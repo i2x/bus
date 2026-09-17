@@ -39,13 +39,23 @@
   .appbar .brand { font-weight: 700; font-size: 16px; }
   .appbar .btn { --bs-btn-color: #fff; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: rgba(255,255,255,.15); --bs-btn-active-bg: rgba(255,255,255,.25); border: 0; }
 
-  /* search row */
-  .search .form-select, .search .form-control, .search .btn { min-height: 52px; }
-  #zone { font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 20px; max-width: 78px; text-align: center; padding-left: 10px; padding-right: 26px; background-position: right 6px center; color: #fff; }
-  #zone.none { color: var(--bs-secondary-color); background-color: var(--bs-tertiary-bg); }
-  #num { font-family: "IBM Plex Mono", monospace; font-size: 24px; font-weight: 700; letter-spacing: .08em; }
-  #num::placeholder { font-weight: 600; letter-spacing: 0; opacity: .5; font-size: 17px; }
-  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 0 2px; -webkit-overflow-scrolling: touch; }
+  /* search */
+  .search { position: sticky; top: 44px; z-index: 1020; background: var(--bs-body-bg); padding-bottom: 4px; }
+  .numwrap { position: relative; }
+  .numwrap .lead-ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--bs-secondary-color); font-size: 18px; pointer-events: none; }
+  #num { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 700; letter-spacing: .08em; min-height: 58px; padding: 0 48px 0 42px; border-width: 2px; border-radius: 14px; }
+  #num:focus { border-color: var(--bmta); box-shadow: 0 0 0 4px rgba(211,34,42,.15); }
+  #num::placeholder { font-family: var(--bs-body-font-family); font-weight: 500; letter-spacing: 0; opacity: .5; font-size: 17px; }
+  .numwrap .clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; background: none; color: var(--bs-secondary-color); font-size: 20px; }
+  .zones { display: flex; gap: 5px; margin-top: 6px; }
+  .zb { flex: 1 1 0; min-width: 0; height: 40px; border-radius: 10px; border: 1.5px solid var(--bs-border-color); background: var(--bs-tertiary-bg); color: var(--bs-body-color);
+        font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 16px; padding: 0; transition: transform .08s; }
+  .zb.any { flex: 1.9 1 0; font-family: var(--bs-body-font-family); font-size: 13px; font-weight: 600; }
+  .zb:active { transform: scale(.93); }
+  .zb.active { color: #fff; border-color: transparent; background: var(--bs-body-color); }
+  [data-bs-theme="dark"] .zb.active.any { color: #111; }
+  .zb.hint { border-color: var(--bs-body-color); border-style: dashed; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 6px 0 2px; -webkit-overflow-scrolling: touch; }
   .chips::-webkit-scrollbar { display: none; }
   .chip { flex: 0 0 auto; --bs-btn-padding-y: .2rem; --bs-btn-padding-x: .7rem; --bs-btn-font-size: .8rem; border-radius: 999px; font-family: "IBM Plex Mono", monospace; font-weight: 600; }
   .chips .lbl { flex: 0 0 auto; font-size: 12px; color: var(--bs-secondary-color); align-self: center; }
@@ -104,13 +114,15 @@
 <main class="container-app container pt-2">
 
   <form id="form" class="search" autocomplete="off">
-    <div class="input-group">
-      <select id="zone" class="form-select none" aria-label="เขตการเดินรถ">
-        <option value="">?</option>
-        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
-      </select>
-      <input id="num" class="form-control" type="text" inputmode="numeric" pattern="[0-9๐-๙\- ]*" placeholder="หมายเลขข้างรถ เช่น 3077" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false">
-      <button class="btn btn-primary px-3" type="submit" aria-label="ค้นหา"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <div class="numwrap">
+      <i class="fa-solid fa-hashtag lead-ic"></i>
+      <input id="num" class="form-control" type="text" inputmode="numeric" placeholder="พิมพ์หมายเลขข้างรถ" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false" autocapitalize="off" autocorrect="off">
+      <button class="clear" type="button" id="clearBtn" aria-label="ล้าง" hidden><i class="fa-solid fa-circle-xmark"></i></button>
+    </div>
+    <div class="zones" id="zones" role="radiogroup" aria-label="เขตการเดินรถ">
+      <button type="button" class="zb any active" data-z="" aria-pressed="true">เขต ?</button>
+      <button type="button" class="zb" data-z="1">1</button><button type="button" class="zb" data-z="2">2</button><button type="button" class="zb" data-z="3">3</button><button type="button" class="zb" data-z="4">4</button>
+      <button type="button" class="zb" data-z="5">5</button><button type="button" class="zb" data-z="6">6</button><button type="button" class="zb" data-z="7">7</button><button type="button" class="zb" data-z="8">8</button>
     </div>
     <div class="chips" id="chips"></div>
   </form>
@@ -156,7 +168,8 @@
 <script>
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
-  const out = $("#out"), num = $("#num"), form = $("#form"), zoneSel = $("#zone");
+  const out = $("#out"), num = $("#num"), form = $("#form"), zonesEl = $("#zones"), clearBtn = $("#clearBtn");
+  let zone = "";
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const thumb = p => IMG + p + "/960px-" + p.split("/").pop();
   const commons = f => "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(f.replace(/ /g, "_"));
@@ -168,10 +181,22 @@
   applyTheme(store.get("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   $("#themeBtn").onclick = () => { const t = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark"; store.set("theme", t); applyTheme(t); };
 
-  // เลือกเขต
-  const paintZone = () => { const z = zoneSel.value; zoneSel.classList.toggle("none", !z); zoneSel.style.backgroundColor = z ? ZONES[z].color : ""; };
-  zoneSel.addEventListener("change", () => { paintZone(); num.focus(); });
-  paintZone();
+  // เลือกเขต — แตะซ้ำเพื่อยกเลิก
+  function setZone(z, silent) {
+    zone = z || "";
+    zonesEl.querySelectorAll(".zb").forEach(b => {
+      const on = (b.dataset.z || "") === zone;
+      b.classList.toggle("active", on); b.setAttribute("aria-pressed", on);
+      b.style.background = on && zone ? ZONES[zone].color : "";
+    });
+    if (!silent) live();
+  }
+  zonesEl.addEventListener("click", e => {
+    const b = e.target.closest(".zb"); if (!b) return;
+    setZone(b.dataset.z && b.dataset.z === zone ? "" : b.dataset.z);
+  });
+  // ไฮไลต์เขตที่รุ่นนี้มีอยู่ (ช่วยเดา)
+  function hintZones(zs) { zonesEl.querySelectorAll(".zb[data-z]").forEach(b => b.classList.toggle("hint", !!b.dataset.z && zs.includes(+b.dataset.z))); }
 
   // จับคู่รุ่น
   function matchModel(n) {
@@ -294,21 +319,48 @@
   }
   renderChips();
 
-  function lookup(raw, push = true) {
-    const res = parse(raw, zoneSel.value);
-    if (res.error) { out.innerHTML = `<div class="alert alert-danger alert-compact mb-0"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`; return; }
+  function lookup(raw, { push = true, quiet = false } = {}) {
+    const res = parse(raw, zone);
+    if (res.error) {
+      hintZones([]);
+      if (!quiet) out.innerHTML = `<div class="alert alert-danger alert-compact mb-0"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`;
+      return false;
+    }
     const [first, ...rest] = res.results;
     render(first, rest);
+    hintZones(Object.keys(first.model.zones).map(Number));
     if (push) history.replaceState(null, "", "#" + encodeURIComponent((first.zone ? first.zone + "-" : "") + first.num));
-    num.blur();
+    return true;
   }
+  // ค้นหาทันทีขณะพิมพ์ (ไม่ต้องกดปุ่ม)
+  let t;
+  function live() {
+    clearTimeout(t);
+    const v = num.value.trim();
+    clearBtn.hidden = !v;
+    if (!v) { out.innerHTML = ""; hintZones([]); history.replaceState(null, "", location.pathname); return; }
+    t = setTimeout(() => {
+      const digits = v.replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).replace(/\D/g, "");
+      if (digits.length < 4) { hintZones([]); return; }          // ยังพิมพ์ไม่ครบ ไม่ต้องฟ้อง
+      lookup(v, { quiet: digits.length < 5 });                   // 4 หลักอาจยังไม่ครบ → เงียบไว้ก่อน
+    }, 120);
+  }
+  num.addEventListener("input", () => {
+    // พิมพ์/วางแบบ "7-3077" → แยกเขตให้อัตโนมัติ
+    const mm = num.value.trim().replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).match(/^([1-8])[-–—_/ ](\d+)$/);
+    if (mm) { num.value = mm[2]; setZone(mm[1], true); }
+    live();
+  });
+  num.addEventListener("focus", () => num.select());
+  clearBtn.onclick = () => { num.value = ""; setZone("", true); live(); num.focus(); };
   function setAndLookup(q) {
     const mm = q.match(/^([1-8])-(\d+)$/);
-    if (mm) { zoneSel.value = mm[1]; num.value = mm[2]; } else { zoneSel.value = ""; num.value = q; }
-    paintZone(); lookup(num.value);
+    if (mm) { setZone(mm[1], true); num.value = mm[2]; } else { setZone("", true); num.value = q; }
+    clearBtn.hidden = !num.value;
+    lookup(num.value);
   }
 
-  form.addEventListener("submit", e => { e.preventDefault(); lookup(num.value); });
+  form.addEventListener("submit", e => { e.preventDefault(); clearTimeout(t); lookup(num.value); num.blur(); });
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-q]"); if (!b) return;
     bootstrap.Offcanvas.getInstance($("#models"))?.hide();
