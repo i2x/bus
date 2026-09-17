@@ -1,0 +1,126 @@
+// ข้อมูลรถโดยสาร ขสมก. — อ้างอิงจาก
+// https://th.wikipedia.org/wiki/องค์การขนส่งมวลชนกรุงเทพ (ตารางจำนวนรถโดยสารประจำทาง / เขตการเดินรถ / อัตราค่าโดยสาร)
+
+const IMG = "https://upload.wikimedia.org/wikipedia/commons/thumb/";
+
+const ZONES = {
+  1: { color: "purple", office: "บางเขน",
+       area: "พื้นที่ตอนเหนือของกรุงเทพและจังหวัดปทุมธานี — อ.คลองหลวง อ.ธัญบุรี อ.ลำลูกกา จ.ปทุมธานี, เขตดอนเมือง บางเขน หลักสี่ สายไหม",
+       extra: "ให้บริการบางเส้นทางใน อ.เมืองนนทบุรี อ.ปากเกร็ด อ.บางใหญ่ จ.นนทบุรี",
+       depots: [["กปด.11", "บางเขน", "ที่ตั้งสำนักงานเขต"], ["กปด.21", "ธรรมศาสตร์", ""], ["กปด.31", "รังสิต", ""]] },
+  2: { color: "green", office: "สวนสยาม",
+       area: "พื้นที่ตะวันออกของกรุงเทพ — เขตมีนบุรี คลองสามวา หนองจอก ลาดกระบัง สวนหลวง สะพานสูง คันนายาว บึงกุ่ม",
+       extra: "ให้บริการบางเส้นทางใน อ.บางพลี จ.สมุทรปราการ และ อ.คลองหลวง อ.ธัญบุรี อ.ลำลูกกา จ.ปทุมธานี",
+       depots: [["กปด.12", "มีนบุรี", ""], ["กปด.22/32", "สวนสยาม", "ที่ตั้งสำนักงานเขต · ที่ตั้งฝ่ายการเดินรถเอกชนร่วมบริการ"]] },
+  3: { color: "red", office: "เมกาบางนา",
+       area: "จังหวัดสมุทรปราการฝั่งตะวันออกและตอนใต้ของกรุงเทพ — อ.เมืองสมุทรปราการ อ.บางพลี อ.บางเสาธง ฝั่งตะวันออกของ อ.พระประแดง, เขตบางนา พระโขนง ประเวศ",
+       extra: "",
+       depots: [["กปด.13", "ปู่เจ้าสมิงพราย", "อู่ย่อย: ใต้ทางด่วนช้างเอราวัณ 2"], ["กปด.23", "ฟาร์มจระเข้ สมุทรปราการ", ""], ["กปด.33", "เมกาบางนา", "ที่ตั้งสำนักงานเขต · อู่ย่อย: แพรกษาบ่อดิน"]] },
+  4: { color: "orangered", office: "คลองเตย",
+       area: "ใจกลางเมืองกรุงเทพตอนล่าง — เขตคลองเตย วัฒนา ปทุมวัน สาทร บางคอแหลม ยานนาวา สัมพันธวงศ์ บางรัก และตอนล่างของเขตห้วยขวาง",
+       extra: "ให้บริการบางเส้นทางใน อ.บางกรวย จ.นนทบุรี และ อ.บางพลี จ.สมุทรปราการ",
+       depots: [["กปด.14", "คลองเตย", "ที่ตั้งสำนักงานเขต"], ["กปด.24", "ปู่เจ้าสมิงพราย", ""], ["กปด.34", "พระราม 9", ""]] },
+  5: { color: "hotpink", office: "แสมดำ",
+       area: "กรุงเทพฝั่งธนบุรีตอนล่าง ฝั่งตะวันตกของสมุทรปราการ และบางส่วนของสมุทรสาคร — อ.เมืองสมุทรสาคร, อ.พระสมุทรเจดีย์ ฝั่งตะวันตกของ อ.พระประแดง, เขตธนบุรี คลองสาน จอมทอง บางบอน บางขุนเทียน ทุ่งครุ ราษฎร์บูรณะ",
+       extra: "ให้บริการบางเส้นทางใน อ.เมืองสมุทรปราการ",
+       depots: [["กปด.15", "ราชประชา", ""], ["กปด.25", "กัลปพฤกษ์", ""], ["กปด.35", "แสมดำ", "ที่ตั้งสำนักงานเขต · อู่ย่อย: แสมดำ-เติมก๊าซ"]] },
+  6: { color: "gold", office: "NT พุทธมณฑลสาย 3",
+       area: "กรุงเทพฝั่งธนบุรีตอนบน บางส่วนของสมุทรสาครและนครปฐม — อ.พุทธมณฑล อ.สามพราน อ.นครชัยศรี จ.นครปฐม, อ.กระทุ่มแบน จ.สมุทรสาคร, เขตหนองแขม บางแค บางกอกน้อย บางกอกใหญ่ ภาษีเจริญ ตลิ่งชัน ทวีวัฒนา",
+       extra: "ให้บริการบางเส้นทางใน อ.เมืองนนทบุรี อ.ปากเกร็ด จ.นนทบุรี และ อ.พระประแดง จ.สมุทรปราการ",
+       depots: [["กปด.16", "วัดไร่ขิง", ""], ["กปด.26/36", "NT พุทธมณฑลสาย 3", "ที่ตั้งสำนักงานเขต"]] },
+  7: { color: "blue", office: "เทศบาลบางบัวทอง",
+       area: "ตะวันตกเฉียงเหนือของกรุงเทพ รอบเกาะรัตนโกสินทร์ และจังหวัดนนทบุรีทั้งจังหวัด — อ.เมืองนนทบุรี ปากเกร็ด บางกรวย บางใหญ่ บางบัวทอง ไทรน้อย, เขตบางซื่อ บางพลัด พระนคร ดุสิต ป้อมปราบศัตรูพ่าย",
+       extra: "",
+       depots: [["กปด.17", "เทศบาลบางบัวทอง", "ที่ตั้งสำนักงานเขต · อู่ย่อย: บางบัวทอง (บัวทองเคหะ)"], ["กปด.27/37", "ไทรน้อย (หนองเชียงโคตร)", ""]] },
+  8: { color: "saddlebrown", office: "สวนสยาม",
+       area: "ใจกลางเมืองกรุงเทพตอนบน — เขตจตุจักร ดินแดง พญาไท ราชเทวี ลาดพร้าว วังทองหลาง บางกะปิ และตอนบนของเขตห้วยขวาง",
+       extra: "ให้บริการบางเส้นทางใน อ.เมืองนนทบุรี จ.นนทบุรี",
+       depots: [["กปด.18", "กำแพงเพชร", "อู่ย่อย: หมอชิต 2 (ไม่เก็บรถ สำหรับเติมน้ำมัน)"], ["กปด.28", "ใต้ทางด่วนรามอินทรา", ""], ["กปด.38", "สวนสยาม", "ที่ตั้งสำนักงานเขต"]] },
+};
+
+// หมวดสีรถ + อัตราค่าโดยสาร (บาท)
+const LIVERY = {
+  creamred: {
+    name: "รถธรรมดา สีครีม-แดง", swatch: ["#f3e6c8", "#d3222a"], ac: false,
+    fare: { type: "flat", standard: 8, expressway: 10, allnight: 9.5, discount: 4 },
+  },
+  creamblue: {
+    name: "รถปรับอากาศ สีครีม-น้ำเงิน", swatch: ["#f3e6c8", "#1a2f8f"], ac: true,
+    fare: { type: "distance", km: [12, 12, 14, 16, 18, 20, 20, 20], expressway: "+2", discount: "-4" },
+  },
+  orange: {
+    name: "รถปรับอากาศ สีส้ม (ยูโรทู)", swatch: ["#f7941d", "#f7941d"], ac: true,
+    fare: { type: "distance", km: [13, 15, 17, 19, 21, 23, 25, 25], expressway: "+2", discount: "-4" },
+  },
+  blue: {
+    name: "รถปรับอากาศ สีฟ้า (ใช้ก๊าซธรรมชาติ NGV)", swatch: ["#8bb8e8", "#8bb8e8"], ac: true,
+    fare: { type: "distance", km: [15, 20, 20, 20, 25, 25, 25, 25], expressway: "+2", discount: "-4" },
+  },
+  bluehybrid: {
+    name: "รถปรับอากาศ สีฟ้า (ไฮบริด)", swatch: ["#8bb8e8", "#2c7bd6"], ac: true,
+    fare: null,
+  },
+};
+
+// รุ่นรถ — key: prefix ของหมายเลขข้างรถ, digits: จำนวนหลักของหมายเลข (ไม่รวมเลขเขต)
+// zones: จำนวนรถในแต่ละเขต (จากตาราง), total: จำนวนรถที่ให้บริการ
+const MODELS = [
+  { id: "ak176", brand: "Hino", model: "AK176", livery: "creamred", year: 2534,
+    prefix: "40", digits: 5, total: 490, status: "ให้บริการ",
+    zones: { 1: 58, 3: 156, 4: 105, 5: 171 },
+    image: "9/9a/Hino_AK176_145E%283-19E%29_3-40481.jpg", imageFile: "Hino AK176 145E(3-19E) 3-40481.jpg" },
+  { id: "mt111", brand: "Isuzu", model: "MT111QB", livery: "creamred", year: 2534,
+    prefix: "50", digits: 5, total: 529, status: "ให้บริการ",
+    zones: { 1: 123, 6: 171, 7: 205, 8: 30 },
+    image: "d/db/Isuzu_Cream-red_Bus_95_%281-29%29.jpg", imageFile: "Isuzu Cream-red Bus 95 (1-29).jpg" },
+  { id: "rp118", brand: "Mitsubishi Fuso", model: "RP118", livery: "creamred", year: 2534,
+    prefix: "80", digits: 5, total: 500, status: "ให้บริการ",
+    zones: { 2: 214, 4: 111, 8: 175 },
+    note: "1 คันได้รับการปรับปรุงสภาพ (renovated) ในปี 2559 คือ 8-80040",
+    image: "6/67/Mitsubishi_Fuso_RP118_156%282-49%29_8-80329.jpg", imageFile: "Mitsubishi Fuso RP118 156(2-49) 8-80329.jpg",
+    special: { "80040": { note: "คันนี้คือคันที่ได้รับการปรับปรุงสภาพ (renovated) เมื่อปี 2559", image: "c/c0/Mitsubishi_Renovated_Bus_8-80040_%283%29.jpg", imageFile: "Mitsubishi Renovated Bus 8-80040 (3).jpg" } } },
+
+  { id: "hu3kskl", brand: "Hino", model: "HU3KSKL", livery: "creamblue", year: 2538,
+    prefix: "40", digits: 4, total: 79, status: "ให้บริการ",
+    zones: { 2: 24, 4: 55 },
+    image: "5/53/Hino_Cream-Blue_Bus_22_%283-40%29_%283%29.jpg", imageFile: "Hino Cream-Blue Bus 22 (3-40) (3).jpg" },
+  { id: "cqa650", brand: "Isuzu", model: "CQA650 A/T", livery: "creamblue", year: 2538,
+    prefix: "3", digits: 4, total: 100, status: "ให้บริการ",
+    zones: { 1: 15, 7: 85 },
+    image: "9/97/Isuzu_CQA650A-T_134%282-20%29_7-3069.jpg", imageFile: "Isuzu CQA650A-T 134(2-20) 7-3069.jpg" },
+  { id: "ru1jssl-44", brand: "Hino", model: "RU1JSSL", livery: "orange", year: 2541,
+    prefix: "44", digits: 5, total: 197, status: "ให้บริการ",
+    zones: { 1: 13, 2: 34, 3: 60, 4: 40, 5: 50 },
+    image: "d/d3/Hino_RU1JSSL_138A%284-33E%29_5-44061.jpg", imageFile: "Hino RU1JSSL 138A(4-33E) 5-44061.jpg" },
+  { id: "lv223s", brand: "Isuzu", model: "LV223S", livery: "orange", year: 2541,
+    prefix: "55", digits: 5, total: 200, status: "ให้บริการ",
+    zones: { 1: 18, 6: 55, 7: 69, 8: 58 },
+    image: "f/ff/Isuzu_EURO_II_Bus_505_%282-24E%29_%284%29.jpg", imageFile: "Isuzu EURO II Bus 505 (2-24E) (4).jpg" },
+  { id: "ru1jssl-45", brand: "Hino", model: "RU1JSSL", livery: "orange", year: 2544,
+    prefix: "45", digits: 5, total: 125, status: "ให้บริการ",
+    zones: { 1: 41, 2: 12, 3: 47, 4: 7, 5: 18 },
+    image: "8/82/Hino_EURO_II_Renovated_Bus_1-45090_%286%29.jpg", imageFile: "Hino EURO II Renovated Bus 1-45090 (6).jpg" },
+  { id: "lv423r", brand: "Isuzu", model: "LV423R", livery: "orange", year: 2544,
+    prefix: "56", digits: 5, total: 123, status: "ให้บริการ",
+    zones: { 1: 5, 6: 100, 7: 12, 8: 6 },
+    image: "5/55/Isuzu_EURO_II_Bus_4-69_%282%29.jpg", imageFile: "Isuzu EURO II Bus 4-69 (2).jpg" },
+  { id: "bh115h", brand: "Daewoo", model: "BH115H", livery: "orange", year: 2544,
+    prefix: "67", digits: 5, range: [67001, 67060], total: 16, status: "ให้บริการ",
+    zones: { 8: 16 },
+    image: "e/ef/Daewoo_BH115H_137%283-48%29_8-67021.jpg", imageFile: "Daewoo BH115H 137(3-48) 8-67021.jpg" },
+  { id: "bh115", brand: "Daewoo", model: "BH115", livery: "orange", year: 2544,
+    prefix: "67", digits: 5, range: [67061, 67250], total: 35, status: "ให้บริการ",
+    zones: { 8: 35 },
+    image: "f/fb/Daewoo_BH115_73%282-45%29_8-67115.jpg", imageFile: "Daewoo BH115 73(2-45) 8-67115.jpg" },
+  { id: "bonluck", brand: "Bonluck", model: "JXK6120L-NGV-01", livery: "blue", year: 2561,
+    prefix: "70", digits: 5, total: 486, status: "ให้บริการ",
+    zones: { 1: 123, 2: 105, 3: 108, 5: 150 },
+    image: "5/58/Bonluck_BMTA_Bus_138_%284-22E%29_%28Ratchapracha_Depot_Line%29.jpg", imageFile: "Bonluck BMTA Bus 138 (4-22E) (Ratchapracha Depot Line).jpg" },
+  { id: "hybrid", brand: "Hino", model: "HU2ASKP-VJT", livery: "bluehybrid", year: 2563,
+    prefix: "46", digits: 5, range: [46001, 46001], total: 1, status: "ตัดจอด (ม.89)", retired: true,
+    zones: { 1: 1 },
+    note: "รถไฮบริด บริจาคจาก JICA มีเพียงคันเดียว (1-46001)",
+    image: "3/31/Hino_Hybrid_Bus_1-46001_%283%29.jpg", imageFile: "Hino Hybrid Bus 1-46001 (3).jpg" },
+];
+
+const SOURCE_URL = "https://th.wikipedia.org/wiki/องค์การขนส่งมวลชนกรุงเทพ";
