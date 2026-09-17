@@ -22,150 +22,120 @@
   :root {
     --bmta: #d3222a;
     --bs-body-font-family: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --bs-primary: #d3222a; --bs-primary-rgb: 211, 34, 42;
-    --bs-link-color-rgb: 211, 34, 42;
+    --bs-body-font-size: .95rem;
+    --bs-primary: #d3222a; --bs-primary-rgb: 211, 34, 42; --bs-link-color-rgb: 211, 34, 42;
     --safe-b: env(safe-area-inset-bottom, 0px);
   }
   [data-bs-theme="light"] { --bs-body-bg: #f6f3ec; --bs-tertiary-bg: #ece7db; --bs-secondary-bg: #f0ece2; }
   [data-bs-theme="dark"]  { --bs-body-bg: #121110; --bs-tertiary-bg: #1f1d1a; --bs-secondary-bg: #262320; --bs-border-color: #35312b; }
-  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body { padding-bottom: calc(24px + var(--safe-b)); -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { padding-bottom: calc(16px + var(--safe-b)); -webkit-tap-highlight-color: transparent; }
   .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
   .btn-primary { --bs-btn-bg: var(--bmta); --bs-btn-border-color: var(--bmta); --bs-btn-hover-bg: #b81c23; --bs-btn-hover-border-color: #b81c23; --bs-btn-active-bg: #a0181f; }
-  .btn, .form-control { min-height: 48px; }  /* tap target ≥ 44px */
+  @media (min-width: 768px) { .container-app { max-width: 640px; } }
 
-  /* top bar */
+  /* app bar */
   .appbar { position: sticky; top: 0; z-index: 1030; background: var(--bmta); color: #fff; padding-top: env(safe-area-inset-top, 0px); }
-  .appbar .brand { font-weight: 700; font-size: 17px; }
+  .appbar .brand { font-weight: 700; font-size: 16px; }
   .appbar .btn { --bs-btn-color: #fff; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: rgba(255,255,255,.15); --bs-btn-active-bg: rgba(255,255,255,.25); border: 0; }
 
-  /* search */
-  .search-card { border: 0; box-shadow: 0 6px 24px -12px rgba(0,0,0,.35); }
-  .zone-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 6px; -webkit-overflow-scrolling: touch; }
-  .zone-row::-webkit-scrollbar { display: none; }
-  .zone-btn {
-    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 12px; border: 2px solid var(--bs-border-color); background: var(--bs-tertiary-bg);
-    font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 18px; color: var(--bs-body-color); position: relative; transition: transform .1s;
-  }
-  .zone-btn:active { transform: scale(.94); }
-  .zone-btn .dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; }
-  .zone-btn.active { color: #fff; border-color: transparent; }
-  .zone-btn.active .dot { display: none; }
-  .zone-btn.any { width: auto; padding: 0 12px; font-family: var(--bs-body-font-family); font-size: 14px; font-weight: 600; }
-  #num { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 700; letter-spacing: .08em; min-height: 58px; }
-  #num::placeholder { font-weight: 600; letter-spacing: .02em; color: var(--bs-secondary-color); opacity: .6; font-size: 20px; }
-  .chip { --bs-btn-padding-y: .35rem; --bs-btn-padding-x: .8rem; --bs-btn-font-size: .85rem; border-radius: 999px; min-height: 36px; font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+  /* search row */
+  .search .form-select, .search .form-control, .search .btn { min-height: 52px; }
+  #zone { font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 20px; max-width: 78px; text-align: center; padding-left: 10px; padding-right: 26px; background-position: right 6px center; color: #fff; }
+  #zone.none { color: var(--bs-secondary-color); background-color: var(--bs-tertiary-bg); }
+  #num { font-family: "IBM Plex Mono", monospace; font-size: 24px; font-weight: 700; letter-spacing: .08em; }
+  #num::placeholder { font-weight: 600; letter-spacing: 0; opacity: .5; font-size: 17px; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 0 2px; -webkit-overflow-scrolling: touch; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; --bs-btn-padding-y: .2rem; --bs-btn-padding-x: .7rem; --bs-btn-font-size: .8rem; border-radius: 999px; font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+  .chips .lbl { flex: 0 0 auto; font-size: 12px; color: var(--bs-secondary-color); align-self: center; }
 
   /* result */
-  .plate { display: flex; align-items: stretch; }
-  .plate .zone { min-width: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
-  .plate .zone .n { font-family: "IBM Plex Mono", monospace; font-size: 38px; font-weight: 700; line-height: 1; }
-  .plate .zone .l { font-size: 11px; opacity: .9; }
-  .plate .zone.unknown { background: var(--bs-tertiary-bg); color: var(--bs-secondary-color); text-shadow: none; }
-  .plate .info { flex: 1; min-width: 0; padding: 12px 14px; }
-  .plate .big { font-family: "IBM Plex Mono", monospace; font-size: clamp(30px, 9vw, 44px); font-weight: 700; line-height: 1; letter-spacing: .04em; }
-  .plate .big .dim { opacity: .4; }
-  .hero { position: relative; background: var(--bs-tertiary-bg); }
-  .hero img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
-  .hero .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 8px; font-size: 11px; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.7)); }
-  .hero .cap a { color: #fff; }
-  .livery { display: inline-flex; width: 28px; height: 16px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0,0,0,.25); vertical-align: -3px; }
-  .livery i { flex: 1; }
-  .kv { display: grid; grid-template-columns: 34px 1fr; gap: 10px 8px; align-items: start; }
-  .kv .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--bs-tertiary-bg); color: var(--bs-secondary-color); }
-  .kv .k { font-size: 12px; color: var(--bs-secondary-color); line-height: 1.2; }
-  .kv .v { font-weight: 600; }
-  .accordion-button { font-weight: 600; min-height: 52px; }
-  .accordion-button:not(.collapsed) { color: var(--bs-body-color); background: var(--bs-tertiary-bg); box-shadow: none; }
-  .accordion-button:focus { box-shadow: none; }
-  .accordion-button .fa-fw { color: var(--bmta); margin-right: 10px; }
-  .fleet-z { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--bs-border-color); border-radius: 8px; padding: 4px 10px; font-size: 14px; background: var(--bs-tertiary-bg); }
-  .fleet-z.here { border-color: var(--bs-body-color); box-shadow: 0 0 0 2px rgba(0,0,0,.12); }
-  .fleet-z .dot { width: 10px; height: 10px; border-radius: 3px; }
-  .depot { border: 1px solid var(--bs-border-color); border-radius: 10px; padding: 10px 12px; background: var(--bs-tertiary-bg); }
-  .depot .k { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--bs-secondary-color); }
-  table.fare td { font-family: "IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; }
-  table.fare th { font-size: 12px; white-space: nowrap; font-weight: 600; color: var(--bs-secondary-color); }
-  .sticky-actions { position: sticky; bottom: calc(12px + var(--safe-b)); z-index: 5; }
+  .card { animation: rise .25s cubic-bezier(.2,.7,.2,1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+  .plate { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 0; border-left: 10px solid var(--bs-tertiary-bg); }
+  .plate .big { font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: .04em; padding-left: 10px; }
+  .plate .big .dim { opacity: .45; }
+  .zbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: #fff; }
+  .top { display: grid; grid-template-columns: 116px 1fr; gap: 10px; padding: 0 12px 10px; }
+  .thumb { width: 116px; height: 88px; object-fit: cover; border-radius: 10px; background: var(--bs-tertiary-bg); display: block; }
+  .top .model { font-weight: 700; font-size: 18px; line-height: 1.15; }
+  .top .model small { font-weight: 500; color: var(--bs-secondary-color); font-size: 14px; }
+  .facts { font-size: 13px; line-height: 1.45; margin-top: 3px; }
+  .facts i { width: 16px; text-align: center; color: var(--bs-secondary-color); margin-right: 2px; }
+  .livery { display: inline-flex; width: 22px; height: 12px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(0,0,0,.25); vertical-align: -1px; }
+  .livery i { flex: 1; width: auto; margin: 0; }
+  .row-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; background: none; border: 0; border-top: 1px solid var(--bs-border-color); color: inherit; text-align: left; font-size: 13.5px; min-height: 44px; }
+  .row-btn > i:first-child { color: var(--bmta); width: 18px; text-align: center; }
+  .row-btn .t { flex: 1; min-width: 0; }
+  .row-btn .chev { transition: transform .2s; color: var(--bs-secondary-color); font-size: 12px; }
+  .row-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .detail { padding: 4px 12px 12px 42px; font-size: 13px; }
+  .depot { border: 1px solid var(--bs-border-color); border-radius: 8px; padding: 6px 10px; background: var(--bs-tertiary-bg); }
+  .depot .k { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--bs-secondary-color); }
+  .fleet-z { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--bs-border-color); border-radius: 7px; padding: 2px 8px; font-size: 12px; background: var(--bs-tertiary-bg); color: inherit; }
+  .fleet-z.here { border-color: var(--bs-body-color); }
+  .fleet-z .dot { width: 9px; height: 9px; border-radius: 3px; }
+  table.fare { font-size: 12.5px; margin: 0; }
+  table.fare td { font-family: "IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; padding: 4px 6px; }
+  table.fare th { font-size: 11px; white-space: nowrap; font-weight: 600; color: var(--bs-secondary-color); padding: 4px 6px; }
+  .alert-compact { padding: 6px 10px; font-size: 13px; margin-bottom: 8px; display: flex; gap: 8px; align-items: flex-start; }
 
   /* reference list */
-  .ref-item { display: flex; align-items: center; gap: 12px; min-height: 64px; }
-  .ref-item .pf { font-family: "IBM Plex Mono", monospace; font-size: 17px; font-weight: 700; min-width: 74px; }
+  .ref-item { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px; }
+  .ref-item .pf { font-family: "IBM Plex Mono", monospace; font-size: 15px; font-weight: 700; min-width: 66px; }
   .ref-item .pf .x { opacity: .4; }
-  .ref-item .m { font-weight: 600; line-height: 1.25; }
-  .ref-item .d { font-size: 12px; color: var(--bs-secondary-color); }
-  .card { animation: rise .3s cubic-bezier(.2,.7,.2,1); }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
-  @media (min-width: 768px) { .container-app { max-width: 720px; } }
+  .ref-item .m { font-weight: 600; font-size: 14px; line-height: 1.2; }
+  .ref-item .d { font-size: 11.5px; color: var(--bs-secondary-color); }
 </style>
 </head>
 <body>
 
 <nav class="appbar">
-  <div class="container-app container d-flex align-items-center py-2">
+  <div class="container-app container d-flex align-items-center py-1">
     <i class="fa-solid fa-bus me-2"></i>
     <div class="brand flex-grow-1">รถเมล์คันนี้คือคันไหน?</div>
-    <button class="btn btn-sm px-2" id="themeBtn" type="button" aria-label="สลับธีมสว่าง/มืด"><i class="fa-solid fa-moon fa-lg"></i></button>
-    <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#help" aria-label="วิธีใช้"><i class="fa-solid fa-circle-question fa-lg"></i></button>
+    <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#models" aria-label="รุ่นรถทั้งหมด"><i class="fa-solid fa-list"></i></button>
+    <button class="btn btn-sm px-2" id="themeBtn" type="button" aria-label="สลับธีมสว่าง/มืด"><i class="fa-solid fa-moon"></i></button>
+    <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#help" aria-label="วิธีใช้"><i class="fa-solid fa-circle-question"></i></button>
   </div>
 </nav>
 
-<main class="container-app container pt-3">
+<main class="container-app container pt-2">
 
-  <!-- ค้นหา -->
-  <div class="card search-card rounded-4">
-    <div class="card-body p-3">
-      <div class="small text-secondary mb-1"><i class="fa-solid fa-map-pin me-1"></i>เขตการเดินรถ <span class="opacity-75">(เลขตัวแรกก่อนขีด — ไม่รู้ก็ข้ามได้)</span></div>
-      <div class="zone-row" id="zones"></div>
-      <form id="form" autocomplete="off" class="mt-2">
-        <div class="small text-secondary mb-1"><i class="fa-solid fa-hashtag me-1"></i>หมายเลขข้างรถ</div>
-        <div class="input-group input-group-lg">
-          <span class="input-group-text mono fw-bold" id="zonePrefix">?-</span>
-          <input id="num" class="form-control" type="text" inputmode="numeric" pattern="[0-9๐-๙\- ]*" placeholder="เช่น 3077" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false">
-          <button class="btn btn-outline-secondary" type="button" id="clearBtn" aria-label="ล้าง"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <button class="btn btn-primary w-100 mt-2 fw-semibold" type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>ดูข้อมูลรถ</button>
-      </form>
-      <div class="d-flex flex-wrap gap-2 mt-3 align-items-center" id="examples">
-        <span class="small text-secondary">ลองดู</span>
-        <button class="btn btn-outline-secondary chip" type="button" data-q="7-3077">7-3077</button>
-        <button class="btn btn-outline-secondary chip" type="button" data-q="2-70235">2-70235</button>
-        <button class="btn btn-outline-secondary chip" type="button" data-q="8-80040">8-80040</button>
-        <button class="btn btn-outline-secondary chip" type="button" data-q="1-46001">1-46001</button>
-      </div>
-      <div id="recent" class="d-none mt-2 d-flex flex-wrap gap-2 align-items-center">
-        <span class="small text-secondary"><i class="fa-solid fa-clock-rotate-left me-1"></i>ล่าสุด</span>
-        <span id="recentList" class="d-contents"></span>
-      </div>
+  <form id="form" class="search" autocomplete="off">
+    <div class="input-group">
+      <select id="zone" class="form-select none" aria-label="เขตการเดินรถ">
+        <option value="">?</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+      </select>
+      <input id="num" class="form-control" type="text" inputmode="numeric" pattern="[0-9๐-๙\- ]*" placeholder="หมายเลขข้างรถ เช่น 3077" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false">
+      <button class="btn btn-primary px-3" type="submit" aria-label="ค้นหา"><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
-  </div>
+    <div class="chips" id="chips"></div>
+  </form>
 
-  <div id="out" class="mt-3"></div>
+  <div id="out" class="mt-2"></div>
 
-  <!-- รุ่นรถทั้งหมด -->
-  <section class="mt-4">
-    <h2 class="h5 fw-bold mb-1"><i class="fa-solid fa-list me-2 text-primary"></i>รุ่นรถทั้งหมดของ ขสมก.</h2>
-    <p class="small text-secondary mb-2">แตะเพื่อดูรายละเอียดรุ่น · ตัวเลขหน้าคือรหัสรุ่นในหมายเลขข้างรถ</p>
-    <div class="list-group rounded-4 overflow-hidden" id="refgrid"></div>
-  </section>
-
-  <footer class="small text-secondary mt-4 lh-sm">
-    <i class="fa-brands fa-wikipedia-w me-1"></i>ข้อมูลรุ่นรถ จำนวนรถ เขตการเดินรถ และอัตราค่าโดยสาร อ้างอิงจาก
-    <a href="https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%99%E0%B8%AA%E0%B9%88%E0%B8%87%E0%B8%A1%E0%B8%A7%E0%B8%A5%E0%B8%8A%E0%B8%99%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E" target="_blank" rel="noopener">วิกิพีเดีย: องค์การขนส่งมวลชนกรุงเทพ</a>
-    (CC BY-SA) · ภาพจาก Wikimedia Commons · ข้อมูลอาจไม่ตรงกับสภาพปัจจุบันของรถแต่ละคัน
-  </footer>
 </main>
 
-<!-- วิธีใช้ -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="models" style="width:min(100vw,420px)">
+  <div class="offcanvas-header border-bottom py-2">
+    <h5 class="offcanvas-title fw-bold fs-6"><i class="fa-solid fa-list me-2 text-primary"></i>รุ่นรถทั้งหมดของ ขสมก. <span class="text-secondary fw-normal">(13 รุ่น)</span></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+  </div>
+  <div class="offcanvas-body p-0"><div class="list-group list-group-flush" id="refgrid"></div></div>
+</div>
+
 <div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="help" style="height:auto;max-height:85vh">
   <div class="offcanvas-header pb-0">
     <h5 class="offcanvas-title fw-bold"><i class="fa-solid fa-circle-info me-2 text-primary"></i>วิธีอ่านหมายเลขข้างรถ</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
   </div>
   <div class="offcanvas-body">
-    <p class="mb-2">รถ ขสมก. ทุกคันมีหมายเลขข้างรถแสดงที่กันชนหน้า ตัวถังซ้าย–ขวา และกระจกหลัง รูปแบบ <span class="mono fw-bold">ข-AXXX</span> (4 หลัก) หรือ <span class="mono fw-bold">ข-AAXXX</span> (5 หลัก)</p>
+    <p class="mb-2">หมายเลขข้างรถอยู่ที่กันชนหน้า ตัวถังซ้าย–ขวา และกระจกหลัง รูปแบบ <span class="mono fw-bold">ข-AXXX</span> หรือ <span class="mono fw-bold">ข-AAXXX</span></p>
     <ul class="mb-3">
-      <li><span class="mono fw-bold">ข</span> — เขตการเดินรถที่รถสังกัด (1–8)</li>
+      <li><span class="mono fw-bold">ข</span> — เขตการเดินรถที่รถสังกัด (1–8) — เลือกในช่องแรก หรือปล่อย <b>?</b> ถ้าไม่รู้</li>
       <li><span class="mono fw-bold">A / AA</span> — รหัสรุ่นของรถ</li>
       <li><span class="mono fw-bold">XXX</span> — ลำดับที่ของรถในรุ่นนั้น</li>
     </ul>
@@ -173,7 +143,11 @@
       <div><span class="mono fw-bold">7-3077</span> → เขต 7 · รุ่น 3 (Isuzu CQA650 A/T ครีม-น้ำเงิน) · คันที่ 77</div>
       <div class="mt-1"><span class="mono fw-bold">2-70235</span> → เขต 2 · รุ่น 70 (Bonluck NGV สีฟ้า) · คันที่ 235</div>
     </div>
-    <p class="small text-secondary mt-3 mb-0">พิมพ์แค่ตัวเลขก็ได้ เช่น <span class="mono">70235</span> ระบบจะเดารุ่นให้ · รองรับเลขไทย ๐–๙</p>
+    <p class="small text-secondary mt-3 mb-2">พิมพ์ทั้งชุดในช่องเดียวก็ได้ เช่น <span class="mono">7-3077</span> · รองรับเลขไทย ๐–๙</p>
+    <hr class="my-2">
+    <p class="text-secondary mb-0 lh-sm" style="font-size:11.5px"><i class="fa-brands fa-wikipedia-w me-1"></i>ข้อมูลรุ่นรถ จำนวนรถ เขตการเดินรถ และค่าโดยสาร จาก
+      <a href="https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%99%E0%B8%AA%E0%B9%88%E0%B8%87%E0%B8%A1%E0%B8%A7%E0%B8%A5%E0%B8%8A%E0%B8%99%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E" target="_blank" rel="noopener">วิกิพีเดีย: องค์การขนส่งมวลชนกรุงเทพ</a>
+      (CC BY-SA) · ภาพจาก Wikimedia Commons · ข้อมูลอาจไม่ตรงกับสภาพปัจจุบันของรถแต่ละคัน</p>
   </div>
 </div>
 
@@ -182,33 +156,24 @@
 <script>
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
-  const out = $("#out"), num = $("#num"), form = $("#form"), zonesEl = $("#zones"), zonePrefix = $("#zonePrefix");
+  const out = $("#out"), num = $("#num"), form = $("#form"), zoneSel = $("#zone");
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const thumb = p => IMG + p + "/960px-" + p.split("/").pop();
   const commons = f => "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(f.replace(/ /g, "_"));
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-  let zone = null;
+  const EXAMPLES = ["7-3077", "2-70235", "8-80040", "1-46001", "3-40481"];
 
-  // ── ธีม ──
-  const applyTheme = t => { document.documentElement.setAttribute("data-bs-theme", t); $("#themeBtn i").className = "fa-solid fa-lg " + (t === "dark" ? "fa-sun" : "fa-moon"); $('meta[name="theme-color"]').content = "#d3222a"; };
+  // ธีม
+  const applyTheme = t => { document.documentElement.setAttribute("data-bs-theme", t); $("#themeBtn i").className = "fa-solid " + (t === "dark" ? "fa-sun" : "fa-moon"); };
   applyTheme(store.get("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   $("#themeBtn").onclick = () => { const t = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark"; store.set("theme", t); applyTheme(t); };
 
-  // ── ปุ่มเลือกเขต ──
-  zonesEl.innerHTML = `<button type="button" class="zone-btn any active" data-z="">ไม่ระบุ</button>` +
-    Object.keys(ZONES).map(z => `<button type="button" class="zone-btn" data-z="${z}" aria-label="เขต ${z}">${z}<span class="dot" style="background:${ZONES[z].color}"></span></button>`).join("");
-  function setZone(z) {
-    zone = z ? +z : null;
-    zonesEl.querySelectorAll(".zone-btn").forEach(b => {
-      const on = (b.dataset.z || "") === (z || "");
-      b.classList.toggle("active", on);
-      b.style.background = on && z ? ZONES[z].color : "";
-    });
-    zonePrefix.textContent = (zone || "?") + "-";
-  }
-  zonesEl.addEventListener("click", e => { const b = e.target.closest(".zone-btn"); if (!b) return; setZone(b.dataset.z); num.focus(); });
+  // เลือกเขต
+  const paintZone = () => { const z = zoneSel.value; zoneSel.classList.toggle("none", !z); zoneSel.style.backgroundColor = z ? ZONES[z].color : ""; };
+  zoneSel.addEventListener("change", () => { paintZone(); num.focus(); });
+  paintZone();
 
-  // ── หาว่ารุ่นไหนตรงกับเลข ──
+  // จับคู่รุ่น
   function matchModel(n) {
     const v = parseInt(n, 10);
     return MODELS.filter(m => n.length === m.digits && n.startsWith(m.prefix) && (!m.range || (v >= m.range[0] && v <= m.range[1])));
@@ -216,48 +181,43 @@
   function parse(raw, zSel) {
     let s = raw.trim().replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).replace(/\s/g, "").replace(/^ข/, "").replace(/[–—_/]/g, "-");
     if (!s) return { error: "กรอกหมายเลขข้างรถก่อนนะ" };
-    if (!/^[0-9-]+$/.test(s)) return { error: "หมายเลขข้างรถควรมีเฉพาะตัวเลข เช่น 3077 หรือ 7-3077" };
+    if (!/^[0-9-]+$/.test(s)) return { error: "ใส่เฉพาะตัวเลข เช่น 3077 หรือ 7-3077" };
     const cands = [];
     if (s.includes("-")) {
       const [z, n, ...rest] = s.split("-");
       if (rest.length || !n) return { error: "รูปแบบไม่ถูกต้อง ลอง เขต-หมายเลข เช่น 2-70235" };
-      if (!/^[1-8]$/.test(z)) return { error: `เขตการเดินรถต้องเป็นเลข 1–8 (ได้ "${esc(z)}")` };
+      if (!/^[1-8]$/.test(z)) return { error: `เขตต้องเป็นเลข 1–8 (ได้ "${esc(z)}")` };
       cands.push({ zone: +z, num: n });
-    } else if (zSel) {
-      cands.push({ zone: zSel, num: s });
-    } else {
+    } else if (zSel) cands.push({ zone: +zSel, num: s });
+    else {
       if (s.length === 6) cands.push({ zone: +s[0], num: s.slice(1) });
       if (s.length === 5) { cands.push({ zone: null, num: s }); cands.push({ zone: +s[0], num: s.slice(1) }); }
       if (s.length === 4) cands.push({ zone: null, num: s });
     }
-    if (!cands.length) return { error: "หมายเลขข้างรถมี 4 หรือ 5 หลัก (ไม่รวมเลขเขต) เช่น 3077 หรือ 70235" };
+    if (!cands.length) return { error: "หมายเลขมี 4 หรือ 5 หลัก (ไม่รวมเขต) เช่น 3077 หรือ 70235" };
     const results = [];
     for (const c of cands) { if (c.zone !== null && !(c.zone >= 1 && c.zone <= 8)) continue; for (const m of matchModel(c.num)) results.push({ ...c, model: m }); }
-    if (!results.length) return { error: `ไม่พบรุ่นรถที่ใช้หมายเลข <b class="mono">${esc(s)}</b> — ตรวจสอบตัวเลขอีกครั้ง หรือดูรายการรหัสรุ่นด้านล่าง` };
+    if (!results.length) return { error: `ไม่พบรุ่นที่ใช้หมายเลข <b class="mono">${esc(s)}</b> — ดูรหัสรุ่นได้ที่ "รุ่นรถทั้งหมด" ด้านล่าง` };
     return { results };
   }
 
-  function fareTable(liv) {
-    const f = liv.fare;
-    if (!f) return `<p class="text-secondary mb-0">ไม่มีข้อมูลอัตราค่าโดยสารเฉพาะสำหรับรถรุ่นนี้</p>`;
-    if (f.type === "flat") return `
-      <div class="row g-2 text-center">
-        ${[["ราคามาตรฐาน", f.standard, "fa-ticket"], ["ขึ้นทางด่วน", f.expressway, "fa-road"], ["ตลอดคืน", f.allnight, "fa-moon"], ["ลดหย่อน", f.discount, "fa-id-card"]].map(([k, v, ic]) =>
-          `<div class="col-6 col-sm-3"><div class="p-2 rounded-3 bg-body-tertiary h-100"><div class="small text-secondary"><i class="fa-solid ${ic} me-1"></i>${k}</div><div class="mono fw-bold fs-4">${v.toFixed(2)}</div></div></div>`).join("")}
-      </div>
-      <p class="small text-secondary mt-2 mb-0">ราคาเดียวตลอดสาย (บาท) · ลดหย่อน = บัตรสวัสดิการแห่งรัฐ</p>`;
+  const money = v => Number.isInteger(v) ? v : v.toFixed(2);
+  function fareSummary(f) {
+    if (!f) return "ไม่มีข้อมูลค่าโดยสาร";
+    if (f.type === "flat") return `<b>${money(f.standard)} บาท</b> ตลอดสาย · ทางด่วน ${money(f.expressway)} · ตลอดคืน ${money(f.allnight)} · ลดหย่อน ${money(f.discount)}`;
+    return `<b>${Math.min(...f.km)}–${Math.max(...f.km)} บาท</b> ตามระยะ · ทางด่วน ${f.expressway} · ลดหย่อน ${f.discount}`;
+  }
+  function fareDetail(f) {
+    if (!f) return "";
+    if (f.type === "flat") return `<div class="text-secondary">ราคาเดียวตลอดสาย · ลดหย่อน = บัตรสวัสดิการแห่งรัฐ</div>`;
     const heads = ["4", "8", "12", "16", "20", "24", "28", "28+"];
-    return `<div class="table-responsive"><table class="table table-sm table-bordered fare text-center mb-2">
+    return `<div class="table-responsive"><table class="table table-sm table-bordered fare text-center">
       <thead><tr>${heads.map(h => `<th>${h} กม.</th>`).join("")}</tr></thead>
       <tbody><tr>${f.km.map(v => `<td>${v.toFixed(2)}</td>`).join("")}</tr></tbody></table></div>
-      <div class="d-flex gap-2 flex-wrap small">
-        <span class="badge text-bg-secondary fw-normal"><i class="fa-solid fa-road me-1"></i>ทางด่วน ${f.expressway} บาท</span>
-        <span class="badge text-bg-secondary fw-normal"><i class="fa-solid fa-id-card me-1"></i>ลดหย่อน/บัตรสวัสดิการฯ ${f.discount} บาท</span>
-      </div>
-      <p class="small text-secondary mt-2 mb-0">คิดตามระยะทาง (บาท)</p>`;
+      <div class="text-secondary mt-1">ราคาตามระยะทาง (บาท) · ทางด่วนเพิ่ม 2 บาท · ลดหย่อน/บัตรสวัสดิการแห่งรัฐ ลด 4 บาท</div>`;
   }
 
-  function render(r, alternatives, raw) {
+  function render(r, alternatives) {
     const m = r.model, liv = LIVERY[m.livery], z = r.zone ? ZONES[r.zone] : null;
     const seq = parseInt(r.num.slice(m.prefix.length), 10);
     const sp = m.special && m.special[r.num];
@@ -267,121 +227,94 @@
     const label = (r.zone || "?") + "-" + r.num;
 
     let warn = "";
-    if (m.retired) warn = `<div class="alert alert-danger d-flex gap-2 py-2 mb-2"><i class="fa-solid fa-ban mt-1"></i><div><b>${esc(m.status)}</b> — รถคันนี้ถูกตัดจอดแล้ว ไม่ได้ให้บริการ</div></div>`;
-    else if (r.zone && !inZone) warn = `<div class="alert alert-warning d-flex gap-2 py-2 mb-2"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ตามข้อมูล รถรุ่น <b>${esc(m.brand)} ${esc(m.model)}</b> ไม่มีให้บริการในเขต ${r.zone} (มีในเขต ${zoneList.map(([k]) => k).join(", ")}) — อาจโอนย้ายเขต หรือกรอกเลขเขตผิด</div></div>`;
-    else if (seq > m.total) warn = `<div class="alert alert-warning d-flex gap-2 py-2 mb-2"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ลำดับที่ ${seq} มากกว่าจำนวนรถรุ่นนี้ที่ยังให้บริการ (${m.total} คัน) — อาจปลดระวางแล้ว หรือข้อมูลไม่ครบ</div></div>`;
+    if (m.retired) warn = `<div class="alert alert-danger alert-compact"><i class="fa-solid fa-ban mt-1"></i><div><b>${esc(m.status)}</b> — ถูกตัดจอดแล้ว ไม่ได้ให้บริการ</div></div>`;
+    else if (r.zone && !inZone) warn = `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ตามข้อมูล รุ่นนี้ไม่มีในเขต ${r.zone} (มีในเขต ${zoneList.map(([k]) => k).join(", ")}) — อาจโอนย้ายเขต หรือเลขเขตผิด</div></div>`;
+    else if (seq > m.total) warn = `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ลำดับที่ ${seq} เกินจำนวนรถรุ่นนี้ที่ยังให้บริการ (${m.total} คัน) — อาจปลดระวางแล้ว</div></div>`;
+    if (sp) warn += `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-star mt-1"></i><div>${esc(sp.note)}</div></div>`;
 
-    const alt = alternatives.length ? `<div class="small text-secondary mt-2 px-1"><i class="fa-solid fa-shuffle me-1"></i>หรือหมายถึง ` +
-      alternatives.map(a => `<button type="button" class="btn btn-link btn-sm p-0 mono fw-bold align-baseline" data-q="${a.zone ? a.zone + "-" : ""}${a.num}">${a.zone ? a.zone + "-" : ""}${a.num}</button> (${esc(a.model.brand)} ${esc(a.model.model)}${a.zone ? " เขต " + a.zone : ""})`).join(" · ") + `</div>` : "";
+    const alt = alternatives.length ? `<div class="text-secondary mt-1 px-1" style="font-size:12.5px"><i class="fa-solid fa-shuffle me-1"></i>หรือหมายถึง ` +
+      alternatives.map(a => `<button type="button" class="btn btn-link btn-sm p-0 mono fw-bold align-baseline" style="font-size:12.5px" data-q="${a.zone ? a.zone + "-" : ""}${a.num}">${a.zone ? a.zone + "-" : ""}${a.num}</button> (${esc(a.model.brand)} ${esc(a.model.model)}${a.zone ? " เขต " + a.zone : ""})`).join(" · ") + `</div>` : "";
 
     out.innerHTML = `
       ${warn}
-      <article class="card rounded-4 overflow-hidden shadow-sm border-0">
-        <div class="plate border-bottom">
-          <div class="zone ${z ? "" : "unknown"}" style="${z ? "background:" + z.color : ""}"><div class="n">${r.zone || "?"}</div><div class="l">เขต</div></div>
-          <div class="info">
-            <div class="big"><span class="dim">${r.zone || "?"}-</span>${esc(r.num)}</div>
-            <div class="small mt-1 text-secondary"><span class="livery me-1"><i style="background:${liv.swatch[0]}"></i><i style="background:${liv.swatch[1]}"></i></span>${esc(liv.name)}</div>
-            <span class="badge rounded-pill mt-1 ${m.retired ? "text-bg-danger" : "text-bg-success"}"><i class="fa-solid ${m.retired ? "fa-ban" : "fa-circle-check"} me-1"></i>${esc(m.status)}</span>
-          </div>
+      <article class="card rounded-3 overflow-hidden shadow-sm border-0">
+        <div class="plate" style="border-left-color:${z ? z.color : "var(--bs-tertiary-bg)"}">
+          <div class="big"><span class="dim">${r.zone || "?"}-</span>${esc(r.num)}</div>
+          <div class="flex-grow-1"></div>
+          ${z ? `<span class="zbadge" style="background:${z.color}"><i class="fa-solid fa-location-dot"></i>เขต ${r.zone}</span>` : ""}
+          <span class="badge rounded-pill ${m.retired ? "text-bg-danger" : "text-bg-success"}"><i class="fa-solid ${m.retired ? "fa-ban" : "fa-circle-check"} me-1"></i>${esc(m.status)}</span>
         </div>
-        <div class="hero">
-          <img src="${img}" alt="${esc(m.brand)} ${esc(m.model)}" loading="lazy" onerror="this.parentNode.style.minHeight='120px';this.remove()">
-          <div class="cap"><i class="fa-solid fa-camera me-1"></i>ภาพตัวอย่างรถรุ่นเดียวกัน · <a href="${commons(imgFile)}" target="_blank" rel="noopener">Wikimedia Commons</a></div>
-        </div>
-        <div class="card-body">
-          <div class="d-flex align-items-baseline gap-2 mb-3">
-            <div class="fs-3 fw-bold lh-1">${esc(m.brand)}</div>
-            <div class="fs-5 text-secondary">${esc(m.model)}</div>
+        <div class="top">
+          <a href="${commons(imgFile)}" target="_blank" rel="noopener" title="ภาพตัวอย่างรถรุ่นเดียวกัน (Wikimedia Commons)"><img class="thumb" src="${img}" alt="${esc(m.brand)} ${esc(m.model)}" loading="lazy" onerror="this.style.visibility='hidden'"></a>
+          <div class="min-w-0">
+            <div class="model">${esc(m.brand)} <small>${esc(m.model)}</small></div>
+            <div class="facts">
+              <div><span class="livery me-1"><i style="background:${liv.swatch[0]}"></i><i style="background:${liv.swatch[1]}"></i></span>${esc(liv.name)}</div>
+              <div><i class="fa-solid fa-calendar-days"></i> พ.ศ. ${m.year} <span class="text-secondary">(อายุ ~${new Date().getFullYear() - (m.year - 543)} ปี)</span></div>
+              <div><i class="fa-solid fa-hashtag"></i> รุ่น <span class="mono">${esc(m.prefix)}${"X".repeat(m.digits - m.prefix.length)}</span> · คันที่ <b>${seq}</b><span class="text-secondary">/${m.total}</span>${inZone ? ` · ในเขต ${r.zone} มี ${inZone} คัน` : ""}</div>
+            </div>
           </div>
-          <div class="kv">
-            <div class="ic"><i class="fa-solid ${liv.ac ? "fa-snowflake" : "fa-wind"}"></i></div>
-            <div><div class="k">ประเภท</div><div class="v">${liv.ac ? "รถปรับอากาศ" : "รถธรรมดา (ไม่ปรับอากาศ)"}</div></div>
-            <div class="ic"><i class="fa-solid fa-calendar-days"></i></div>
-            <div><div class="k">เริ่มให้บริการ</div><div class="v">พ.ศ. ${m.year} <span class="fw-normal text-secondary small">(ค.ศ. ${m.year - 543} · อายุ ~${new Date().getFullYear() - (m.year - 543)} ปี)</span></div></div>
-            <div class="ic"><i class="fa-solid fa-hashtag"></i></div>
-            <div><div class="k">รหัสรุ่น / ลำดับที่</div><div class="v"><span class="mono">${esc(m.prefix)}${"X".repeat(m.digits - m.prefix.length)}</span> · คันที่ <b>${seq}</b> <span class="fw-normal text-secondary small">จาก ${m.total} คัน${m.range ? ` (${m.range[0]}–${m.range[1]})` : ""}</span></div></div>
-            ${inZone ? `<div class="ic"><i class="fa-solid fa-warehouse"></i></div><div><div class="k">รถรุ่นนี้ในเขต ${r.zone}</div><div class="v">${inZone} คัน</div></div>` : ""}
-          </div>
-          ${sp ? `<div class="alert alert-warning py-2 mt-3 mb-0 small"><i class="fa-solid fa-star me-1"></i>${esc(sp.note)}</div>` : ""}
-          ${m.note && !sp ? `<div class="small text-secondary mt-3"><i class="fa-solid fa-circle-info me-1"></i>${esc(m.note)}</div>` : ""}
         </div>
 
-        <div class="accordion accordion-flush border-top" id="acc">
-          <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#acZone"><i class="fa-solid fa-map-location-dot fa-fw"></i>เขตการเดินรถ${z ? "ที่ " + r.zone : ""} และอู่</button></h2>
-            <div id="acZone" class="accordion-collapse collapse show" data-bs-parent="#acc"><div class="accordion-body">
-              ${z ? `
-                <p class="mb-1"><b>สำนักงานเขต:</b> อู่${esc(z.office)}</p>
-                <p class="small text-secondary mb-2">${esc(z.area)}${z.extra ? `<br><i class="fa-solid fa-plus me-1"></i>${esc(z.extra)}` : ""}</p>
-                <div class="row g-2">${z.depots.map(([k, v, s]) => `<div class="col-12 col-sm-6"><div class="depot"><div class="k">${esc(k)}</div><div class="fw-semibold">อู่${esc(v)}</div>${s ? `<div class="small text-secondary">${esc(s)}</div>` : ""}</div></div>`).join("")}</div>`
-              : `<p class="text-secondary mb-2"><i class="fa-solid fa-circle-question me-1"></i>ยังไม่ทราบเขต — แตะเลือกเขตด้านบนหรือพิมพ์ <span class="mono">เขต-หมายเลข</span></p>`}
-              <div class="small text-secondary mt-3 mb-1">รถรุ่นนี้แยกตามเขต</div>
-              <div class="d-flex gap-2 flex-wrap">${zoneList.map(([k, v]) => `<button type="button" class="fleet-z ${+k === r.zone ? "here" : ""}" data-q="${k}-${r.num}"><span class="dot" style="background:${ZONES[k].color}"></span>เขต <b class="mono">${k}</b> · ${v} คัน</button>`).join("")}</div>
-            </div></div>
-          </div>
-          <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acFare"><i class="fa-solid fa-ticket fa-fw"></i>อัตราค่าโดยสาร</button></h2>
-            <div id="acFare" class="accordion-collapse collapse" data-bs-parent="#acc"><div class="accordion-body">
-              <div class="small text-secondary mb-2">${esc(liv.name)}</div>${fareTable(liv)}
-            </div></div>
-          </div>
-        </div>
-        <div class="card-footer bg-body-tertiary d-flex gap-2">
-          <button type="button" class="btn btn-outline-secondary flex-fill" id="shareBtn"><i class="fa-solid fa-share-nodes me-1"></i>แชร์</button>
-          <a class="btn btn-outline-secondary flex-fill" href="${SOURCE_URL}" target="_blank" rel="noopener"><i class="fa-brands fa-wikipedia-w me-1"></i>ที่มา</a>
-        </div>
+        <button class="row-btn" type="button" data-bs-toggle="collapse" data-bs-target="#dZone" aria-expanded="false">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span class="t">${z ? `<b>เขต ${r.zone}</b> · สนง. อู่${esc(z.office)} · ${z.depots.length} กปด.` : `ไม่ระบุเขต · รุ่นนี้มีในเขต ${zoneList.map(([k]) => k).join(", ")}`}</span>
+          <i class="fa-solid fa-chevron-down chev"></i>
+        </button>
+        <div class="collapse" id="dZone"><div class="detail">
+          ${z ? `<div class="text-secondary mb-2">${esc(z.area)}${z.extra ? `<br><i class="fa-solid fa-plus me-1"></i>${esc(z.extra)}` : ""}</div>
+            <div class="d-grid gap-1 mb-2">${z.depots.map(([k, v, s]) => `<div class="depot"><span class="k me-2">${esc(k)}</span><b>อู่${esc(v)}</b>${s ? `<div class="text-secondary" style="font-size:11.5px">${esc(s)}</div>` : ""}</div>`).join("")}</div>` : ""}
+          <div class="text-secondary mb-1" style="font-size:12px">รถรุ่นนี้แยกตามเขต</div>
+          <div class="d-flex gap-1 flex-wrap">${zoneList.map(([k, v]) => `<button type="button" class="fleet-z ${+k === r.zone ? "here" : ""}" data-q="${k}-${r.num}"><span class="dot" style="background:${ZONES[k].color}"></span>เขต <b class="mono">${k}</b> · ${v}</button>`).join("")}</div>
+        </div></div>
+
+        <button class="row-btn" type="button" data-bs-toggle="collapse" data-bs-target="#dFare" aria-expanded="false">
+          <i class="fa-solid fa-ticket"></i><span class="t">${fareSummary(liv.fare)}</span><i class="fa-solid fa-chevron-down chev"></i>
+        </button>
+        <div class="collapse" id="dFare"><div class="detail">${fareDetail(liv.fare)}</div></div>
+
       </article>
       ${alt}`;
 
-    $("#shareBtn").onclick = async () => {
-      const url = location.origin + location.pathname + "#" + encodeURIComponent(label);
-      const text = `${label} — ${m.brand} ${m.model} (${liv.name})`;
-      try { if (navigator.share) await navigator.share({ title: "รถเมล์ " + label, text, url }); else { await navigator.clipboard.writeText(url); toast("คัดลอกลิงก์แล้ว"); } } catch {}
-    };
     pushRecent(label);
-    out.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function toast(msg) {
-    const el = document.createElement("div");
-    el.className = "toast align-items-center text-bg-dark border-0 position-fixed start-50 translate-middle-x";
-    el.style.bottom = "calc(20px + var(--safe-b))"; el.style.zIndex = 2000;
-    el.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="fa-solid fa-check me-2"></i>${esc(msg)}</div></div>`;
-    document.body.appendChild(el); const t = new bootstrap.Toast(el, { delay: 1800 }); t.show(); el.addEventListener("hidden.bs.toast", () => el.remove());
-  }
 
-  // ── ประวัติล่าสุด ──
+  // ชิป: ล่าสุด + ตัวอย่าง (แถวเดียวเลื่อนได้)
   function pushRecent(label) {
-    const list = (store.get("recent") || []).filter(x => x !== label); list.unshift(label); store.set("recent", list.slice(0, 6)); renderRecent();
+    if (label.startsWith("?")) return;
+    const list = (store.get("recent") || []).filter(x => x !== label); list.unshift(label); store.set("recent", list.slice(0, 5)); renderChips();
   }
-  function renderRecent() {
-    const list = store.get("recent") || [];
-    $("#recent").classList.toggle("d-none", !list.length);
-    $("#recentList").innerHTML = list.map(l => `<button class="btn btn-outline-secondary chip" type="button" data-q="${esc(l)}">${esc(l)}</button>`).join("");
+  function renderChips() {
+    const recent = store.get("recent") || [];
+    const ex = EXAMPLES.filter(e => !recent.includes(e));
+    $("#chips").innerHTML =
+      (recent.length ? `<span class="lbl"><i class="fa-solid fa-clock-rotate-left"></i></span>` + recent.map(l => `<button class="btn btn-outline-secondary chip" type="button" data-q="${esc(l)}">${esc(l)}</button>`).join("") : "") +
+      `<span class="lbl">ลอง</span>` + ex.map(l => `<button class="btn btn-outline-secondary chip" type="button" data-q="${l}">${l}</button>`).join("");
   }
-  renderRecent();
+  renderChips();
 
   function lookup(raw, push = true) {
-    const res = parse(raw, zone);
-    if (res.error) { out.innerHTML = `<div class="alert alert-danger d-flex gap-2 py-2"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`; return; }
+    const res = parse(raw, zoneSel.value);
+    if (res.error) { out.innerHTML = `<div class="alert alert-danger alert-compact mb-0"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`; return; }
     const [first, ...rest] = res.results;
-    render(first, rest, raw);
-    if (push) history.replaceState(null, "", "#" + encodeURIComponent((first.zone || "") + (first.zone ? "-" : "") + first.num));
+    render(first, rest);
+    if (push) history.replaceState(null, "", "#" + encodeURIComponent((first.zone ? first.zone + "-" : "") + first.num));
     num.blur();
   }
-  // ตั้งค่าฟอร์มจากข้อความเช่น "7-3077" แล้วค้นหา
   function setAndLookup(q) {
     const mm = q.match(/^([1-8])-(\d+)$/);
-    if (mm) { setZone(mm[1]); num.value = mm[2]; } else { setZone(""); num.value = q; }
-    lookup(num.value);
+    if (mm) { zoneSel.value = mm[1]; num.value = mm[2]; } else { zoneSel.value = ""; num.value = q; }
+    paintZone(); lookup(num.value);
   }
 
   form.addEventListener("submit", e => { e.preventDefault(); lookup(num.value); });
-  $("#clearBtn").onclick = () => { num.value = ""; setZone(""); out.innerHTML = ""; history.replaceState(null, "", location.pathname); num.focus(); };
-  document.addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) setAndLookup(b.dataset.q); });
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-q]"); if (!b) return;
+    bootstrap.Offcanvas.getInstance($("#models"))?.hide();
+    setAndLookup(b.dataset.q);
+  });
 
-  // ── รายการรุ่น ──
   $("#refgrid").innerHTML = MODELS.map(m => {
     const liv = LIVERY[m.livery], zs = Object.keys(m.zones);
     const sample = zs[0] + "-" + (m.range ? m.range[0] : m.prefix + "1".padStart(m.digits - m.prefix.length, "0"));
@@ -391,14 +324,13 @@
         <span class="livery me-1"><i style="background:${liv.swatch[0]}"></i><i style="background:${liv.swatch[1]}"></i></span><span class="m">${esc(m.brand)} ${esc(m.model)}</span>
         <div class="d">พ.ศ. ${m.year} · ${m.total} คัน · เขต ${zs.join(", ")}${m.retired ? ' · <span class="text-danger">ตัดจอด</span>' : ""}</div>
       </span>
-      <i class="fa-solid fa-chevron-right text-secondary small"></i>
+      <i class="fa-solid fa-chevron-right text-secondary" style="font-size:11px"></i>
     </button>`;
   }).join("");
 
-  // ── deep link ──
   const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
   addEventListener("hashchange", fromHash);
-  if (location.hash.length > 1) fromHash();
+  if (location.hash.length > 1) fromHash(); else num.focus();
 })();
 </script>
 </body>
