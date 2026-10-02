@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>คันนี้ดีไหม? — ค้นหาและรีวิวรถเมล์ ขสมก. รายคัน</title>
 <meta name="description" content="กรอกหมายเลขข้างรถโดยสาร ขสมก. ดูรุ่น เขต อู่ ค่าโดยสาร และรีวิวการขับ การจอดป้าย สภาพรถ ของคันนั้นจากผู้โดยสาร">
-<meta name="theme-color" content="#e9edf1">
+<meta name="theme-color" content="#dfe6f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="คันนี้ดีไหม">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
@@ -19,7 +19,7 @@
 </head>
 <body>
 
-<header class="sticky top-0 z-30 bg-paper/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+<header class="glass-bar sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
   <div class="mx-auto flex h-14 max-w-[640px] items-center gap-1 px-4">
     <div class="flex-1 font-display text-[21px] font-bold tracking-tight">คันนี้ดีไหม<span class="text-route">?</span></div>
     <button class="tag mr-1 bg-ticket px-3 py-1 font-display text-[14px] text-ticket-ink" id="ptsPill" type="button" hidden aria-label="แต้มของฉัน"><i class="fa-solid fa-ticket-simple"></i><span>0</span></button>
@@ -31,10 +31,10 @@
 <main class="mx-auto max-w-[640px] px-4">
 
  <section class="view" id="v-search">
-  <form id="form" class="sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 bg-paper/85 px-4 pb-3 backdrop-blur-md" autocomplete="off">
+  <form id="form" class="glass-bar sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 px-4 pb-3" autocomplete="off">
     <div class="relative">
       <i class="fa-solid fa-hashtag pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[18px] text-mute"></i>
-      <input id="num" class="h-16 w-full rounded-2xl border-2 border-transparent bg-card pr-12 pl-11 font-display text-[30px] font-bold tracking-wider text-ink shadow-[0_8px_24px_-18px_rgb(20_28_39/.5)] outline-none transition placeholder:font-sans placeholder:text-[16px] placeholder:font-medium placeholder:tracking-normal placeholder:text-mute/70 focus:border-route"
+      <input id="num" class="glass h-16 w-full rounded-2xl !border-2 pr-12 pl-11 font-display text-[30px] font-bold tracking-wider text-ink outline-none transition placeholder:font-sans placeholder:text-[16px] placeholder:font-medium placeholder:tracking-normal placeholder:text-mute/70 focus:border-route"
         type="text" inputmode="numeric" placeholder="พิมพ์เลขข้างรถ เช่น 7-3077" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false" autocapitalize="off" autocorrect="off">
       <button class="icon-btn absolute top-1/2 right-2 -translate-y-1/2" type="button" id="clearBtn" aria-label="ล้าง" hidden><i class="fa-solid fa-circle-xmark"></i></button>
     </div>
@@ -49,7 +49,7 @@
  </section>
 
  <section class="view" id="v-feed" hidden>
-  <div class="sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 flex items-center gap-2 bg-paper/85 px-4 pb-3 backdrop-blur-md">
+  <div class="glass-bar sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 flex items-center gap-2 px-4 pb-3">
     <div class="seg flex-1" role="tablist">
       <button class="on" type="button" data-feed="new">ล่าสุด</button>
       <button type="button" data-feed="top">มีประโยชน์</button>
@@ -65,8 +65,8 @@
 
 </main>
 
-<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[var(--safe-b)] backdrop-blur-md" aria-label="เมนูหลัก">
-  <div class="mx-auto flex max-w-[640px]">
+<nav class="fixed inset-x-3 bottom-[calc(10px+var(--safe-b))] z-30" aria-label="เมนูหลัก">
+  <div class="glass mx-auto flex max-w-[616px] rounded-[26px] !bg-solid px-1">
     <button type="button" class="tab on" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นหา</button>
     <button type="button" class="tab" data-tab="feed"><i class="fa-solid fa-comments"></i>Feed</button>
     <button type="button" class="tab" data-tab="shop"><i class="fa-solid fa-gift"></i>แลกของ</button>
@@ -125,7 +125,7 @@
 
 <!-- รุ่นรถทั้งหมด -->
 <dialog class="sheet side" id="models" aria-labelledby="mTitle">
-  <div class="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-card px-5 py-3">
+  <div class="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-solid px-5 py-3 backdrop-blur-xl">
     <h2 class="flex-1 font-display text-[19px] font-bold" id="mTitle">รถ ขสมก. ทั้ง 13 รุ่น</h2>
     <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
   </div>
@@ -177,7 +177,7 @@
   document.addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) sheet(b.dataset.open).show(); });
 
   // ---------- ธีม ----------
-  const applyTheme = t => { document.documentElement.classList.toggle("dark", t === "dark"); $("#themeBtn i").className = "fa-solid " + (t === "dark" ? "fa-sun" : "fa-moon"); $('meta[name="theme-color"]').content = t === "dark" ? "#0e131a" : "#e9edf1"; };
+  const applyTheme = t => { document.documentElement.classList.toggle("dark", t === "dark"); $("#themeBtn i").className = "fa-solid " + (t === "dark" ? "fa-sun" : "fa-moon"); $('meta[name="theme-color"]').content = t === "dark" ? "#0b1020" : "#dfe6f0"; };
   applyTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
   $("#themeBtn").onclick = () => { const t = document.documentElement.classList.contains("dark") ? "light" : "dark"; store.set("theme", t); applyTheme(t); };
 
@@ -291,7 +291,7 @@
     const alt = alternatives.length ? `<div class="mt-2 flex flex-wrap items-center gap-1.5 px-1 text-[13px] text-mute"><i class="fa-solid fa-shuffle"></i>หรือหมายถึง ` +
       alternatives.map(a => { const q = (a.zone ? a.zone + "-" : "") + a.num; return `<button type="button" class="chip !text-[13px]" data-q="${q}">${q} <span class="font-sans font-normal text-mute">${esc(a.model.brand)}</span></button>`; }).join("") + `</div>` : "";
 
-    const fact = (k, v, sub) => `<div class="bg-card px-2 py-2.5"><dt class="eyebrow !text-[11px]">${k}</dt><dd class="num text-[19px] font-bold leading-tight">${v}</dd><dd class="text-[11.5px] text-mute">${sub}</dd></div>`;
+    const fact = (k, v, sub) => `<div class="px-2 py-2.5"><dt class="eyebrow !text-[11px]">${k}</dt><dd class="num text-[19px] font-bold leading-tight">${v}</dd><dd class="text-[11.5px] text-mute">${sub}</dd></div>`;
     const row = (icon, title, body) => `<details class="group border-t border-line">
         <summary class="flex min-h-12 items-center gap-3 px-4 py-2.5 text-[14px]"><i class="fa-solid ${icon} w-5 text-center text-route"></i><span class="min-w-0 flex-1">${title}</span><i class="fa-solid fa-chevron-down text-[12px] text-mute transition group-open:rotate-180"></i></summary>
         <div class="px-4 pb-4 text-[13.5px]">${body}</div></details>`;
@@ -314,7 +314,7 @@
             <div class="mt-1 text-[13px] leading-snug">${esc(liv.name)}</div>
           </div>
         </div>
-        <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center">
+        <dl class="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
           ${fact("ปีที่เริ่มวิ่ง", m.year, `อายุ ~${new Date().getFullYear() - (m.year - 543)} ปี`)}
           ${fact("คันที่", `${seq}<span class="text-[13px] text-mute">/${m.total}</span>`, `รุ่น ${esc(m.prefix)}${"X".repeat(m.digits - m.prefix.length)}`)}
           ${fact("ค่าโดยสาร", fare, fareSub)}
@@ -690,8 +690,8 @@
     el.innerHTML = `<div class="card rise overflow-hidden">
         <div class="flex items-center gap-3.5 p-4"><div class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sunk text-[36px]">${esc(me.user.avatar)}</div>
           <div class="min-w-0 flex-1"><div class="truncate font-display text-[22px] font-bold leading-tight">${esc(me.user.display_name)}</div><div class="truncate text-[13px] text-mute">${esc(me.user.email)}</div></div></div>
-        <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center">
-          ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="bg-card py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
+        <dl class="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
+          ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
         </dl>
       </div>
       <div class="card mt-3 overflow-hidden">
