@@ -1,0 +1,154 @@
+/* คันนี้ดีไหม? — Tailwind CSS v4 source · build: npm run build:css → app.css */
+@import "tailwindcss" source(none);
+@source "../index.html";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* โทเคน: คอนกรีตป้ายรถเมล์ · น้ำเงินสายรถ (ปุ่มกด) · เหลืองตั๋ว (แต้ม/ดาว) · แดงเตือน (แจ้งเหตุเท่านั้น) */
+@theme static {
+  --font-display: "Chakra Petch", "Noto Sans Thai", system-ui, sans-serif;
+  --font-sans: "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-paper: var(--c-paper);
+  --color-card: var(--c-card);
+  --color-sunk: var(--c-sunk);
+  --color-ink: var(--c-ink);
+  --color-mute: var(--c-mute);
+  --color-line: var(--c-line);
+  --color-route: var(--c-route);
+  --color-route-ink: var(--c-route-ink);
+  --color-route-soft: var(--c-route-soft);
+  --color-ticket: #f2b01e;
+  --color-ticket-ink: #6b4a00;
+  --color-ticket-soft: var(--c-ticket-soft);
+  --color-alarm: var(--c-alarm);
+  --color-alarm-soft: var(--c-alarm-soft);
+  --color-ok: var(--c-ok);
+  --color-ok-soft: var(--c-ok-soft);
+
+  --radius-plate: 20px;
+  --ease-out-back: cubic-bezier(.2, .8, .2, 1);
+}
+
+:root {
+  --c-paper: #e9edf1; --c-card: #ffffff; --c-sunk: #f2f4f7;
+  --c-ink: #141c27; --c-mute: #5a6574; --c-line: #d6dce4;
+  --c-route: #2346d6; --c-route-ink: #1a34a3; --c-route-soft: #e3e9ff;
+  --c-ticket-soft: #fff1cc;
+  --c-alarm: #d1362a; --c-alarm-soft: #fde6e3;
+  --c-ok: #11815a; --c-ok-soft: #dcf3e9;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+.dark {
+  --c-paper: #0e131a; --c-card: #171f29; --c-sunk: #1e2833;
+  --c-ink: #e7ecf2; --c-mute: #95a2b2; --c-line: #2a3542;
+  --c-route: #7b93ff; --c-route-ink: #a9b8ff; --c-route-soft: #222e55;
+  --c-ticket-soft: #3a2f12;
+  --c-alarm: #ff7a6e; --c-alarm-soft: #3d1d1b;
+  --c-ok: #4fd29b; --c-ok-soft: #13352a;
+  color-scheme: dark;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-paper text-ink font-sans antialiased; line-height: 1.6; padding-bottom: calc(84px + var(--safe-b)); }
+  :focus-visible { outline: 2.5px solid var(--c-route); outline-offset: 2px; border-radius: 8px; }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; }
+  summary { list-style: none; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  [hidden] { display: none !important; }
+}
+
+@layer components {
+  /* ป้ายเลขข้างรถ = ลายสีรถรุ่นนั้นจริง (--body / --band มาจาก data.js) */
+  .plate {
+    --band: var(--band-c, #d3222a);
+    position: relative; overflow: hidden; border-radius: var(--radius-plate) var(--radius-plate) 0 0;
+    background: var(--body, #f3e6c8); color: #141c27; padding: 14px 18px 30px;
+  }
+  .plate::after {
+    content: ""; position: absolute; left: -10%; right: -10%; bottom: 0; height: 22px;
+    background: var(--band); transform: skewY(-2.2deg); transform-origin: right bottom;
+    box-shadow: 0 -5px 0 0 color-mix(in srgb, var(--band) 35%, transparent);
+  }
+  .plate .fleet { font-family: var(--font-display); font-weight: 700; font-size: clamp(54px, 17vw, 72px); line-height: .95; letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+  .plate .fleet .z { opacity: .5; }
+  .mini-plate {
+    display: inline-flex; align-items: center; position: relative; overflow: hidden; border-radius: 7px;
+    padding: 0 8px 3px; background: var(--body, #f3e6c8); color: #141c27;
+    font-family: var(--font-display); font-weight: 700; font-size: 14px; line-height: 1.5;
+  }
+  .mini-plate::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--band-c, #d3222a); }
+
+  .card { @apply bg-card rounded-[18px] shadow-[0_1px_0_var(--c-line),0_8px_24px_-18px_rgb(20_28_39/.35)]; }
+  .eyebrow { @apply font-display text-[12.5px] font-semibold uppercase tracking-[.08em] text-mute; }
+  .num { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+
+  .btn-primary, .btn-quiet, .btn-alarm { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 font-semibold transition active:scale-[.97] disabled:opacity-50; }
+  .btn-primary { @apply bg-route text-white hover:bg-route-ink dark:text-paper; }
+  .btn-quiet { @apply bg-sunk text-ink hover:bg-line; }
+  .btn-alarm { @apply bg-alarm-soft text-alarm; }
+  .icon-btn { @apply grid h-10 w-10 place-items-center rounded-full text-[17px] text-mute transition hover:bg-sunk active:scale-90; }
+  .hb { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 text-[12.5px] font-semibold text-ink transition active:scale-95; }
+  .hb.on { @apply bg-route-soft text-route; }
+  .tag { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold; }
+
+  .seg { @apply flex gap-1 rounded-2xl bg-sunk p-1; }
+  .seg > button { @apply flex-1 rounded-xl px-3 py-2 text-[13.5px] font-semibold text-mute transition; }
+  .seg > button.on { @apply bg-card text-ink shadow-sm; }
+
+  .chip { @apply shrink-0 rounded-full border border-line bg-card px-3 py-1 font-display text-[14px] font-semibold text-ink transition active:scale-95; }
+  .field { @apply w-full rounded-xl border-2 border-line bg-card px-3 py-2.5 text-[15px] text-ink outline-none transition placeholder:text-mute/70 focus:border-route; }
+
+  .bar-t { @apply h-2 flex-1 overflow-hidden rounded-full bg-sunk; }
+  .bar-t > i { @apply block h-full rounded-full bg-ticket; }
+
+  .zb { @apply h-11 min-w-0 flex-1 rounded-xl border-2 border-transparent bg-card font-display text-[17px] font-bold text-ink transition active:scale-90; }
+  .zb.any { @apply flex-[1.9] font-sans text-[13px] font-semibold text-mute; }
+  .zb.active { @apply bg-ink text-paper; }
+  .zb.hint:not(.active) { @apply border-dashed border-ink/50; }
+
+  .tab { @apply flex flex-1 flex-col items-center gap-0.5 pt-2 pb-2 text-[11.5px] font-medium text-mute; }
+  .tab i { @apply grid h-8 w-14 place-items-center rounded-full text-[17px] transition; }
+  .tab.on { @apply text-ink font-semibold; }
+  .tab.on i { @apply bg-route-soft text-route; }
+
+  /* bottom sheet ด้วย <dialog> */
+  dialog.sheet {
+    @apply m-0 mt-auto mx-auto w-full max-w-[640px] max-h-[92dvh] overflow-y-auto rounded-t-[26px] bg-card p-0 text-ink;
+    border: 0; padding-bottom: var(--safe-b);
+  }
+  dialog.sheet[open] { animation: sheet-up .32s var(--ease-out-back); }
+  dialog.sheet::backdrop { background: rgb(10 14 20 / .45); backdrop-filter: blur(2px); animation: fade .2s; }
+  dialog.sheet.side { @apply mt-0 mr-0 ml-auto h-dvh max-h-dvh max-w-[420px] rounded-none rounded-l-[26px]; }
+  dialog.sheet.side[open] { animation: sheet-left .3s var(--ease-out-back); }
+  .grab { @apply mx-auto mt-2.5 mb-1 h-1.5 w-10 rounded-full bg-line; }
+
+  .star-in button { @apply px-0.5 text-[30px] leading-none text-line transition active:scale-125; }
+  .star-in button.on { @apply text-ticket; }
+
+  /* ตั๋วแต้ม: รอยปรุสองข้างแบบตั๋วรถเมล์ */
+  .ticket {
+    --notch: 11px;
+    background: radial-gradient(circle at 0 50%, transparent var(--notch), var(--color-ticket) calc(var(--notch) + .5px)) left / 51% 100% no-repeat,
+                radial-gradient(circle at 100% 50%, transparent var(--notch), var(--color-ticket) calc(var(--notch) + .5px)) right / 51% 100% no-repeat;
+    color: var(--color-ticket-ink); border-radius: 14px;
+  }
+  .ticket .perf { border-left: 2px dashed rgb(107 74 0 / .35); }
+
+  .toastx { @apply pointer-events-none fixed left-1/2 z-50 max-w-[90vw] -translate-x-1/2 translate-y-4 rounded-full bg-ink px-4 py-2 text-[14px] text-paper opacity-0 transition; bottom: calc(92px + var(--safe-b)); }
+  .toastx.show { @apply translate-y-0 opacity-100; }
+
+  .rise { animation: rise .35s var(--ease-out-back) both; }
+}
+
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-left { from { transform: translateX(100%); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after, dialog.sheet[open], dialog.sheet::backdrop { animation: none !important; transition: none !important; }
+}

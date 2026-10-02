@@ -9,8 +9,10 @@ RSYNC="rsync -az --delete --exclude .DS_Store -e 'ssh -p $PORT'"
 
 $SSH 'bash -s' < deploy/server-setup.sh
 
-# web tier: static
-eval $RSYNC index.html data.js "$HOST:/var/www/bus/"
+# web tier: static (สร้าง app.css จาก Tailwind ก่อน)
+[ -d node_modules ] || npm install --silent
+npm run --silent build:css
+eval $RSYNC index.html data.js app.css "$HOST:/var/www/bus/"
 eval $RSYNC pitch/ "$HOST:/var/www/bus/pitch/"
 # app tier: API (+ data.js ชุดเดียวกับหน้าเว็บ)
 eval $RSYNC --exclude node_modules api/ "$HOST:/opt/bus-api/"

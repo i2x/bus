@@ -1,317 +1,206 @@
 <!DOCTYPE html>
-<html lang="th" data-bs-theme="light">
+<html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>คันนี้ดีไหม? — ค้นหาและรีวิวรถเมล์ ขสมก. รายคัน</title>
 <meta name="description" content="กรอกหมายเลขข้างรถโดยสาร ขสมก. ดูรุ่น เขต อู่ ค่าโดยสาร และรีวิวการขับ การจอดป้าย สภาพรถ ของคันนั้นจากผู้โดยสาร">
-<meta name="theme-color" content="#d3222a">
+<meta name="theme-color" content="#e9edf1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="คันนี้ดีไหม">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23d3222a'/><text x='50' y='72' text-anchor='middle' font-size='60'>🚌</text></svg>">
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232346d6'/><text x='50' y='72' text-anchor='middle' font-size='60'>🚌</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
-
-<style>
-  :root {
-    --bmta: #d3222a;
-    --bs-body-font-family: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --bs-body-font-size: .95rem;
-    --bs-primary: #d3222a; --bs-primary-rgb: 211, 34, 42; --bs-link-color-rgb: 211, 34, 42;
-    --safe-b: env(safe-area-inset-bottom, 0px);
-  }
-  [data-bs-theme="light"] { --bs-body-bg: #f6f3ec; --bs-tertiary-bg: #ece7db; --bs-secondary-bg: #f0ece2; }
-  [data-bs-theme="dark"]  { --bs-body-bg: #121110; --bs-tertiary-bg: #1f1d1a; --bs-secondary-bg: #262320; --bs-border-color: #35312b; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { padding-bottom: calc(76px + var(--safe-b)); -webkit-tap-highlight-color: transparent; }
-  .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
-  .btn-primary { --bs-btn-bg: var(--bmta); --bs-btn-border-color: var(--bmta); --bs-btn-hover-bg: #b81c23; --bs-btn-hover-border-color: #b81c23; --bs-btn-active-bg: #a0181f; }
-  @media (min-width: 768px) { .container-app { max-width: 640px; } }
-
-  /* app bar */
-  .appbar { position: sticky; top: 0; z-index: 1030; background: var(--bmta); color: #fff; padding-top: env(safe-area-inset-top, 0px); }
-  .appbar .brand { font-weight: 700; font-size: 16px; }
-  .appbar .btn { --bs-btn-color: #fff; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: rgba(255,255,255,.15); --bs-btn-active-bg: rgba(255,255,255,.25); border: 0; }
-
-  /* search */
-  .search { position: sticky; top: 44px; z-index: 1020; background: var(--bs-body-bg); padding-bottom: 4px; }
-  .numwrap { position: relative; }
-  .numwrap .lead-ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--bs-secondary-color); font-size: 18px; pointer-events: none; }
-  #num { font-family: "IBM Plex Mono", monospace; font-size: 28px; font-weight: 700; letter-spacing: .08em; min-height: 58px; padding: 0 48px 0 42px; border-width: 2px; border-radius: 14px; }
-  #num:focus { border-color: var(--bmta); box-shadow: 0 0 0 4px rgba(211,34,42,.15); }
-  #num::placeholder { font-family: var(--bs-body-font-family); font-weight: 500; letter-spacing: 0; opacity: .5; font-size: 17px; }
-  .numwrap .clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; background: none; color: var(--bs-secondary-color); font-size: 20px; }
-  .zones { display: flex; gap: 5px; margin-top: 6px; }
-  .zb { flex: 1 1 0; min-width: 0; height: 40px; border-radius: 10px; border: 1.5px solid var(--bs-border-color); background: var(--bs-tertiary-bg); color: var(--bs-body-color);
-        font-family: "IBM Plex Mono", monospace; font-weight: 700; font-size: 16px; padding: 0; transition: transform .08s; }
-  .zb.any { flex: 1.9 1 0; font-family: var(--bs-body-font-family); font-size: 13px; font-weight: 600; }
-  .zb:active { transform: scale(.93); }
-  .zb.active { color: #fff; border-color: transparent; background: var(--bs-body-color); }
-  [data-bs-theme="dark"] .zb.active.any { color: #111; }
-  .zb.hint { border-color: var(--bs-body-color); border-style: dashed; }
-  .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 6px 0 2px; -webkit-overflow-scrolling: touch; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: 0 0 auto; --bs-btn-padding-y: .2rem; --bs-btn-padding-x: .7rem; --bs-btn-font-size: .8rem; border-radius: 999px; font-family: "IBM Plex Mono", monospace; font-weight: 600; }
-  .chips .lbl { flex: 0 0 auto; font-size: 12px; color: var(--bs-secondary-color); align-self: center; }
-
-  /* result */
-  .card { animation: rise .25s cubic-bezier(.2,.7,.2,1); }
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
-  .plate { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 0; border-left: 10px solid var(--bs-tertiary-bg); }
-  .plate .big { font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: .04em; padding-left: 10px; }
-  .plate .big .dim { opacity: .45; }
-  .zbadge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; color: #fff; }
-  .top { display: grid; grid-template-columns: 116px 1fr; gap: 10px; padding: 0 12px 10px; }
-  .thumb { width: 116px; height: 88px; object-fit: cover; border-radius: 10px; background: var(--bs-tertiary-bg); display: block; }
-  .top .model { font-weight: 700; font-size: 18px; line-height: 1.15; }
-  .top .model small { font-weight: 500; color: var(--bs-secondary-color); font-size: 14px; }
-  .facts { font-size: 13px; line-height: 1.45; margin-top: 3px; }
-  .facts i { width: 16px; text-align: center; color: var(--bs-secondary-color); margin-right: 2px; }
-  .livery { display: inline-flex; width: 22px; height: 12px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(0,0,0,.25); vertical-align: -1px; }
-  .livery i { flex: 1; width: auto; margin: 0; }
-  .row-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; background: none; border: 0; border-top: 1px solid var(--bs-border-color); color: inherit; text-align: left; font-size: 13.5px; min-height: 44px; }
-  .row-btn > i:first-child { color: var(--bmta); width: 18px; text-align: center; }
-  .row-btn .t { flex: 1; min-width: 0; }
-  .row-btn .chev { transition: transform .2s; color: var(--bs-secondary-color); font-size: 12px; }
-  .row-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
-  .detail { padding: 4px 12px 12px 42px; font-size: 13px; }
-  .depot { border: 1px solid var(--bs-border-color); border-radius: 8px; padding: 6px 10px; background: var(--bs-tertiary-bg); }
-  .depot .k { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--bs-secondary-color); }
-  .fleet-z { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--bs-border-color); border-radius: 7px; padding: 2px 8px; font-size: 12px; background: var(--bs-tertiary-bg); color: inherit; }
-  .fleet-z.here { border-color: var(--bs-body-color); }
-  .fleet-z .dot { width: 9px; height: 9px; border-radius: 3px; }
-  table.fare { font-size: 12.5px; margin: 0; }
-  table.fare td { font-family: "IBM Plex Mono", monospace; font-weight: 600; white-space: nowrap; padding: 4px 6px; }
-  table.fare th { font-size: 11px; white-space: nowrap; font-weight: 600; color: var(--bs-secondary-color); padding: 4px 6px; }
-  .alert-compact { padding: 6px 10px; font-size: 13px; margin-bottom: 8px; display: flex; gap: 8px; align-items: flex-start; }
-
-  /* reference list */
-  .ref-item { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px; }
-  .ref-item .pf { font-family: "IBM Plex Mono", monospace; font-size: 15px; font-weight: 700; min-width: 66px; }
-  .ref-item .pf .x { opacity: .4; }
-  .ref-item .m { font-weight: 600; font-size: 14px; line-height: 1.2; }
-  .ref-item .d { font-size: 11.5px; color: var(--bs-secondary-color); }
-
-  /* app: แต้ม, แท็บล่าง, view */
-  .pts { display: inline-flex; align-items: center; gap: 4px; background: #ffe8b3; color: #7a4d00; border-radius: 999px; padding: 2px 10px; font-size: 12.5px; font-weight: 700; font-family: "IBM Plex Mono", monospace; border: 0; }
-  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; background: var(--bs-body-bg); border-top: 1px solid var(--bs-border-color); padding-bottom: var(--safe-b); }
-  .tabbar .in { display: flex; max-width: 640px; margin: 0 auto; }
-  .tabbar button { flex: 1; border: 0; background: none; padding: 7px 0 8px; font-size: 11px; color: var(--bs-secondary-color); }
-  .tabbar button i { display: block; font-size: 18px; margin-bottom: 2px; }
-  .tabbar button.on { color: var(--bmta); font-weight: 600; }
-  .view-h { display: flex; align-items: center; gap: 6px; padding: 4px 0 8px; }
-  .pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--bs-tertiary-bg); border: 0; color: inherit; }
-  .pill.on { background: var(--bs-body-color); color: var(--bs-body-bg); }
-  .soon { font-size: 10.5px; font-weight: 700; background: #dfe9fb; color: #2b6fd6; border-radius: 999px; padding: 1px 8px; vertical-align: 2px; }
-
-  /* รีวิว */
-  .rating { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 12px; border-top: 1px solid var(--bs-border-color); }
-  .rating .avg { font-family: "IBM Plex Mono", monospace; font-size: 38px; font-weight: 700; line-height: 1; }
-  .stars, .rv .st { color: #e0a100; letter-spacing: 1px; }
-  .stars { font-size: 14px; }
-  .bar { display: grid; grid-template-columns: 58px 1fr 26px; gap: 8px; align-items: center; font-size: 12.5px; }
-  .bar + .bar { margin-top: 4px; }
-  .bar .t { height: 8px; border-radius: 99px; background: var(--bs-tertiary-bg); overflow: hidden; }
-  .bar .t i { display: block; height: 100%; background: var(--bmta); border-radius: 99px; }
-  .bar b { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; }
-  .rv { padding: 10px 12px; border-top: 1px solid var(--bs-border-color); }
-  .rv .who { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--bs-secondary-color); margin-bottom: 4px; min-width: 0; flex-wrap: wrap; }
-  .rv .av { width: 28px; height: 28px; border-radius: 50%; background: var(--bs-tertiary-bg); display: grid; place-items: center; font-size: 16px; }
-  .rv .st { font-size: 12px; }
-  .rv .txt { font-size: 14px; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
-  .rv .busref { font-family: "IBM Plex Mono", monospace; font-weight: 700; color: var(--bs-body-color); border: 0; background: none; padding: 0; }
-  .re { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--bs-secondary-color); }
-  .hb { font-size: 12px; background: var(--bs-tertiary-bg); color: var(--bs-body-color); border: 0; border-radius: 999px; padding: 3px 10px; }
-  .hb.on { background: #fde3e4; color: var(--bmta); font-weight: 600; }
-  .hb:disabled { opacity: 1; }
-  .inc { color: var(--bmta); font-weight: 700; font-size: 12px; }
-  .starrow { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--bs-border-color); }
-  .starrow .s button { border: 0; background: none; padding: 2px 3px; font-size: 26px; line-height: 1; color: #d9d4c8; }
-  .starrow .s button.on { color: #e0a100; }
-  [data-bs-theme="dark"] .starrow .s button { color: #4a453d; }
-  [data-bs-theme="dark"] .starrow .s button.on { color: #e0a100; }
-
-  /* แลกของ / ฉัน */
-  .wallet { background: #1a1a1a; color: #fff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
-  .wallet .n { font-family: "IBM Plex Mono", monospace; font-size: 34px; font-weight: 700; line-height: 1; }
-  .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .stk { background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-radius: 14px; text-align: center; padding: 12px 6px 10px; }
-  [data-bs-theme="light"] .stk { background: #fff; }
-  .stk .face { font-size: 38px; line-height: 1.1; }
-  .stk b { display: block; font-size: 13px; margin-top: 4px; }
-  .stk .cost { font-size: 11px; font-weight: 700; color: #7a4d00; background: #ffe8b3; border-radius: 99px; padding: 1px 8px; display: inline-block; margin-top: 4px; font-family: "IBM Plex Mono", monospace; }
-  .stat3 { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
-  .stat3 b { display: block; font-family: "IBM Plex Mono", monospace; font-size: 22px; }
-  .stat3 span { font-size: 12px; color: var(--bs-secondary-color); }
-  .ledger { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid var(--bs-border-color); font-size: 13.5px; }
-  .ledger .d { font-family: "IBM Plex Mono", monospace; font-weight: 700; min-width: 42px; text-align: right; }
-  .toastx { position: fixed; left: 50%; bottom: calc(76px + var(--safe-b)); transform: translate(-50%, 20px); z-index: 1060; background: #1a1a1a; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: .2s; pointer-events: none; max-width: 90vw; }
-  .toastx.show { opacity: 1; transform: translate(-50%, 0); }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link href="app.css" rel="stylesheet">
+<script>try { if (JSON.parse(localStorage.getItem("theme")) === "dark" || (!localStorage.getItem("theme") && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark"); } catch {}</script>
 </head>
 <body>
 
-<nav class="appbar">
-  <div class="container-app container d-flex align-items-center py-1">
-    <i class="fa-solid fa-bus me-2"></i>
-    <div class="brand flex-grow-1">คันนี้ดีไหม?</div>
-    <button class="pts me-1" id="ptsPill" type="button" hidden aria-label="แต้มของฉัน"><i class="fa-solid fa-coins"></i><span>0</span></button>
-    <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#models" aria-label="รุ่นรถทั้งหมด"><i class="fa-solid fa-list"></i></button>
-    <button class="btn btn-sm px-2" id="themeBtn" type="button" aria-label="สลับธีมสว่าง/มืด"><i class="fa-solid fa-moon"></i></button>
-    <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#help" aria-label="วิธีใช้"><i class="fa-solid fa-circle-question"></i></button>
+<header class="sticky top-0 z-30 bg-paper/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+  <div class="mx-auto flex h-14 max-w-[640px] items-center gap-1 px-4">
+    <div class="flex-1 font-display text-[21px] font-bold tracking-tight">คันนี้ดีไหม<span class="text-route">?</span></div>
+    <button class="tag mr-1 bg-ticket px-3 py-1 font-display text-[14px] text-ticket-ink" id="ptsPill" type="button" hidden aria-label="แต้มของฉัน"><i class="fa-solid fa-ticket-simple"></i><span>0</span></button>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="สลับธีมสว่าง/มืด"><i class="fa-solid fa-moon"></i></button>
+    <button class="icon-btn" type="button" data-open="#help" aria-label="วิธีอ่านเลขข้างรถ"><i class="fa-regular fa-circle-question"></i></button>
   </div>
-</nav>
+</header>
 
-<main class="container-app container pt-2">
+<main class="mx-auto max-w-[640px] px-4">
 
  <section class="view" id="v-search">
-  <form id="form" class="search" autocomplete="off">
-    <div class="numwrap">
-      <i class="fa-solid fa-hashtag lead-ic"></i>
-      <input id="num" class="form-control" type="text" inputmode="numeric" placeholder="พิมพ์หมายเลขข้างรถ" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false" autocapitalize="off" autocorrect="off">
-      <button class="clear" type="button" id="clearBtn" aria-label="ล้าง" hidden><i class="fa-solid fa-circle-xmark"></i></button>
+  <form id="form" class="sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 bg-paper/85 px-4 pb-3 backdrop-blur-md" autocomplete="off">
+    <div class="relative">
+      <i class="fa-solid fa-hashtag pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[18px] text-mute"></i>
+      <input id="num" class="h-16 w-full rounded-2xl border-2 border-transparent bg-card pr-12 pl-11 font-display text-[30px] font-bold tracking-wider text-ink shadow-[0_8px_24px_-18px_rgb(20_28_39/.5)] outline-none transition placeholder:font-sans placeholder:text-[16px] placeholder:font-medium placeholder:tracking-normal placeholder:text-mute/70 focus:border-route"
+        type="text" inputmode="numeric" placeholder="พิมพ์เลขข้างรถ เช่น 7-3077" aria-label="หมายเลขข้างรถ" enterkeyhint="search" spellcheck="false" autocapitalize="off" autocorrect="off">
+      <button class="icon-btn absolute top-1/2 right-2 -translate-y-1/2" type="button" id="clearBtn" aria-label="ล้าง" hidden><i class="fa-solid fa-circle-xmark"></i></button>
     </div>
-    <div class="zones" id="zones" role="radiogroup" aria-label="เขตการเดินรถ">
-      <button type="button" class="zb any active" data-z="" aria-pressed="true">เขต ?</button>
+    <div class="mt-2 flex gap-1.5" id="zones" role="radiogroup" aria-label="เขตการเดินรถ">
+      <button type="button" class="zb any active" data-z="" aria-pressed="true">ไม่รู้เขต</button>
       <button type="button" class="zb" data-z="1">1</button><button type="button" class="zb" data-z="2">2</button><button type="button" class="zb" data-z="3">3</button><button type="button" class="zb" data-z="4">4</button>
       <button type="button" class="zb" data-z="5">5</button><button type="button" class="zb" data-z="6">6</button><button type="button" class="zb" data-z="7">7</button><button type="button" class="zb" data-z="8">8</button>
     </div>
-    <div class="chips" id="chips"></div>
+    <div class="mt-2 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" id="chips"></div>
   </form>
-
-  <div id="out" class="mt-2"></div>
+  <div id="out" class="mt-1"></div>
  </section>
 
  <section class="view" id="v-feed" hidden>
-  <div class="view-h">
-    <button class="pill on" type="button" data-feed="new">ล่าสุด</button>
-    <button class="pill" type="button" data-feed="top">มีประโยชน์</button>
-    <button class="pill" type="button" data-feed="incident"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ</button>
-    <button class="btn btn-sm ms-auto text-secondary" type="button" id="feedReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button>
+  <div class="sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 flex items-center gap-2 bg-paper/85 px-4 pb-3 backdrop-blur-md">
+    <div class="seg flex-1" role="tablist">
+      <button class="on" type="button" data-feed="new">ล่าสุด</button>
+      <button type="button" data-feed="top">มีประโยชน์</button>
+      <button type="button" data-feed="incident">แจ้งเหตุ</button>
+    </div>
+    <button class="icon-btn" type="button" id="feedReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button>
   </div>
   <div id="feedList"></div>
  </section>
 
  <section class="view" id="v-shop" hidden></section>
- <section class="view" id="v-me" hidden></section>
+ <section class="view pt-1" id="v-me" hidden></section>
 
 </main>
 
-<nav class="tabbar" aria-label="เมนูหลัก"><div class="in">
-  <button type="button" data-tab="search" class="on"><i class="fa-solid fa-magnifying-glass"></i>ค้นหา</button>
-  <button type="button" data-tab="feed"><i class="fa-solid fa-newspaper"></i>Feed</button>
-  <button type="button" data-tab="shop"><i class="fa-solid fa-store"></i>แลกของ</button>
-  <button type="button" data-tab="me"><i class="fa-solid fa-user"></i>ฉัน</button>
-</div></nav>
+<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[var(--safe-b)] backdrop-blur-md" aria-label="เมนูหลัก">
+  <div class="mx-auto flex max-w-[640px]">
+    <button type="button" class="tab on" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นหา</button>
+    <button type="button" class="tab" data-tab="feed"><i class="fa-solid fa-comments"></i>Feed</button>
+    <button type="button" class="tab" data-tab="shop"><i class="fa-solid fa-gift"></i>แลกของ</button>
+    <button type="button" class="tab" data-tab="me"><i class="fa-solid fa-user"></i>ฉัน</button>
+  </div>
+</nav>
 
-<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="writeSheet" style="height:auto;max-height:94vh">
-  <div class="offcanvas-header pb-1">
-    <h5 class="offcanvas-title fw-bold fs-6"><span id="wTitle">รีวิว</span> <span class="mono" id="wBus"></span></h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
-  </div>
-  <div class="offcanvas-body pt-1">
-    <form id="wForm" novalidate>
-      <div class="btn-group w-100 mb-1" role="group" aria-label="ประเภท">
-        <input type="radio" class="btn-check" name="wType" id="wtR" value="review" checked><label class="btn btn-outline-secondary btn-sm" for="wtR"><i class="fa-solid fa-star me-1"></i>รีวิว</label>
-        <input type="radio" class="btn-check" name="wType" id="wtI" value="incident"><label class="btn btn-outline-secondary btn-sm" for="wtI"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ</label>
-      </div>
-      <div id="wStars"></div>
-      <textarea id="wText" class="form-control mt-2" rows="3" maxlength="500" style="font-size:14px"></textarea>
-      <div class="row g-2 mt-0">
-        <div class="col-7"><label class="form-label small text-secondary mb-0" for="wStop">ป้ายที่ขึ้น</label><input id="wStop" class="form-control form-control-sm" maxlength="80" placeholder="เช่น ฟิวเจอร์พาร์ค"></div>
-        <div class="col-5"><label class="form-label small text-secondary mb-0" for="wTime">เวลา</label><input id="wTime" class="form-control form-control-sm" type="time"></div>
-      </div>
-      <div class="small text-secondary mt-2" id="wHint"></div>
-      <div class="small text-danger mt-1" id="wErr" role="alert"></div>
-      <div class="d-grid mt-2"><button class="btn btn-primary fw-bold" id="wSubmit" type="submit">ส่ง</button></div>
-    </form>
-  </div>
-</div>
+<!-- เขียนรีวิว / แจ้งเหตุ -->
+<dialog class="sheet" id="writeSheet" aria-labelledby="wTitle">
+  <div class="grab"></div>
+  <form id="wForm" class="px-5 pb-5" novalidate>
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold"><span id="wTitle">รีวิว</span> <span class="mini-plate ml-1 align-middle" id="wBus"></span></h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="seg" id="wType">
+      <button type="button" class="on" data-type="review"><i class="fa-solid fa-star mr-1"></i>รีวิว</button>
+      <button type="button" data-type="incident"><i class="fa-solid fa-triangle-exclamation mr-1"></i>แจ้งเหตุ</button>
+    </div>
+    <div id="wStars" class="mt-2 divide-y divide-line"></div>
+    <label class="sr-only" for="wText">ข้อความ</label>
+    <textarea id="wText" class="field mt-3 min-h-24 resize-none" rows="3" maxlength="500"></textarea>
+    <div class="mt-3 grid grid-cols-[1fr_118px] gap-2">
+      <label class="text-[12.5px] text-mute">ป้ายที่ขึ้น<input id="wStop" class="field mt-1" maxlength="80" placeholder="เช่น ฟิวเจอร์พาร์ค"></label>
+      <label class="text-[12.5px] text-mute">เวลา<input id="wTime" class="field mt-1 num" type="time"></label>
+    </div>
+    <p class="mt-3 text-[12.5px] leading-relaxed text-mute" id="wHint"></p>
+    <p class="text-[13px] font-medium text-alarm" id="wErr" role="alert"></p>
+    <button class="btn-primary mt-2 w-full" id="wSubmit" type="submit">ส่งรีวิว</button>
+  </form>
+</dialog>
 
-<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="authSheet" style="height:auto;max-height:94vh">
-  <div class="offcanvas-header pb-1">
-    <h5 class="offcanvas-title fw-bold fs-6"><i class="fa-solid fa-user me-2 text-primary"></i><span id="aTitle">เข้าสู่ระบบ</span></h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
-  </div>
-  <div class="offcanvas-body pt-1">
-    <div class="small text-secondary mb-2" id="aWhy"></div>
-    <div class="d-flex gap-2 mb-2"><button class="pill on" type="button" data-amode="login">มีบัญชีแล้ว</button><button class="pill" type="button" data-amode="register">สมัครใหม่ +20 แต้ม</button></div>
-    <form id="aForm" novalidate>
-      <input id="aName" class="form-control mb-2" maxlength="30" placeholder="ชื่อที่แสดง (คนอื่นเห็น)" autocomplete="nickname" hidden>
-      <input id="aEmail" class="form-control mb-2" type="email" placeholder="อีเมล" autocomplete="email" inputmode="email">
-      <input id="aPass" class="form-control mb-1" type="password" placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" autocomplete="current-password">
-      <div class="small text-danger" id="aErr" role="alert"></div>
-      <div class="d-grid mt-2"><button class="btn btn-primary fw-bold" id="aSubmit" type="submit">เข้าสู่ระบบ</button></div>
+<!-- ล็อกอิน / สมัคร -->
+<dialog class="sheet" id="authSheet" aria-labelledby="aTitle">
+  <div class="grab"></div>
+  <div class="px-5 pb-5">
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="aTitle">เข้าสู่ระบบ</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="mb-3 text-[13.5px] text-mute" id="aWhy" hidden></p>
+    <div class="seg">
+      <button class="on" type="button" data-amode="login">มีบัญชีแล้ว</button>
+      <button type="button" data-amode="register">สมัครใหม่ <span class="tag ml-1 bg-ticket px-1.5 py-0 text-ticket-ink">+20</span></button>
+    </div>
+    <form id="aForm" class="mt-3 grid gap-2" novalidate>
+      <input id="aName" class="field" maxlength="30" placeholder="ชื่อที่แสดง (คนอื่นเห็นชื่อนี้)" autocomplete="nickname" aria-label="ชื่อที่แสดง" hidden>
+      <input id="aEmail" class="field" type="email" placeholder="อีเมล" autocomplete="email" inputmode="email" aria-label="อีเมล">
+      <input id="aPass" class="field" type="password" placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" autocomplete="current-password" aria-label="รหัสผ่าน">
+      <p class="text-[13px] font-medium text-alarm" id="aErr" role="alert"></p>
+      <button class="btn-primary w-full" id="aSubmit" type="submit">เข้าสู่ระบบ</button>
     </form>
-    <p class="text-secondary mt-2 mb-0" style="font-size:11.5px"><i class="fa-solid fa-shield-halved me-1"></i>เก็บแค่อีเมลกับชื่อที่แสดง · ไม่เก็บตำแหน่ง · รหัสผ่านเก็บแบบ bcrypt</p>
+    <p class="mt-3 text-[12px] text-mute"><i class="fa-solid fa-shield-halved mr-1"></i>เก็บแค่อีเมลกับชื่อที่แสดง · ไม่เก็บตำแหน่งของคุณ</p>
   </div>
-</div>
+</dialog>
+
+<!-- รุ่นรถทั้งหมด -->
+<dialog class="sheet side" id="models" aria-labelledby="mTitle">
+  <div class="sticky top-0 z-10 flex items-center gap-2 border-b border-line bg-card px-5 py-3">
+    <h2 class="flex-1 font-display text-[19px] font-bold" id="mTitle">รถ ขสมก. ทั้ง 13 รุ่น</h2>
+    <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="divide-y divide-line" id="refgrid"></div>
+</dialog>
+
+<!-- วิธีอ่านเลข -->
+<dialog class="sheet" id="help" aria-labelledby="hTitle">
+  <div class="grab"></div>
+  <div class="px-5 pb-6">
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="hTitle">อ่านเลขข้างรถยังไง</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="plate !rounded-[18px] !pb-8" style="--body:#f3e6c8;--band-c:#1a2f8f">
+      <div class="fleet !text-[56px]"><span class="z">7-</span><span class="text-route">3</span>0<span>77</span></div>
+    </div>
+    <dl class="mt-4 grid grid-cols-[64px_1fr] gap-x-3 gap-y-2.5 text-[14px]">
+      <dt class="num text-[18px] font-bold">7-</dt><dd>เขตการเดินรถ (1–8) — ไม่รู้ก็เลือก "ไม่รู้เขต" ได้</dd>
+      <dt class="num text-[18px] font-bold text-route">3</dt><dd>รหัสรุ่นรถ (บางรุ่นใช้ 2 หลัก เช่น 70 = Bonluck NGV)</dd>
+      <dt class="num text-[18px] font-bold">077</dt><dd>ลำดับรถในรุ่นนั้น</dd>
+    </dl>
+    <p class="mt-4 text-[13.5px] text-mute">เลขอยู่ที่กันชนหน้า ข้างตัวรถ และกระจกหลัง · พิมพ์ทั้งชุดในช่องเดียวได้ รองรับเลขไทย ๐–๙</p>
+    <p class="mt-4 border-t border-line pt-3 text-[11.5px] leading-snug text-mute"><i class="fa-brands fa-wikipedia-w mr-1"></i>ข้อมูลรุ่นรถ จำนวนรถ เขต และค่าโดยสาร จาก
+      <a class="underline" href="https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%99%E0%B8%AA%E0%B9%88%E0%B8%87%E0%B8%A1%E0%B8%A7%E0%B8%A5%E0%B8%8A%E0%B8%99%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E" target="_blank" rel="noopener">วิกิพีเดีย: องค์การขนส่งมวลชนกรุงเทพ</a>
+      (CC BY-SA) · ภาพจาก Wikimedia Commons · ข้อมูลอาจไม่ตรงกับสภาพปัจจุบันของรถแต่ละคัน</p>
+  </div>
+</dialog>
 
 <div class="toastx" id="toast" role="status" aria-live="polite"></div>
 
-<div class="offcanvas offcanvas-end" tabindex="-1" id="models" style="width:min(100vw,420px)">
-  <div class="offcanvas-header border-bottom py-2">
-    <h5 class="offcanvas-title fw-bold fs-6"><i class="fa-solid fa-list me-2 text-primary"></i>รุ่นรถทั้งหมดของ ขสมก. <span class="text-secondary fw-normal">(13 รุ่น)</span></h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
-  </div>
-  <div class="offcanvas-body p-0"><div class="list-group list-group-flush" id="refgrid"></div></div>
-</div>
-
-<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="help" style="height:auto;max-height:85vh">
-  <div class="offcanvas-header pb-0">
-    <h5 class="offcanvas-title fw-bold"><i class="fa-solid fa-circle-info me-2 text-primary"></i>วิธีอ่านหมายเลขข้างรถ</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
-  </div>
-  <div class="offcanvas-body">
-    <p class="mb-2">หมายเลขข้างรถอยู่ที่กันชนหน้า ตัวถังซ้าย–ขวา และกระจกหลัง รูปแบบ <span class="mono fw-bold">ข-AXXX</span> หรือ <span class="mono fw-bold">ข-AAXXX</span></p>
-    <ul class="mb-3">
-      <li><span class="mono fw-bold">ข</span> — เขตการเดินรถที่รถสังกัด (1–8) — เลือกในช่องแรก หรือปล่อย <b>?</b> ถ้าไม่รู้</li>
-      <li><span class="mono fw-bold">A / AA</span> — รหัสรุ่นของรถ</li>
-      <li><span class="mono fw-bold">XXX</span> — ลำดับที่ของรถในรุ่นนั้น</li>
-    </ul>
-    <div class="p-3 rounded-3 bg-body-tertiary small">
-      <div><span class="mono fw-bold">7-3077</span> → เขต 7 · รุ่น 3 (Isuzu CQA650 A/T ครีม-น้ำเงิน) · คันที่ 77</div>
-      <div class="mt-1"><span class="mono fw-bold">2-70235</span> → เขต 2 · รุ่น 70 (Bonluck NGV สีฟ้า) · คันที่ 235</div>
-    </div>
-    <p class="small text-secondary mt-3 mb-2">พิมพ์ทั้งชุดในช่องเดียวก็ได้ เช่น <span class="mono">7-3077</span> · รองรับเลขไทย ๐–๙</p>
-    <hr class="my-2">
-    <p class="text-secondary mb-0 lh-sm" style="font-size:11.5px"><i class="fa-brands fa-wikipedia-w me-1"></i>ข้อมูลรุ่นรถ จำนวนรถ เขตการเดินรถ และค่าโดยสาร จาก
-      <a href="https://th.wikipedia.org/wiki/%E0%B8%AD%E0%B8%87%E0%B8%84%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%82%E0%B8%99%E0%B8%AA%E0%B9%88%E0%B8%87%E0%B8%A1%E0%B8%A7%E0%B8%A5%E0%B8%8A%E0%B8%99%E0%B8%81%E0%B8%A3%E0%B8%B8%E0%B8%87%E0%B9%80%E0%B8%97%E0%B8%9E" target="_blank" rel="noopener">วิกิพีเดีย: องค์การขนส่งมวลชนกรุงเทพ</a>
-      (CC BY-SA) · ภาพจาก Wikimedia Commons · ข้อมูลอาจไม่ตรงกับสภาพปัจจุบันของรถแต่ละคัน</p>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script src="data.js"></script>
 <script>
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const out = $("#out"), num = $("#num"), form = $("#form"), zonesEl = $("#zones"), clearBtn = $("#clearBtn");
   let zone = "";
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const thumb = p => IMG + p + "/960px-" + p.split("/").pop();
   const commons = f => "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(f.replace(/ /g, "_"));
-  const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+  const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
   const EXAMPLES = ["7-3077", "2-70235", "8-80040", "1-46001", "3-40481"];
+  const thaiDigits = s => s.replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d));
 
-  // ธีม
-  const applyTheme = t => { document.documentElement.setAttribute("data-bs-theme", t); $("#themeBtn i").className = "fa-solid " + (t === "dark" ? "fa-sun" : "fa-moon"); };
-  applyTheme(store.get("theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
-  $("#themeBtn").onclick = () => { const t = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark"; store.set("theme", t); applyTheme(t); };
+  // ---------- sheet (<dialog>) ----------
+  const sheet = id => ({ show: () => { const d = $(id); if (!d.open) d.showModal(); }, hide: () => $(id).close() });
+  $$("dialog.sheet").forEach(d => d.addEventListener("click", e => { if (e.target === d || e.target.closest("[data-close]")) d.close(); }));
+  document.addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) sheet(b.dataset.open).show(); });
 
-  // เลือกเขต — แตะซ้ำเพื่อยกเลิก
+  // ---------- ธีม ----------
+  const applyTheme = t => { document.documentElement.classList.toggle("dark", t === "dark"); $("#themeBtn i").className = "fa-solid " + (t === "dark" ? "fa-sun" : "fa-moon"); $('meta[name="theme-color"]').content = t === "dark" ? "#0e131a" : "#e9edf1"; };
+  applyTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+  $("#themeBtn").onclick = () => { const t = document.documentElement.classList.contains("dark") ? "light" : "dark"; store.set("theme", t); applyTheme(t); };
+
+  // ---------- ลายสีรถ (ใช้ทั้งป้ายใหญ่และป้ายเล็ก) ----------
+  function liveryVars(m) {
+    const [body, band] = LIVERY[m.livery].swatch;
+    return `--body:${body};--band-c:${band === body ? `color-mix(in srgb, ${band} 62%, #000)` : band}`;
+  }
+  function modelFor(fleet) {
+    const mm = String(fleet).match(/^(\d)-(\d+)$/); if (!mm) return null;
+    const ms = matchModel(mm[2]);
+    return ms.find(k => k.zones[mm[1]]) || ms[0] || null;
+  }
+  const miniPlate = (fleet, extra = "") => { const m = modelFor(fleet); return `<span class="mini-plate ${extra}" style="${m ? liveryVars(m) : ""}">${esc(fleet)}</span>`; };
+
+  // ---------- เลือกเขต — แตะซ้ำเพื่อยกเลิก ----------
   function setZone(z, silent) {
     zone = z || "";
-    zonesEl.querySelectorAll(".zb").forEach(b => {
+    $$(".zb", zonesEl).forEach(b => {
       const on = (b.dataset.z || "") === zone;
       b.classList.toggle("active", on); b.setAttribute("aria-pressed", on);
       b.style.background = on && zone ? ZONES[zone].color : "";
+      b.style.color = on && zone ? "#fff" : "";
     });
     if (!silent) live();
   }
@@ -319,17 +208,16 @@
     const b = e.target.closest(".zb"); if (!b) return;
     setZone(b.dataset.z && b.dataset.z === zone ? "" : b.dataset.z);
   });
-  // ไฮไลต์เขตที่รุ่นนี้มีอยู่ (ช่วยเดา)
-  function hintZones(zs) { zonesEl.querySelectorAll(".zb[data-z]").forEach(b => b.classList.toggle("hint", !!b.dataset.z && zs.includes(+b.dataset.z))); }
+  function hintZones(zs) { $$(".zb[data-z]", zonesEl).forEach(b => b.classList.toggle("hint", !!b.dataset.z && zs.includes(+b.dataset.z))); }
 
-  // จับคู่รุ่น
+  // ---------- จับคู่รุ่น ----------
   function matchModel(n) {
     const v = parseInt(n, 10);
     return MODELS.filter(m => n.length === m.digits && n.startsWith(m.prefix) && (!m.range || (v >= m.range[0] && v <= m.range[1])));
   }
   function parse(raw, zSel) {
-    let s = raw.trim().replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).replace(/\s/g, "").replace(/^ข/, "").replace(/[–—_/]/g, "-");
-    if (!s) return { error: "กรอกหมายเลขข้างรถก่อนนะ" };
+    let s = thaiDigits(raw.trim()).replace(/\s/g, "").replace(/^ข/, "").replace(/[–—_/]/g, "-");
+    if (!s) return { error: "กรอกหมายเลขข้างรถก่อน" };
     if (!/^[0-9-]+$/.test(s)) return { error: "ใส่เฉพาะตัวเลข เช่น 3077 หรือ 7-3077" };
     const cands = [];
     if (s.includes("-")) {
@@ -346,26 +234,43 @@
     if (!cands.length) return { error: "หมายเลขมี 4 หรือ 5 หลัก (ไม่รวมเขต) เช่น 3077 หรือ 70235" };
     const results = [];
     for (const c of cands) { if (c.zone !== null && !(c.zone >= 1 && c.zone <= 8)) continue; for (const m of matchModel(c.num)) results.push({ ...c, model: m }); }
-    if (!results.length) return { error: `ไม่พบรุ่นที่ใช้หมายเลข <b class="mono">${esc(s)}</b> — ดูรหัสรุ่นได้ที่ "รุ่นรถทั้งหมด" ด้านล่าง` };
+    if (!results.length) return { error: `ไม่มีรุ่นที่ใช้เลข <b class="num">${esc(s)}</b> — ดูรหัสรุ่นทั้งหมดได้ที่ <button type="button" class="underline font-semibold" data-open="#models">รถทั้ง 13 รุ่น</button>` };
     return { results };
   }
 
+  // ---------- ค่าโดยสาร ----------
   const money = v => Number.isInteger(v) ? v : v.toFixed(2);
-  function fareSummary(f) {
-    if (!f) return "ไม่มีข้อมูลค่าโดยสาร";
-    if (f.type === "flat") return `<b>${money(f.standard)} บาท</b> ตลอดสาย · ทางด่วน ${money(f.expressway)} · ตลอดคืน ${money(f.allnight)} · ลดหย่อน ${money(f.discount)}`;
-    return `<b>${Math.min(...f.km)}–${Math.max(...f.km)} บาท</b> ตามระยะ · ทางด่วน ${f.expressway} · ลดหย่อน ${f.discount}`;
+  function fareShort(f) {
+    if (!f) return ["–", "ไม่มีข้อมูล"];
+    if (f.type === "flat") return [`${money(f.standard)} ฿`, "ตลอดสาย"];
+    return [`${Math.min(...f.km)}–${Math.max(...f.km)} ฿`, "ตามระยะทาง"];
   }
   function fareDetail(f) {
-    if (!f) return "";
-    if (f.type === "flat") return `<div class="text-secondary">ราคาเดียวตลอดสาย · ลดหย่อน = บัตรสวัสดิการแห่งรัฐ</div>`;
+    if (!f) return `<p class="text-mute">ไม่มีข้อมูลค่าโดยสาร</p>`;
+    if (f.type === "flat") return `<dl class="grid grid-cols-2 gap-2">${[["ปกติ", f.standard], ["ขึ้นทางด่วน", f.expressway], ["ตลอดคืน", f.allnight], ["ลดหย่อน*", f.discount]].map(([k, v]) =>
+      `<div class="rounded-xl bg-sunk px-3 py-2"><dt class="text-[12px] text-mute">${k}</dt><dd class="num text-[18px] font-bold">${money(v)} ฿</dd></div>`).join("")}</dl>
+      <p class="mt-2 text-[12px] text-mute">* บัตรสวัสดิการแห่งรัฐ</p>`;
     const heads = ["4", "8", "12", "16", "20", "24", "28", "28+"];
-    return `<div class="table-responsive"><table class="table table-sm table-bordered fare text-center">
-      <thead><tr>${heads.map(h => `<th>${h} กม.</th>`).join("")}</tr></thead>
-      <tbody><tr>${f.km.map(v => `<td>${v.toFixed(2)}</td>`).join("")}</tr></tbody></table></div>
-      <div class="text-secondary mt-1">ราคาตามระยะทาง (บาท) · ทางด่วนเพิ่ม 2 บาท · ลดหย่อน/บัตรสวัสดิการแห่งรัฐ ลด 4 บาท</div>`;
+    return `<div class="grid grid-cols-4 gap-1.5">${f.km.map((v, i) => `<div class="rounded-xl bg-sunk px-2 py-1.5 text-center"><div class="text-[11px] text-mute">≤ ${heads[i]} กม.</div><div class="num text-[16px] font-bold">${v}</div></div>`).join("")}</div>
+      <p class="mt-2 text-[12px] text-mute">บาท · ขึ้นทางด่วน +2 · บัตรสวัสดิการแห่งรัฐ −4</p>`;
   }
 
+  // ---------- หน้าว่าง: บอกว่าเลขอยู่ตรงไหน ----------
+  function emptyState() {
+    return `<div class="card rise p-5">
+      <div class="eyebrow">เริ่มจากเลขข้างรถ</div>
+      <p class="mt-1 text-[15px]">ดูที่กันชนหน้า ข้างตัวรถ หรือกระจกหลัง แล้วพิมพ์ตามนั้น</p>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        ${["7-3077", "2-70235", "8-80040"].map(f => `<button type="button" data-q="${f}" class="transition active:scale-95">${miniPlate(f, "!text-[17px] !px-3")}</button>`).join("")}
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <button type="button" class="btn-quiet text-[14px]" data-open="#help"><i class="fa-regular fa-circle-question"></i>อ่านเลขยังไง</button>
+        <button type="button" class="btn-quiet text-[14px]" data-open="#models"><i class="fa-solid fa-list"></i>ดูรถทั้ง 13 รุ่น</button>
+      </div>
+    </div>`;
+  }
+
+  // ---------- ผลค้นหา ----------
   function render(r, alternatives) {
     const m = r.model, liv = LIVERY[m.livery], z = r.zone ? ZONES[r.zone] : null;
     const seq = parseInt(r.num.slice(m.prefix.length), 10);
@@ -374,64 +279,61 @@
     const inZone = r.zone ? m.zones[r.zone] : null;
     const zoneList = Object.entries(m.zones);
     const label = (r.zone || "?") + "-" + r.num;
+    const [fare, fareSub] = fareShort(liv.fare);
 
+    const note = (tone, icon, html) => `<div class="mb-2 flex gap-2.5 rounded-2xl px-4 py-3 text-[13.5px] ${tone}"><i class="fa-solid ${icon} mt-1"></i><div>${html}</div></div>`;
     let warn = "";
-    if (m.retired) warn = `<div class="alert alert-danger alert-compact"><i class="fa-solid fa-ban mt-1"></i><div><b>${esc(m.status)}</b> — ถูกตัดจอดแล้ว ไม่ได้ให้บริการ</div></div>`;
-    else if (r.zone && !inZone) warn = `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ตามข้อมูล รุ่นนี้ไม่มีในเขต ${r.zone} (มีในเขต ${zoneList.map(([k]) => k).join(", ")}) — อาจโอนย้ายเขต หรือเลขเขตผิด</div></div>`;
-    else if (seq > m.total) warn = `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>ลำดับที่ ${seq} เกินจำนวนรถรุ่นนี้ที่ยังให้บริการ (${m.total} คัน) — อาจปลดระวางแล้ว</div></div>`;
-    if (sp) warn += `<div class="alert alert-warning alert-compact"><i class="fa-solid fa-star mt-1"></i><div>${esc(sp.note)}</div></div>`;
+    if (m.retired) warn = note("bg-alarm-soft text-alarm", "fa-ban", `<b>${esc(m.status)}</b> — รุ่นนี้ตัดจอดแล้ว ไม่ได้วิ่งให้บริการ`);
+    else if (r.zone && !inZone) warn = note("bg-ticket-soft text-ink", "fa-triangle-exclamation", `ตามข้อมูล รุ่นนี้ไม่มีในเขต ${r.zone} (มีในเขต ${zoneList.map(([k]) => k).join(", ")}) — อาจย้ายเขต หรือเลขเขตผิด`);
+    else if (seq > m.total) warn = note("bg-ticket-soft text-ink", "fa-triangle-exclamation", `ลำดับที่ ${seq} เกินจำนวนรถรุ่นนี้ที่ยังวิ่ง (${m.total} คัน) — อาจปลดระวางแล้ว`);
+    if (sp) warn += note("bg-route-soft text-ink", "fa-star", esc(sp.note));
 
-    const alt = alternatives.length ? `<div class="text-secondary mt-1 px-1" style="font-size:12.5px"><i class="fa-solid fa-shuffle me-1"></i>หรือหมายถึง ` +
-      alternatives.map(a => `<button type="button" class="btn btn-link btn-sm p-0 mono fw-bold align-baseline" style="font-size:12.5px" data-q="${a.zone ? a.zone + "-" : ""}${a.num}">${a.zone ? a.zone + "-" : ""}${a.num}</button> (${esc(a.model.brand)} ${esc(a.model.model)}${a.zone ? " เขต " + a.zone : ""})`).join(" · ") + `</div>` : "";
+    const alt = alternatives.length ? `<div class="mt-2 flex flex-wrap items-center gap-1.5 px-1 text-[13px] text-mute"><i class="fa-solid fa-shuffle"></i>หรือหมายถึง ` +
+      alternatives.map(a => { const q = (a.zone ? a.zone + "-" : "") + a.num; return `<button type="button" class="chip !text-[13px]" data-q="${q}">${q} <span class="font-sans font-normal text-mute">${esc(a.model.brand)}</span></button>`; }).join("") + `</div>` : "";
+
+    const fact = (k, v, sub) => `<div class="bg-card px-2 py-2.5"><dt class="eyebrow !text-[11px]">${k}</dt><dd class="num text-[19px] font-bold leading-tight">${v}</dd><dd class="text-[11.5px] text-mute">${sub}</dd></div>`;
+    const row = (icon, title, body) => `<details class="group border-t border-line">
+        <summary class="flex min-h-12 items-center gap-3 px-4 py-2.5 text-[14px]"><i class="fa-solid ${icon} w-5 text-center text-route"></i><span class="min-w-0 flex-1">${title}</span><i class="fa-solid fa-chevron-down text-[12px] text-mute transition group-open:rotate-180"></i></summary>
+        <div class="px-4 pb-4 text-[13.5px]">${body}</div></details>`;
 
     out.innerHTML = `
       ${warn}
-      <article class="card rounded-3 overflow-hidden shadow-sm border-0">
-        <div class="plate" style="border-left-color:${z ? z.color : "var(--bs-tertiary-bg)"}">
-          <div class="big"><span class="dim">${r.zone || "?"}-</span>${esc(r.num)}</div>
-          <div class="flex-grow-1"></div>
-          ${z ? `<span class="zbadge" style="background:${z.color}"><i class="fa-solid fa-location-dot"></i>เขต ${r.zone}</span>` : ""}
-          <span class="badge rounded-pill ${m.retired ? "text-bg-danger" : "text-bg-success"}"><i class="fa-solid ${m.retired ? "fa-ban" : "fa-circle-check"} me-1"></i>${esc(m.status)}</span>
+      <article class="card rise overflow-hidden">
+        <div class="plate" style="${liveryVars(m)}">
+          <div class="flex flex-wrap items-center gap-1.5 text-[12.5px] font-semibold">
+            <span class="tag bg-black/10">${z ? `<span class="h-2 w-2 rounded-full" style="background:${z.color}"></span>เขต ${r.zone} · อู่${esc(z.office)}` : "ยังไม่ระบุเขต"}</span>
+            <span class="tag ${m.retired ? "bg-[#d1362a] text-white" : "bg-black/10"}">${esc(m.status)}</span>
+          </div>
+          <div class="fleet mt-2"><span class="z">${r.zone || "?"}-</span>${esc(r.num)}</div>
         </div>
-        <div class="top">
-          <a href="${commons(imgFile)}" target="_blank" rel="noopener" title="ภาพตัวอย่างรถรุ่นเดียวกัน (Wikimedia Commons)"><img class="thumb" src="${img}" alt="${esc(m.brand)} ${esc(m.model)}" loading="lazy" onerror="this.style.visibility='hidden'"></a>
+        <div class="flex gap-3.5 p-4">
+          <a href="${commons(imgFile)}" target="_blank" rel="noopener" class="shrink-0" title="ภาพรถรุ่นเดียวกัน (Wikimedia Commons)"><img class="h-[78px] w-[104px] rounded-xl bg-sunk object-cover" src="${img}" alt="${esc(m.brand)} ${esc(m.model)}" loading="lazy" onerror="this.style.visibility='hidden'"></a>
           <div class="min-w-0">
-            <div class="model">${esc(m.brand)} <small>${esc(m.model)}</small></div>
-            <div class="facts">
-              <div><span class="livery me-1"><i style="background:${liv.swatch[0]}"></i><i style="background:${liv.swatch[1]}"></i></span>${esc(liv.name)}</div>
-              <div><i class="fa-solid fa-calendar-days"></i> พ.ศ. ${m.year} <span class="text-secondary">(อายุ ~${new Date().getFullYear() - (m.year - 543)} ปี)</span></div>
-              <div><i class="fa-solid fa-hashtag"></i> รุ่น <span class="mono">${esc(m.prefix)}${"X".repeat(m.digits - m.prefix.length)}</span> · คันที่ <b>${seq}</b><span class="text-secondary">/${m.total}</span>${inZone ? ` · ในเขต ${r.zone} มี ${inZone} คัน` : ""}</div>
-            </div>
+            <div class="font-display text-[21px] font-bold leading-tight">${esc(m.brand)}</div>
+            <div class="text-[14px] leading-snug text-mute">${esc(m.model)}</div>
+            <div class="mt-1 text-[13px] leading-snug">${esc(liv.name)}</div>
           </div>
         </div>
-
-        <button class="row-btn" type="button" data-bs-toggle="collapse" data-bs-target="#dZone" aria-expanded="false">
-          <i class="fa-solid fa-map-location-dot"></i>
-          <span class="t">${z ? `<b>เขต ${r.zone}</b> · สนง. อู่${esc(z.office)} · ${z.depots.length} กปด.` : `ไม่ระบุเขต · รุ่นนี้มีในเขต ${zoneList.map(([k]) => k).join(", ")}`}</span>
-          <i class="fa-solid fa-chevron-down chev"></i>
-        </button>
-        <div class="collapse" id="dZone"><div class="detail">
-          ${z ? `<div class="text-secondary mb-2">${esc(z.area)}${z.extra ? `<br><i class="fa-solid fa-plus me-1"></i>${esc(z.extra)}` : ""}</div>
-            <div class="d-grid gap-1 mb-2">${z.depots.map(([k, v, s]) => `<div class="depot"><span class="k me-2">${esc(k)}</span><b>อู่${esc(v)}</b>${s ? `<div class="text-secondary" style="font-size:11.5px">${esc(s)}</div>` : ""}</div>`).join("")}</div>` : ""}
-          <div class="text-secondary mb-1" style="font-size:12px">รถรุ่นนี้แยกตามเขต</div>
-          <div class="d-flex gap-1 flex-wrap">${zoneList.map(([k, v]) => `<button type="button" class="fleet-z ${+k === r.zone ? "here" : ""}" data-q="${k}-${r.num}"><span class="dot" style="background:${ZONES[k].color}"></span>เขต <b class="mono">${k}</b> · ${v}</button>`).join("")}</div>
-        </div></div>
-
-        <button class="row-btn" type="button" data-bs-toggle="collapse" data-bs-target="#dFare" aria-expanded="false">
-          <i class="fa-solid fa-ticket"></i><span class="t">${fareSummary(liv.fare)}</span><i class="fa-solid fa-chevron-down chev"></i>
-        </button>
-        <div class="collapse" id="dFare"><div class="detail">${fareDetail(liv.fare)}</div></div>
-
+        <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center">
+          ${fact("ปีที่เริ่มวิ่ง", m.year, `อายุ ~${new Date().getFullYear() - (m.year - 543)} ปี`)}
+          ${fact("คันที่", `${seq}<span class="text-[13px] text-mute">/${m.total}</span>`, `รุ่น ${esc(m.prefix)}${"X".repeat(m.digits - m.prefix.length)}`)}
+          ${fact("ค่าโดยสาร", fare, fareSub)}
+        </dl>
+        ${row("fa-map-location-dot", z ? `<b>เขต ${r.zone}</b> · ${z.depots.length} อู่ · รุ่นนี้มี ${inZone || 0} คันในเขต` : `รุ่นนี้วิ่งในเขต ${zoneList.map(([k]) => k).join(", ")}`,
+          `${z ? `<p class="text-mute">${esc(z.area)}${z.extra ? ` · ${esc(z.extra)}` : ""}</p>
+            <div class="mt-2 grid gap-1.5">${z.depots.map(([k, v, s]) => `<div class="flex items-baseline gap-2 rounded-xl bg-sunk px-3 py-2"><span class="num text-[12px] text-mute">${esc(k)}</span><b>อู่${esc(v)}</b>${s ? `<span class="text-[12px] text-mute">${esc(s)}</span>` : ""}</div>`).join("")}</div>` : ""}
+          <div class="mt-3 mb-1.5 text-[12px] text-mute">รุ่นนี้แยกตามเขต — แตะเพื่อดูคันในเขตนั้น</div>
+          <div class="flex flex-wrap gap-1.5">${zoneList.map(([k, v]) => `<button type="button" class="chip inline-flex items-center gap-1.5 !text-[13px] ${+k === r.zone ? "!border-ink" : ""}" data-q="${k}-${r.num}"><span class="h-2.5 w-2.5 rounded-[3px]" style="background:${ZONES[k].color}"></span>เขต ${k} <span class="font-sans font-normal text-mute">${v} คัน</span></button>`).join("")}</div>`)}
+        ${row("fa-ticket", `ค่าโดยสาร <b>${fare}</b> ${fareSub}`, fareDetail(liv.fare))}
       </article>
       ${alt}
-      <section class="card rounded-3 overflow-hidden shadow-sm border-0 mt-2" id="rvbox"></section>`;
+      <section class="card rise mt-3 overflow-hidden" id="rvbox"></section>`;
 
     pushRecent(label);
     loadBus(r.zone ? label : null, r.num);
   }
 
-
-  // ชิป: ล่าสุด + ตัวอย่าง (แถวเดียวเลื่อนได้)
+  // ---------- ชิป: ล่าสุด + ตัวอย่าง ----------
   function pushRecent(label) {
     if (label.startsWith("?")) return;
     const list = (store.get("recent") || []).filter(x => x !== label); list.unshift(label); store.set("recent", list.slice(0, 5)); renderChips();
@@ -440,8 +342,8 @@
     const recent = store.get("recent") || [];
     const ex = EXAMPLES.filter(e => !recent.includes(e));
     $("#chips").innerHTML =
-      (recent.length ? `<span class="lbl"><i class="fa-solid fa-clock-rotate-left"></i></span>` + recent.map(l => `<button class="btn btn-outline-secondary chip" type="button" data-q="${esc(l)}">${esc(l)}</button>`).join("") : "") +
-      `<span class="lbl">ลอง</span>` + ex.map(l => `<button class="btn btn-outline-secondary chip" type="button" data-q="${l}">${l}</button>`).join("");
+      (recent.length ? `<i class="fa-solid fa-clock-rotate-left shrink-0 text-[13px] text-mute" aria-label="ล่าสุด"></i>` + recent.map(l => `<button class="chip" type="button" data-q="${esc(l)}">${esc(l)}</button>`).join("") : "") +
+      `<span class="shrink-0 pl-1 text-[12.5px] text-mute">ลอง</span>` + ex.map(l => `<button class="chip !border-dashed !bg-transparent" type="button" data-q="${l}">${l}</button>`).join("");
   }
   renderChips();
 
@@ -449,31 +351,31 @@
     const res = parse(raw, zone);
     if (res.error) {
       hintZones([]);
-      if (!quiet) out.innerHTML = `<div class="alert alert-danger alert-compact mb-0"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`;
+      if (!quiet) out.innerHTML = `<div class="rise flex gap-2.5 rounded-2xl bg-alarm-soft px-4 py-3 text-[14px] text-alarm"><i class="fa-solid fa-circle-exclamation mt-1"></i><div>${res.error}</div></div>`;
       return false;
     }
     const [first, ...rest] = res.results;
     render(first, rest);
     hintZones(Object.keys(first.model.zones).map(Number));
-    if (push) history.replaceState(null, "", "#" + encodeURIComponent((first.zone ? first.zone + "-" : "") + first.num));
+    if (push) history.replaceState(null, "", location.search + "#" + encodeURIComponent((first.zone ? first.zone + "-" : "") + first.num));
     return true;
   }
-  // ค้นหาทันทีขณะพิมพ์ (ไม่ต้องกดปุ่ม)
+  // ค้นหาทันทีขณะพิมพ์
   let t;
   function live() {
     clearTimeout(t);
     const v = num.value.trim();
     clearBtn.hidden = !v;
-    if (!v) { out.innerHTML = ""; hintZones([]); history.replaceState(null, "", location.pathname); return; }
+    if (!v) { curBus = null; out.innerHTML = emptyState(); hintZones([]); history.replaceState(null, "", location.pathname + location.search); return; }
     t = setTimeout(() => {
-      const digits = v.replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).replace(/\D/g, "");
-      if (digits.length < 4) { hintZones([]); return; }          // ยังพิมพ์ไม่ครบ ไม่ต้องฟ้อง
-      lookup(v, { quiet: digits.length < 5 });                   // 4 หลักอาจยังไม่ครบ → เงียบไว้ก่อน
+      const digits = thaiDigits(v).replace(/\D/g, "");
+      if (digits.length < 4) { hintZones([]); return; }
+      lookup(v, { quiet: digits.length < 5 });
     }, 120);
   }
   num.addEventListener("input", () => {
     // พิมพ์/วางแบบ "7-3077" → แยกเขตให้อัตโนมัติ
-    const mm = num.value.trim().replace(/[๐-๙]/g, d => "๐๑๒๓๔๕๖๗๘๙".indexOf(d)).match(/^([1-8])[-–—_/ ](\d+)$/);
+    const mm = thaiDigits(num.value.trim()).match(/^([1-8])[-–—_/ ](\d+)$/);
     if (mm) { num.value = mm[2]; setZone(mm[1], true); }
     live();
   });
@@ -485,11 +387,10 @@
     clearBtn.hidden = !num.value;
     lookup(num.value);
   }
-
   form.addEventListener("submit", e => { e.preventDefault(); clearTimeout(t); lookup(num.value); num.blur(); });
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-q]"); if (!b) return;
-    bootstrap.Offcanvas.getInstance($("#models"))?.hide();
+    $("#models").open && $("#models").close();
     showTab("search");
     setAndLookup(b.dataset.q);
     scrollTo(0, 0);
@@ -498,20 +399,16 @@
   $("#refgrid").innerHTML = MODELS.map(m => {
     const liv = LIVERY[m.livery], zs = Object.keys(m.zones);
     const sample = zs[0] + "-" + (m.range ? m.range[0] : m.prefix + "1".padStart(m.digits - m.prefix.length, "0"));
-    return `<button class="list-group-item list-group-item-action ref-item" type="button" data-q="${sample}">
-      <span class="pf">${esc(m.prefix)}<span class="x">${"X".repeat(m.digits - m.prefix.length)}</span></span>
-      <span class="flex-grow-1 min-w-0">
-        <span class="livery me-1"><i style="background:${liv.swatch[0]}"></i><i style="background:${liv.swatch[1]}"></i></span><span class="m">${esc(m.brand)} ${esc(m.model)}</span>
-        <div class="d">พ.ศ. ${m.year} · ${m.total} คัน · เขต ${zs.join(", ")}${m.retired ? ' · <span class="text-danger">ตัดจอด</span>' : ""}</div>
-      </span>
-      <i class="fa-solid fa-chevron-right text-secondary" style="font-size:11px"></i>
-    </button>`;
+    return `<button class="flex w-full items-center gap-3 px-5 py-3 text-left transition hover:bg-sunk" type="button" data-q="${sample}">
+      <span class="mini-plate w-[74px] justify-center !text-[15px]" style="${liveryVars(m)}">${esc(m.prefix)}<span class="opacity-40">${"X".repeat(m.digits - m.prefix.length)}</span></span>
+      <span class="min-w-0 flex-1 leading-snug"><span class="block text-[14.5px] font-semibold">${esc(m.brand)} ${esc(m.model)}</span>
+        <span class="block text-[12px] text-mute">พ.ศ. ${m.year} · ${m.total} คัน · เขต ${zs.join(", ")}${m.retired ? ' · <span class="text-alarm">ตัดจอด</span>' : ""}</span></span>
+      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`;
   }).join("");
 
-  // ---------- รีวิว / แต้ม / feed (Sprint 1) — คุยกับ REST API ที่ /api ใน origin เดียวกัน ----------
+  // ---------- รีวิว / แต้ม / feed — คุยกับ REST API ที่ /api ใน origin เดียวกัน ----------
   let token = store.get("token"), me = null, curBus = null, rvSort = "new", rvCtrl = null, feedSort = "new", pendingAfterAuth = null;
-  const sheet = id => bootstrap.Offcanvas.getOrCreateInstance($(id));
-  const OFFLINE_MSG = "ระบบรีวิวเปิดใช้บนเซิร์ฟเวอร์ของโปรเจกต์ (หน้านี้เป็นเวอร์ชันค้นหาอย่างเดียว)";
+  const OFFLINE_MSG = "รีวิวและแต้มใช้ได้บนเว็บหลักของโปรเจกต์ — หน้านี้ค้นหาได้อย่างเดียว";
 
   async function api(path, { method = "GET", body, signal } = {}) {
     const headers = {};
@@ -519,9 +416,9 @@
     if (token) headers.Authorization = "Bearer " + token;
     let r;
     try { r = await fetch("/api" + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal }); }
-    catch (e) { if (e.name === "AbortError") throw e; throw Object.assign(new Error("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"), { offline: true }); }
+    catch (e) { if (e.name === "AbortError") throw e; throw Object.assign(new Error("ต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"), { offline: true }); }
     const j = await r.json().catch(() => null);
-    if (!j) throw Object.assign(new Error(OFFLINE_MSG), { offline: true });
+    if (!j) throw Object.assign(new Error(r.status === 429 ? "กดถี่เกินไป รอสักครู่แล้วลองใหม่" : OFFLINE_MSG), { offline: true });
     if (r.status === 401 && token && !path.startsWith("/auth")) setToken(null);
     if (!r.ok) throw Object.assign(new Error(j.error || "เกิดข้อผิดพลาด"), { status: r.status });
     return j;
@@ -529,8 +426,10 @@
 
   let toastT;
   function toast(msg) { const el = $("#toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 2600); }
+  const loading = text => `<div class="flex items-center gap-2.5 p-5 text-[13.5px] text-mute"><i class="fa-solid fa-circle-notch fa-spin"></i>${text}</div>`;
+  const problem = msg => `<div class="flex gap-2.5 p-5 text-[13.5px] text-mute"><i class="fa-solid fa-plug-circle-xmark mt-1"></i><div>${esc(msg)}</div></div>`;
 
-  const starsTxt = v => { const n = Math.round(v || 0); return "★".repeat(n) + "☆".repeat(5 - n); };
+  const starsTxt = v => { const n = Math.round(v || 0); return "★".repeat(n) + `<span class="text-line">${"★".repeat(5 - n)}</span>`; };
   function ago(iso) {
     const d = new Date(iso), s = (Date.now() - d) / 1000;
     if (s < 60) return "เมื่อกี้";
@@ -540,89 +439,107 @@
     if (s < 604800) return Math.floor(s / 86400) + " วันก่อน";
     return d.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
   }
-  function modelOf(fleet) {
-    const m = String(fleet).match(/^(\d)-(\d+)$/); if (!m) return "";
-    const ms = matchModel(m[2]), x = ms.find(k => k.zones[m[1]]) || ms[0];
-    return x ? x.brand + " " + x.model : "";
-  }
 
-  function reviewItem(r, showBus) {
+  function reviewItem(r, showBus, first) {
     const inc = r.type === "incident";
     const avg = inc ? 0 : (r.stars_driving + r.stars_stops + r.stars_condition) / 3;
     const meta = [ago(r.created_at), r.ride_time ? r.ride_time + " น." : "", r.stop_name ? esc(r.stop_name) : ""].filter(Boolean).join(" · ");
-    return `<div class="rv">
-      ${showBus ? `<div class="mb-1" style="font-size:12.5px"><button class="busref" type="button" data-q="${esc(r.fleet_no)}"><i class="fa-solid fa-bus me-1 text-secondary"></i>${esc(r.fleet_no)}</button> <span class="text-secondary">${esc(modelOf(r.fleet_no))}</span></div>` : ""}
-      <div class="who"><span class="av">${esc(r.avatar)}</span><b class="text-body">${esc(r.display_name)}</b><span>· ${meta}</span>
-        <span class="ms-auto">${inc ? `<span class="inc"><i class="fa-solid fa-triangle-exclamation"></i> แจ้งเหตุ</span>` : `<span class="st">${starsTxt(avg)}</span>`}</span></div>
-      <div class="txt">${esc(r.text)}</div>
-      <div class="re">
-        <button class="hb ${r.voted ? "on" : ""}" type="button" data-helpful="${r.id}" ${r.voted || r.mine ? "disabled" : ""}>${inc ? `<i class="fa-solid fa-check me-1"></i>ยืนยัน` : `<i class="fa-solid fa-thumbs-up me-1"></i>มีประโยชน์`} <b>${r.helpful_count}</b></button>
-        ${inc ? "" : `<span>ขับ ${r.stars_driving} · จอดป้าย ${r.stars_stops} · สภาพ ${r.stars_condition}</span>`}
-        ${r.mine ? `<span class="ms-auto">ของฉัน</span>` : ""}
+    const m = showBus ? modelFor(r.fleet_no) : null;
+    return `<article class="${first ? "" : "border-t border-line"} px-4 py-3.5">
+      ${showBus ? `<button class="mb-2.5 flex items-center gap-2 text-left" type="button" data-q="${esc(r.fleet_no)}">${miniPlate(r.fleet_no)}<span class="text-[12.5px] text-mute">${m ? esc(m.brand + " " + m.model) : ""}</span></button>` : ""}
+      <div class="flex items-center gap-2.5">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sunk text-[18px]">${esc(r.avatar)}</span>
+        <div class="min-w-0 flex-1 leading-tight"><div class="truncate text-[14.5px] font-semibold">${esc(r.display_name)}${r.mine ? ` <span class="tag ml-1 bg-sunk !py-0 text-[11px] text-mute">ของฉัน</span>` : ""}</div><div class="truncate text-[12px] text-mute">${meta}</div></div>
+        ${inc ? `<span class="tag bg-alarm-soft text-alarm"><i class="fa-solid fa-triangle-exclamation"></i>แจ้งเหตุ</span>` : `<span class="text-[14px] tracking-wider text-ticket" aria-label="${avg.toFixed(1)} ดาว">${starsTxt(avg)}</span>`}
       </div>
-    </div>`;
+      <p class="mt-2 text-[14.5px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">${esc(r.text)}</p>
+      <div class="mt-2.5 flex flex-wrap items-center gap-2">
+        <button class="hb ${r.voted ? "on" : ""}" type="button" data-helpful="${r.id}" ${r.voted || r.mine ? "disabled" : ""}>${inc ? `<i class="fa-solid fa-check"></i>ยืนยันว่าจริง` : `<i class="fa-solid fa-thumbs-up"></i>มีประโยชน์`} <b class="num">${r.helpful_count}</b></button>
+        ${inc ? "" : `<span class="num text-[12px] text-mute">ขับ ${r.stars_driving} · จอดป้าย ${r.stars_stops} · สภาพ ${r.stars_condition}</span>`}
+      </div>
+    </article>`;
   }
 
-  function loadBus(fleet, num) {
+  function loadBus(fleet, n) {
     const box = $("#rvbox"); curBus = fleet;
     if (!box) return;
     rvCtrl?.abort();
     if (!fleet) {
-      box.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-star me-1"></i>เลือก<b>เขต</b>ด้านบนเพื่อดูรีวิวของคันนี้ — เลข ${esc(num)} มีได้หลายเขต แต่ละเขตคนละคัน</div>`;
+      box.innerHTML = `<div class="flex gap-3 p-5"><i class="fa-solid fa-star mt-1 text-ticket"></i><p class="text-[14px]">เลือก<b>เขต</b>ด้านบนเพื่อดูรีวิว — เลข <span class="num font-bold">${esc(n)}</span> มีได้หลายเขต แต่ละเขตเป็นรถคนละคัน</p></div>`;
       return;
     }
-    box.innerHTML = `<div class="p-3 small text-secondary"><span class="spinner-border spinner-border-sm me-2"></span>กำลังโหลดรีวิว…</div>`;
+    box.innerHTML = loading("กำลังโหลดรีวิว…");
     rvCtrl = new AbortController();
     const signal = rvCtrl.signal;
     Promise.all([api(`/buses/${fleet}`, { signal }), api(`/buses/${fleet}/reviews?sort=${rvSort}`, { signal })])
       .then(([b, list]) => { if (curBus === fleet) box.innerHTML = rvBox(b, list.items); })
-      .catch(e => { if (e.name !== "AbortError" && curBus === fleet) box.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-plug-circle-xmark me-1"></i>${esc(e.message)}</div>`; });
+      .catch(e => { if (e.name !== "AbortError" && curBus === fleet) box.innerHTML = problem(e.message); });
+  }
+  function verdict(s) {
+    if (!s.reviews) return `<span class="tag bg-sunk text-mute">ยังไม่มีใครรีวิว</span>`;
+    const few = s.reviews < 3 ? ` <span class="text-[12px] text-mute">· รีวิวยังน้อย</span>` : "";
+    if (s.avg >= 4) return `<span class="tag bg-ok-soft text-ok">ส่วนใหญ่บอกว่าดี</span>${few}`;
+    if (s.avg >= 3) return `<span class="tag bg-ticket-soft text-ticket-ink dark:text-ticket">พอใช้ได้</span>${few}`;
+    return `<span class="tag bg-alarm-soft text-alarm">หลายคนบ่น</span>${few}`;
   }
   function rvBox(b, items) {
     const s = b.stats;
-    const bar = (l, v) => `<div class="bar"><span>${l}</span><div class="t"><i style="width:${(v || 0) * 20}%"></i></div><b>${v ? v.toFixed(1) : "–"}</b></div>`;
+    const bar = (l, v) => `<div class="mt-1.5 flex items-center gap-2 text-[12.5px]"><span class="w-14 shrink-0 text-mute">${l}</span><div class="bar-t"><i style="width:${(v || 0) * 20}%"></i></div><b class="num w-7 text-right">${v ? v.toFixed(1) : "–"}</b></div>`;
     return `
-      <div class="px-3 pt-2 fw-bold"><i class="fa-solid fa-star text-warning me-1"></i>คันนี้ดีไหม? <span class="mono">${esc(b.fleet_no)}</span></div>
-      <div class="rating" style="border-top:0">
-        <div class="text-center"><div class="avg">${s.avg ? s.avg.toFixed(1) : "–"}</div><div class="stars">${starsTxt(s.avg)}</div><div class="small text-secondary">${s.reviews} รีวิว</div></div>
-        <div>${bar("การขับ", s.driving)}${bar("จอดป้าย", s.stops)}${bar("สภาพรถ", s.condition)}</div>
+      <div class="p-4 pb-3">
+        <div class="eyebrow">คันนี้ดีไหม?</div>
+        <div class="mt-2 flex items-center gap-4">
+          <div class="w-[78px] shrink-0 text-center">
+            <div class="num text-[46px] leading-none font-bold">${s.avg ? s.avg.toFixed(1) : "–"}</div>
+            <div class="mt-1 text-[12px] tracking-wider text-ticket">${starsTxt(s.avg)}</div>
+            <div class="text-[11.5px] text-mute">${s.reviews} รีวิว</div>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div>${verdict(s)}</div>
+            ${bar("การขับ", s.driving)}${bar("จอดป้าย", s.stops)}${bar("สภาพรถ", s.condition)}
+          </div>
+        </div>
       </div>
-      <div class="d-flex gap-2 px-3 pb-2">
-        <button class="btn btn-primary fw-bold flex-grow-1" type="button" data-write="review"><i class="fa-solid fa-pen me-1"></i>รีวิวคันนี้ <span class="opacity-75 small">+10 แต้ม</span></button>
-        <button class="btn btn-outline-danger" type="button" data-write="incident"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ${s.incidents ? ` <span class="badge text-bg-danger">${s.incidents}</span>` : ""}</button>
+      <div class="flex gap-2 px-4 pb-4">
+        <button class="btn-primary flex-1" type="button" data-write="review"><i class="fa-solid fa-pen"></i>รีวิวคันนี้ <span class="tag bg-white/20 !py-0">+10</span></button>
+        <button class="btn-alarm" type="button" data-write="incident"><i class="fa-solid fa-triangle-exclamation"></i>แจ้งเหตุ${s.incidents ? ` <b class="num">${s.incidents}</b>` : ""}</button>
       </div>
-      ${items.length ? `<div class="px-3 pb-2 d-flex gap-2"><button class="pill ${rvSort === "new" ? "on" : ""}" type="button" data-rvsort="new">ล่าสุด</button><button class="pill ${rvSort === "helpful" ? "on" : ""}" type="button" data-rvsort="helpful">มีประโยชน์</button></div>`
+      ${items.length ? `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5"><div class="eyebrow flex-1">รีวิวและเหตุ</div>
+          <div class="seg !p-0.5"><button class="${rvSort === "new" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="new">ล่าสุด</button><button class="${rvSort === "helpful" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="helpful">มีประโยชน์</button></div></div>`
         + items.map(r => reviewItem(r)).join("")
-        : `<div class="rv text-center text-secondary small py-3">ยังไม่มีรีวิวคันนี้ — เป็นคนแรกที่รีวิวสิ</div>`}`;
+        : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ยังไม่มีรีวิวคันนี้ — นั่งอยู่บนคันนี้ใช่ไหม? เขียนรีวิวแรกได้เลย</p>`}`;
   }
 
   // ---------- เขียนรีวิว / แจ้งเหตุ ----------
-  const ASPECTS = [["stars_driving", "การขับขี่"], ["stars_stops", "จอดรับ-ส่งที่ป้าย"], ["stars_condition", "สภาพรถ / แอร์ / ความสะอาด"]];
-  $("#wStars").innerHTML = ASPECTS.map(([k, l]) => `<div class="starrow" data-k="${k}" data-v="0"><span class="small">${l}</span><span class="s">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-star="${i}" aria-label="${i} ดาว">★</button>`).join("")}</span></div>`).join("");
+  const ASPECTS = [["stars_driving", "การขับขี่"], ["stars_stops", "จอดรับ-ส่งชิดป้าย"], ["stars_condition", "สภาพรถ แอร์ ความสะอาด"]];
+  let wType = "review";
+  $("#wStars").innerHTML = ASPECTS.map(([k, l]) => `<div class="starrow flex items-center justify-between gap-2 py-2" data-k="${k}" data-v="0" role="group" aria-label="${l}"><span class="text-[14px]">${l}</span><span class="star-in flex">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-star="${i}" aria-label="${i} ดาว">★</button>`).join("")}</span></div>`).join("");
   $("#wStars").addEventListener("click", e => {
     const b = e.target.closest("[data-star]"); if (!b) return;
     const row = b.closest(".starrow"), v = +b.dataset.star;
     row.dataset.v = v;
-    row.querySelectorAll("[data-star]").forEach(x => x.classList.toggle("on", +x.dataset.star <= v));
+    $$("[data-star]", row).forEach(x => x.classList.toggle("on", +x.dataset.star <= v));
   });
   function setWriteType(type) {
+    wType = type;
     const inc = type === "incident";
-    $(inc ? "#wtI" : "#wtR").checked = true;
+    $$("#wType [data-type]").forEach(b => b.classList.toggle("on", b.dataset.type === type));
     $("#wStars").hidden = inc;
     $("#wTitle").textContent = inc ? "แจ้งเหตุ" : "รีวิว";
     $("#wText").placeholder = inc ? "เกิดอะไรขึ้น เช่น รถเสีย จอดกลางถนน อุบัติเหตุ" : "เล่าสั้น ๆ: ขับเป็นไง จอดชิดป้ายไหม แอร์เย็นไหม";
     $("#wHint").innerHTML = inc
-      ? `<i class="fa-solid fa-circle-info me-1"></i>มีคนกด "ยืนยัน" ครบ 3 คน ได้ +20 แต้ม`
-      : `<i class="fa-solid fa-circle-info me-1"></i>ส่งได้ +10 · ใส่ป้ายและเวลาด้วยได้อีก +5 · รีวิว "คัน" ไม่ใช่ "คน" ห้ามระบุชื่อคนขับ · 1 รีวิว/คัน/วัน`;
-    $("#wSubmit").innerHTML = inc ? "ส่งแจ้งเหตุ" : `ส่งรีวิว <span class="opacity-75">+10 แต้ม</span>`;
+      ? `ถ้ามีคนกด "ยืนยันว่าจริง" ครบ 3 คน คุณได้ <b class="text-ink">+20 แต้ม</b>`
+      : `ส่งรีวิวได้ <b class="text-ink">+10</b> · ใส่ป้ายและเวลาด้วยได้อีก <b class="text-ink">+5</b><br>รีวิวรถ ไม่ใช่ตัวคน — ห้ามใส่ชื่อหรือรูปคนขับ · รีวิวคันเดิมได้วันละครั้ง`;
+    $("#wSubmit").innerHTML = inc ? "ส่งแจ้งเหตุ" : `ส่งรีวิว <span class="tag bg-white/20 !py-0">+10</span>`;
   }
-  document.querySelectorAll("[name=wType]").forEach(r => r.addEventListener("change", () => setWriteType(r.value)));
+  $("#wType").addEventListener("click", e => { const b = e.target.closest("[data-type]"); if (b) setWriteType(b.dataset.type); });
   function openWrite(type) {
     if (!curBus) return;
-    if (!token) return openAuth("ล็อกอินก่อน แล้วค่อยรีวิว — สมัครใหม่ได้ 20 แต้มเลย", () => openWrite(type));
+    if (!token) return openAuth("ล็อกอินก่อนแล้วค่อยรีวิว — สมัครใหม่ได้ 20 แต้มทันที", () => openWrite(type));
     $("#wBus").textContent = curBus;
+    $("#wBus").setAttribute("style", (m => m ? liveryVars(m) : "")(modelFor(curBus)));
     $("#wForm").reset();
-    $("#wStars").querySelectorAll(".starrow").forEach(r => { r.dataset.v = 0; r.querySelectorAll("button").forEach(b => b.classList.remove("on")); });
+    $$(".starrow", $("#wStars")).forEach(r => { r.dataset.v = 0; $$("button", r).forEach(b => b.classList.remove("on")); });
     const now = new Date(); $("#wTime").value = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
     $("#wErr").textContent = "";
     setWriteType(type);
@@ -630,16 +547,15 @@
   }
   $("#wForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const type = $("#wtI").checked ? "incident" : "review";
-    const body = { fleet_no: curBus, type, text: $("#wText").value, stop_name: $("#wStop").value, ride_time: $("#wTime").value };
-    $("#wStars").querySelectorAll(".starrow").forEach(r => { body[r.dataset.k] = +r.dataset.v || null; });
-    if (type === "review" && ASPECTS.some(([k]) => !body[k])) return $("#wErr").textContent = "ให้ดาวให้ครบ 3 ด้านก่อน";
-    if (!body.text.trim()) return $("#wErr").textContent = "เขียนอะไรสักหน่อยก่อนส่ง";
+    const body = { fleet_no: curBus, type: wType, text: $("#wText").value, stop_name: $("#wStop").value, ride_time: $("#wTime").value };
+    $$(".starrow", $("#wStars")).forEach(r => { body[r.dataset.k] = +r.dataset.v || null; });
+    if (wType === "review" && ASPECTS.some(([k]) => !body[k])) return $("#wErr").textContent = "ให้ดาวให้ครบทั้ง 3 ด้านก่อนส่ง";
+    if (!body.text.trim()) return $("#wErr").textContent = "เขียนเล่าสั้น ๆ ก่อนส่ง";
     const btn = $("#wSubmit"); btn.disabled = true;
     try {
       const r = await api("/reviews", { method: "POST", body });
       sheet("#writeSheet").hide();
-      toast(r.earned ? `ส่งแล้ว +${r.earned} แต้ม 🎉` : "ส่งแจ้งเหตุแล้ว ขอบคุณ");
+      toast(r.earned ? `ส่งรีวิวแล้ว +${r.earned} แต้ม` : "ส่งแจ้งเหตุแล้ว");
       rvSort = "new"; loadBus(curBus); refreshMe();
     } catch (err) { $("#wErr").textContent = err.message; }
     finally { btn.disabled = false; }
@@ -649,7 +565,7 @@
   let authMode = "login";
   function setAuthMode(m) {
     authMode = m;
-    document.querySelectorAll("[data-amode]").forEach(b => b.classList.toggle("on", b.dataset.amode === m));
+    $$("[data-amode]").forEach(b => b.classList.toggle("on", b.dataset.amode === m));
     $("#aName").hidden = m !== "register";
     $("#aTitle").textContent = $("#aSubmit").textContent = m === "register" ? "สมัครสมาชิก" : "เข้าสู่ระบบ";
     $("#aPass").autocomplete = m === "register" ? "new-password" : "current-password";
@@ -657,11 +573,12 @@
   }
   function openAuth(why, then, mode = "login") {
     pendingAfterAuth = then || null;
-    $("#aWhy").textContent = why || "";
+    $("#aWhy").textContent = why || ""; $("#aWhy").hidden = !why;
     setAuthMode(mode);
     sheet("#authSheet").show();
   }
-  document.querySelectorAll("[data-amode]").forEach(b => b.onclick = () => setAuthMode(b.dataset.amode));
+  $$("[data-amode]").forEach(b => b.onclick = () => setAuthMode(b.dataset.amode));
+  $("#authSheet").addEventListener("close", () => { const next = pendingAfterAuth; pendingAfterAuth = null; if (next && token) setTimeout(next, 50); });
   $("#aForm").addEventListener("submit", async e => {
     e.preventDefault();
     const btn = $("#aSubmit"); btn.disabled = true;
@@ -671,15 +588,13 @@
       const r = await api("/auth/" + authMode, { method: "POST", body });
       setToken(r.token);
       $("#aForm").reset();
-      sheet("#authSheet").hide();
       toast(authMode === "register" ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
       if (curBus) loadBus(curBus);
-      const next = pendingAfterAuth; pendingAfterAuth = null;
-      if (next) $("#authSheet").addEventListener("hidden.bs.offcanvas", next, { once: true });
+      sheet("#authSheet").hide();
     } catch (err) { $("#aErr").textContent = err.message; }
     finally { btn.disabled = false; }
   });
-  function setToken(t) { token = t; t ? store.set("token", t) : localStorage.removeItem("token"); if (!t) { me = null; updatePts(); } else refreshMe(); }
+  function setToken(t) { token = t; t ? store.set("token", t) : store.del("token"); if (!t) { me = null; updatePts(); } else refreshMe(); }
   async function refreshMe() {
     if (!token) { me = null; updatePts(); return; }
     try { me = await api("/me"); } catch { me = null; }
@@ -693,7 +608,7 @@
   }
   $("#ptsPill").onclick = () => showTab("me");
 
-  // กดมีประโยชน์ / ยืนยัน · เปลี่ยนการเรียง · ปุ่มเขียน
+  // กดมีประโยชน์ / ยืนยัน · เรียงรีวิว · ปุ่มเขียน
   document.addEventListener("click", async e => {
     const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
     const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
@@ -703,88 +618,107 @@
     try {
       const r = await api(`/reviews/${h.dataset.helpful}/helpful`, { method: "POST" });
       h.classList.add("on"); h.querySelector("b").textContent = r.helpful_count;
-      toast("ขอบคุณ — ผู้เขียนได้ +2 แต้ม");
+      toast("ผู้เขียนได้ +2 แต้มจากคุณ");
     } catch (err) { toast(err.message); if (err.status !== 409) h.disabled = false; }
   });
 
   // ---------- Feed ----------
   async function loadFeed() {
     const el = $("#feedList");
-    el.innerHTML = `<div class="p-3 small text-secondary"><span class="spinner-border spinner-border-sm me-2"></span>กำลังโหลด…</div>`;
+    el.innerHTML = `<div class="card">${loading("กำลังโหลด…")}</div>`;
     const q = feedSort === "incident" ? "?type=incident" : feedSort === "top" ? "?sort=top" : "";
     try {
       const r = await api("/feed" + q);
       el.innerHTML = r.items.length
-        ? `<div class="card rounded-3 overflow-hidden shadow-sm border-0">${r.items.map(x => reviewItem(x, true)).join("").replace('<div class="rv">', '<div class="rv" style="border-top:0">')}</div>`
-        : `<div class="p-4 text-center text-secondary small">ยังไม่มีรีวิว — ไปที่แท็บค้นหา กรอกเลขรถคันที่นั่งอยู่ แล้วรีวิวเป็นคนแรก</div>`;
-    } catch (e) { el.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-plug-circle-xmark me-1"></i>${esc(e.message)}</div>`; }
+        ? `<div class="card rise overflow-hidden">${r.items.map((x, i) => reviewItem(x, true, i === 0)).join("")}</div>`
+        : `<div class="card p-6 text-center"><p class="text-[14px]">${feedSort === "incident" ? "ยังไม่มีใครแจ้งเหตุ" : "ยังไม่มีรีวิว"}</p><button class="btn-quiet mt-3" type="button" data-tab-go="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นเลขรถที่นั่งอยู่</button></div>`;
+    } catch (e) { el.innerHTML = `<div class="card">${problem(e.message)}</div>`; }
   }
-  document.querySelectorAll("[data-feed]").forEach(b => b.onclick = () => {
+  $$("[data-feed]").forEach(b => b.onclick = () => {
     feedSort = b.dataset.feed;
-    document.querySelectorAll("[data-feed]").forEach(x => x.classList.toggle("on", x === b));
+    $$("[data-feed]").forEach(x => x.classList.toggle("on", x === b));
     loadFeed();
   });
   $("#feedReload").onclick = loadFeed;
 
-  // ---------- แลกของ (mock — เปิดแลกจริง Sprint 2) ----------
+  // ---------- แลกของ (ร้านยังไม่เปิดแลก) ----------
   const REWARDS = [
-    ["สติกเกอร์ reaction", [["🦖", "Yee", 20], ["🫡", "ลุงขับดี", 20], ["🫳🫴", "67", 30], ["🐂", "Niu Lai", 50], ["😱", "หวาดเสียว", 20], ["🗿", "จอดกลางถนน", 40]]],
-    ["Avatar", [["🧔", "ลุงคนขับ", 80], ["🚌", "สาย 8", 100], ["🐸", "กบ", 60]]],
+    ["สติกเกอร์ไว้กดในรีวิว", [["🦖", "Yee", 20], ["🫡", "ลุงขับดี", 20], ["🫳🫴", "67", 30], ["🐂", "Niu Lai", 50], ["😱", "หวาดเสียว", 20], ["🗿", "จอดกลางถนน", 40]]],
+    ["รูปโปรไฟล์", [["🧔", "ลุงคนขับ", 80], ["🚌", "สาย 8", 100], ["🐸", "กบ", 60]]],
   ];
+  const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"]];
   function renderShop() {
     const pts = me ? me.points : 0;
     $("#v-shop").innerHTML = `
-      <div class="wallet"><div style="font-size:34px">${me ? esc(me.user.avatar) : "🪙"}</div><div><div class="n">${pts}</div>
-        <div class="small opacity-75">${me ? `แต้มสะสม · ${esc(me.user.display_name)}` : "ล็อกอินเพื่อสะสมแต้ม"}</div></div></div>
-      <div class="alert alert-info alert-compact mt-2 mb-0"><i class="fa-solid fa-hammer mt-1"></i><div>ร้านแลกของเปิดใน <b>Sprint 2</b> — ตอนนี้แต้มสะสมไว้ใน ledger แล้ว แลกได้เมื่อร้านเปิด</div></div>
-      ${REWARDS.map(([h, items]) => `<div class="fw-bold small mt-3 mb-2">${h} <span class="soon">Sprint 2</span></div>
-        <div class="shop">${items.map(([f, n, c]) => `<div class="stk" style="${pts >= c ? "" : "opacity:.6"}"><div class="face">${f}</div><b>${n}</b><span class="cost">${c} แต้ม</span></div>`).join("")}</div>`).join("")}
-      <div class="small text-secondary mt-3"><i class="fa-solid fa-circle-info me-1"></i>ได้แต้มจาก: สมัคร +20 · เขียนรีวิว +10 · แนบป้าย/เวลา +5 · คนกดมีประโยชน์ +2/ครั้ง (สูงสุด 30/วัน) · แจ้งเหตุที่มีคนยืนยัน 3 คน +20</div>`;
+      <div class="ticket rise mt-1 flex">
+        <div class="flex-1 px-6 py-4">
+          <div class="font-display text-[12.5px] font-semibold uppercase tracking-[.08em] opacity-70">แต้มสะสม</div>
+          <div class="num text-[48px] leading-none font-bold">${pts}</div>
+          <div class="mt-1 text-[13px] font-medium">${me ? esc(me.user.display_name) : `<button type="button" class="underline" id="shopLogin">ล็อกอินเพื่อสะสมแต้ม</button>`}</div>
+        </div>
+        <div class="perf grid w-24 place-items-center text-[40px]">${me ? esc(me.user.avatar) : "🚌"}</div>
+      </div>
+      <p class="mt-3 flex gap-2 px-1 text-[13px] text-mute"><i class="fa-solid fa-store-slash mt-1"></i>ร้านยังไม่เปิดให้แลก — แต้มที่สะสมไว้ไม่หาย ใช้แลกได้ทันทีที่ร้านเปิด</p>
+      ${REWARDS.map(([h, items]) => `<div class="eyebrow mt-5 mb-2">${h}</div>
+        <div class="grid grid-cols-3 gap-2">${items.map(([f, n, c]) => `<div class="card relative p-3 text-center">
+          ${pts >= c ? `<span class="tag absolute top-2 right-2 bg-ok-soft !px-1.5 !py-0 text-[10.5px] text-ok">พอแลก</span>` : ""}
+          <div class="text-[38px] leading-tight">${f}</div><div class="mt-1 truncate text-[13px] font-semibold">${n}</div>
+          <div class="num mt-1 text-[13px] font-bold text-mute">${c} แต้ม</div></div>`).join("")}</div>`).join("")}
+      <div class="card mt-5 overflow-hidden">
+        <div class="eyebrow px-4 pt-3 pb-1">ได้แต้มจาก</div>
+        ${EARN.map(([k, v]) => `<div class="flex items-center border-t border-line px-4 py-2.5 text-[14px]"><span class="flex-1">${k}</span><b class="num text-ok">${v}</b></div>`).join("")}
+      </div>`;
+    $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth("", null, "register"));
   }
 
   // ---------- ฉัน ----------
-  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ระบุป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ" };
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ" };
   function renderMe() {
     const el = $("#v-me");
     if (!token || !me) {
-      el.innerHTML = `<div class="card rounded-3 shadow-sm border-0 p-4 text-center">
-        <div style="font-size:44px">🚌</div>
-        <div class="fw-bold mt-1">รีวิวรถเมล์คันที่นั่ง แล้วสะสมแต้ม</div>
-        <div class="small text-secondary mb-3">สมัครใหม่รับ 20 แต้ม · ใช้แค่อีเมล</div>
-        <div class="d-grid gap-2"><button class="btn btn-primary fw-bold" type="button" id="meReg">สมัครสมาชิก</button><button class="btn btn-outline-secondary" type="button" id="meLogin">เข้าสู่ระบบ</button></div></div>`;
+      el.innerHTML = `<div class="card rise overflow-hidden">
+        <div class="plate !rounded-b-none" style="--body:#f3e6c8;--band-c:#2346d6"><div class="fleet !text-[44px]">+20 <span class="z">แต้ม</span></div></div>
+        <div class="p-5">
+          <h2 class="font-display text-[21px] font-bold leading-tight">รีวิวรถเมล์คันที่นั่ง แล้วสะสมแต้ม</h2>
+          <p class="mt-1 text-[14px] text-mute">สมัครด้วยอีเมล ได้ 20 แต้มทันที · ใช้แลกสติกเกอร์และรูปโปรไฟล์</p>
+          <div class="mt-4 grid gap-2"><button class="btn-primary" type="button" id="meReg">สมัครสมาชิก</button><button class="btn-quiet" type="button" id="meLogin">มีบัญชีแล้ว เข้าสู่ระบบ</button></div>
+        </div></div>`;
       $("#meReg").onclick = () => openAuth("", null, "register");
       $("#meLogin").onclick = () => openAuth("", null, "login");
       return;
     }
-    el.innerHTML = `<div class="card rounded-3 shadow-sm border-0 overflow-hidden">
-        <div class="d-flex align-items-center gap-3 p-3"><div style="font-size:42px">${esc(me.user.avatar)}</div>
-          <div class="min-w-0 flex-grow-1"><div class="fw-bold fs-5">${esc(me.user.display_name)}</div><div class="small text-secondary text-truncate">${esc(me.user.email)}</div></div></div>
-        <div class="stat3 pb-3"><div><b>${me.points}</b><span>แต้ม</span></div><div><b>${me.reviews}</b><span>รีวิว/แจ้งเหตุ</span></div><div><b>${me.helpful}</b><span>ถูกกดมีประโยชน์</span></div></div>
+    el.innerHTML = `<div class="card rise overflow-hidden">
+        <div class="flex items-center gap-3.5 p-4"><div class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sunk text-[36px]">${esc(me.user.avatar)}</div>
+          <div class="min-w-0 flex-1"><div class="truncate font-display text-[22px] font-bold leading-tight">${esc(me.user.display_name)}</div><div class="truncate text-[13px] text-mute">${esc(me.user.email)}</div></div></div>
+        <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center">
+          ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="bg-card py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
+        </dl>
       </div>
-      <div class="card rounded-3 shadow-sm border-0 overflow-hidden mt-2">
-        <div class="px-3 pt-2 pb-1 fw-bold small"><i class="fa-solid fa-receipt me-1 text-primary"></i>ประวัติแต้ม</div>
-        ${me.ledger.map(l => `<div class="ledger"><span class="d ${l.delta > 0 ? "text-success" : "text-danger"}">${l.delta > 0 ? "+" : ""}${l.delta}</span><span class="flex-grow-1">${REASON[l.reason] || esc(l.reason)}</span><span class="small text-secondary">${ago(l.created_at)}</span></div>`).join("")}
+      <div class="card mt-3 overflow-hidden">
+        <div class="eyebrow px-4 pt-3 pb-1">ประวัติแต้ม</div>
+        ${me.ledger.map(l => `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5 text-[14px]"><b class="num w-11 text-right ${l.delta > 0 ? "text-ok" : "text-alarm"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><span class="flex-1">${REASON[l.reason] || esc(l.reason)}</span><span class="text-[12px] text-mute">${ago(l.created_at)}</span></div>`).join("")}
       </div>
-      <div class="d-grid mt-3"><button class="btn btn-outline-secondary btn-sm" type="button" id="logout"><i class="fa-solid fa-right-from-bracket me-1"></i>ออกจากระบบ</button></div>`;
+      <button class="btn-quiet mt-3 w-full text-[14px]" type="button" id="logout"><i class="fa-solid fa-right-from-bracket"></i>ออกจากระบบ</button>`;
     $("#logout").onclick = () => { setToken(null); toast("ออกจากระบบแล้ว"); if (curBus) loadBus(curBus); };
   }
 
   // ---------- แท็บ ----------
   function showTab(name) {
-    document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v-" + name);
-    document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+    $$(".view").forEach(v => v.hidden = v.id !== "v-" + name);
+    $$("[data-tab]").forEach(b => { const on = b.dataset.tab === name; b.classList.toggle("on", on); on ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"); });
     if (name === "feed") loadFeed();
     if (name === "shop") renderShop();
     if (name === "me") { renderMe(); refreshMe(); }
   }
-  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
+  $$("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
+  document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { showTab(b.dataset.tabGo); scrollTo(0, 0); } });
   refreshMe();
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
   if (["feed", "shop", "me"].includes(tab0)) showTab(tab0);
 
   const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
   addEventListener("hashchange", fromHash);
-  if (location.hash.length > 1) fromHash(); else num.focus();
+  if (location.hash.length > 1) fromHash(); else { out.innerHTML = emptyState(); if (!tab0) num.focus(); }
 })();
 </script>
 </body>

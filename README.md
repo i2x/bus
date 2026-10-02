@@ -6,6 +6,7 @@
 ใช้งานจริง: https://env-0241390.proen.app.ruk-com.cloud/ · สไลด์ Sprint 1: `/pitch/sprint1.html`
 
 - `index.html` — หน้าเว็บ (ค้นหา · รีวิว · Feed · แลกของ · ฉัน) เรียก API ที่ `/api` ใน origin เดียวกัน
+- `styles/app.css` — Tailwind CSS v4 (ต้นฉบับ) → `npm run build:css` ได้ `app.css` ที่หน้าเว็บใช้
 - `data.js` — ข้อมูลรุ่นรถ เขตการเดินรถ ค่าโดยสาร (คัดจาก
   [องค์การขนส่งมวลชนกรุงเทพ — วิกิพีเดีย](https://th.wikipedia.org/wiki/องค์การขนส่งมวลชนกรุงเทพ), CC BY-SA) — API ใช้ไฟล์เดียวกัน
 - `api/` — REST API (Node.js / Express / PostgreSQL) · `schema.sql` คือโครงสร้างตาราง
@@ -20,7 +21,7 @@ DATABASE_URL=postgres:///bus_dev JWT_SECRET=$(openssl rand -hex 32) npm run db:i
 DATABASE_URL=postgres:///bus_dev JWT_SECRET=... npm start      # API ที่ 127.0.0.1:3000
 ```
 
-หน้าเว็บอย่างเดียว (ไม่มีรีวิว): `python3 -m http.server 8765` แล้วเปิด http://localhost:8765
+หน้าเว็บ: `npm install && npm run watch:css` แล้ว `python3 -m http.server 8765` เปิด http://localhost:8765 (ไม่มี API = ค้นหาได้อย่างเดียว)
 
 ## Deploy
 

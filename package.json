@@ -1,0 +1,13 @@
+{
+  "name": "bus-web",
+  "private": true,
+  "description": "คันนี้ดีไหม? — หน้าเว็บ (Tailwind CSS build)",
+  "scripts": {
+    "build:css": "tailwindcss -i styles/app.css -o app.css --minify",
+    "watch:css": "tailwindcss -i styles/app.css -o app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}
