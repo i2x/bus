@@ -99,27 +99,32 @@
   </form>
 </dialog>
 
-<!-- ล็อกอิน / สมัคร -->
+<!-- เข้าสู่ระบบด้วย Google (ตอนนี้จำลอง) -->
 <dialog class="sheet" id="authSheet" aria-labelledby="aTitle">
   <div class="grab"></div>
-  <div class="px-5 pb-5">
+  <div class="px-5 pb-6">
     <div class="flex items-center gap-2 py-2">
+      <button class="icon-btn -ml-2" type="button" id="aBack" aria-label="ย้อนกลับ" hidden><i class="fa-solid fa-arrow-left"></i></button>
       <h2 class="flex-1 font-display text-[21px] font-bold" id="aTitle">เข้าสู่ระบบ</h2>
       <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <p class="mb-3 text-[13.5px] text-mute" id="aWhy" hidden></p>
-    <div class="seg">
-      <button class="on" type="button" data-amode="login">มีบัญชีแล้ว</button>
-      <button type="button" data-amode="register">สมัครใหม่ <span class="tag ml-1 bg-ticket px-1.5 py-0 text-ticket-ink">+20</span></button>
+    <div id="aStep1">
+      <p class="mb-4 text-[14px] text-mute" id="aWhy" hidden></p>
+      <button class="btn-google w-full" type="button" id="gBtn"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
+      <ul class="mt-4 grid gap-1.5 text-[13px] text-mute">
+        <li><i class="fa-solid fa-ticket-simple mr-2 w-4 text-center text-ticket"></i>เข้าครั้งแรกได้ 20 แต้ม</li>
+        <li><i class="fa-solid fa-id-badge mr-2 w-4 text-center"></i>ใช้แค่ชื่อและอีเมลจากบัญชี Google</li>
+        <li><i class="fa-solid fa-key mr-2 w-4 text-center"></i>ไม่ต้องตั้งรหัสผ่าน · ไม่เก็บตำแหน่งของคุณ</li>
+      </ul>
     </div>
-    <form id="aForm" class="mt-3 grid gap-2" novalidate>
-      <input id="aName" class="field" maxlength="30" placeholder="ชื่อที่แสดง (คนอื่นเห็นชื่อนี้)" autocomplete="nickname" aria-label="ชื่อที่แสดง" hidden>
-      <input id="aEmail" class="field" type="email" placeholder="อีเมล" autocomplete="email" inputmode="email" aria-label="อีเมล">
-      <input id="aPass" class="field" type="password" placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" autocomplete="current-password" aria-label="รหัสผ่าน">
-      <p class="text-[13px] font-medium text-alarm" id="aErr" role="alert"></p>
-      <button class="btn-primary w-full" id="aSubmit" type="submit">เข้าสู่ระบบ</button>
-    </form>
-    <p class="mt-3 text-[12px] text-mute"><i class="fa-solid fa-shield-halved mr-1"></i>เก็บแค่อีเมลกับชื่อที่แสดง · ไม่เก็บตำแหน่งของคุณ</p>
+    <div id="aStep2" hidden>
+      <div class="mb-3 flex items-start gap-2.5 rounded-2xl bg-ticket-soft px-4 py-3 text-[13px]">
+        <i class="fa-solid fa-flask mt-1 text-ticket-ink dark:text-ticket"></i>
+        <div><b>โหมดจำลอง</b> — ยังไม่ได้เชื่อมกับ Google จริง เลือกบัญชีทดสอบด้านล่างเพื่อลองใช้ระบบ</div>
+      </div>
+      <div class="overflow-hidden rounded-2xl border border-line" id="gList"></div>
+    </div>
+    <p class="mt-2 text-[13px] font-medium text-alarm" id="aErr" role="alert"></p>
   </div>
 </dialog>
 
@@ -535,7 +540,7 @@
   $("#wType").addEventListener("click", e => { const b = e.target.closest("[data-type]"); if (b) setWriteType(b.dataset.type); });
   function openWrite(type) {
     if (!curBus) return;
-    if (!token) return openAuth("ล็อกอินก่อนแล้วค่อยรีวิว — สมัครใหม่ได้ 20 แต้มทันที", () => openWrite(type));
+    if (!token) return openAuth("เข้าสู่ระบบก่อนแล้วค่อยรีวิว — ครั้งแรกได้ 20 แต้ม", () => openWrite(type));
     $("#wBus").textContent = curBus;
     $("#wBus").setAttribute("style", (m => m ? liveryVars(m) : "")(modelFor(curBus)));
     $("#wForm").reset();
@@ -561,38 +566,47 @@
     finally { btn.disabled = false; }
   });
 
-  // ---------- ล็อกอิน / สมัคร ----------
-  let authMode = "login";
-  function setAuthMode(m) {
-    authMode = m;
-    $$("[data-amode]").forEach(b => b.classList.toggle("on", b.dataset.amode === m));
-    $("#aName").hidden = m !== "register";
-    $("#aTitle").textContent = $("#aSubmit").textContent = m === "register" ? "สมัครสมาชิก" : "เข้าสู่ระบบ";
-    $("#aPass").autocomplete = m === "register" ? "new-password" : "current-password";
+  // ---------- เข้าสู่ระบบด้วย Google (จำลอง) ----------
+  // บัญชีทดสอบ: ตัวที่ทีมใช้ใส่ข้อมูลเดโม + บัญชีที่สร้างบนเครื่องนี้ (จำไว้ใน localStorage เหมือนรายชื่อบัญชีของ Google)
+  const DEMO_G = [["ฝน", "demo-fon@example.com"], ["ต้น", "demo-ton@example.com"], ["Ploy", "demo-ploy@example.com"], ["Nat", "demo-nat@example.com"], ["Bank", "demo-bank@example.com"]].map(([name, email]) => ({ name, email }));
+  const NICKS = ["มิ้นท์", "ปั้น", "เฟิร์น", "บอส", "แพร", "ภูมิ", "ใบเตย", "กาย", "ข้าวหอม", "ต้นกล้า"];
+  const gAccounts = () => { const mine = store.get("gAccounts") || []; return [...mine, ...DEMO_G.filter(d => !mine.some(m => m.email === d.email))]; };
+  function authStep(n) {
+    $("#aStep1").hidden = n !== 1; $("#aStep2").hidden = n !== 2; $("#aBack").hidden = n !== 2;
+    $("#aTitle").textContent = n === 1 ? "เข้าสู่ระบบ" : "เลือกบัญชี Google";
     $("#aErr").textContent = "";
+    if (n === 2) $("#gList").innerHTML = gAccounts().map((a, i) => `<button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-sunk ${i ? "border-t border-line" : ""}" data-gemail="${esc(a.email)}" data-gname="${esc(a.name)}">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-route-soft text-[16px] font-semibold text-route">${esc([...a.name][0])}</span>
+        <span class="min-w-0 flex-1 leading-tight"><span class="block truncate text-[14.5px] font-semibold">${esc(a.name)}</span><span class="block truncate text-[12.5px] text-mute">${esc(a.email)}</span></span></button>`).join("")
+      + `<button type="button" class="flex w-full items-center gap-3 border-t border-line px-4 py-3 text-left transition hover:bg-sunk" data-gnew>
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sunk text-mute"><i class="fa-solid fa-user-plus"></i></span>
+        <span class="text-[14.5px] font-semibold">ใช้บัญชีอื่น <span class="font-normal text-mute">(สร้างบัญชีทดสอบใหม่)</span></span></button>`;
   }
-  function openAuth(why, then, mode = "login") {
+  function openAuth(why, then) {
     pendingAfterAuth = then || null;
     $("#aWhy").textContent = why || ""; $("#aWhy").hidden = !why;
-    setAuthMode(mode);
+    authStep(1);
     sheet("#authSheet").show();
   }
-  $$("[data-amode]").forEach(b => b.onclick = () => setAuthMode(b.dataset.amode));
+  $("#gBtn").onclick = () => authStep(2);
+  $("#aBack").onclick = () => authStep(1);
   $("#authSheet").addEventListener("close", () => { const next = pendingAfterAuth; pendingAfterAuth = null; if (next && token) setTimeout(next, 50); });
-  $("#aForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const btn = $("#aSubmit"); btn.disabled = true;
+  $("#gList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-gemail], [data-gnew]"); if (!b) return;
+    let acc = { email: b.dataset.gemail, name: b.dataset.gname };
+    if (b.hasAttribute("data-gnew")) {
+      acc = { name: NICKS[Math.floor(Math.random() * NICKS.length)], email: "mock-" + Math.random().toString(36).slice(2, 8) + "@example.com" };
+      store.set("gAccounts", [acc, ...(store.get("gAccounts") || [])].slice(0, 5));
+    }
+    $$("#gList button").forEach(x => x.disabled = true);
     try {
-      const body = { email: $("#aEmail").value, password: $("#aPass").value };
-      if (authMode === "register") body.display_name = $("#aName").value;
-      const r = await api("/auth/" + authMode, { method: "POST", body });
+      const r = await api("/auth/google", { method: "POST", body: acc });
       setToken(r.token);
-      $("#aForm").reset();
-      toast(authMode === "register" ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
+      toast(r.created ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
       if (curBus) loadBus(curBus);
       sheet("#authSheet").hide();
     } catch (err) { $("#aErr").textContent = err.message; }
-    finally { btn.disabled = false; }
+    finally { $$("#gList button").forEach(x => x.disabled = false); }
   });
   function setToken(t) { token = t; t ? store.set("token", t) : store.del("token"); if (!t) { me = null; updatePts(); } else refreshMe(); }
   async function refreshMe() {
@@ -613,7 +627,7 @@
     const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
     const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
     const h = e.target.closest("[data-helpful]"); if (!h) return;
-    if (!token) return openAuth("ล็อกอินก่อนกดมีประโยชน์");
+    if (!token) return openAuth("เข้าสู่ระบบก่อนกดมีประโยชน์");
     h.disabled = true;
     try {
       const r = await api(`/reviews/${h.dataset.helpful}/helpful`, { method: "POST" });
@@ -654,7 +668,7 @@
         <div class="flex-1 px-6 py-4">
           <div class="font-display text-[12.5px] font-semibold uppercase tracking-[.08em] opacity-70">แต้มสะสม</div>
           <div class="num text-[48px] leading-none font-bold">${pts}</div>
-          <div class="mt-1 text-[13px] font-medium">${me ? esc(me.user.display_name) : `<button type="button" class="underline" id="shopLogin">ล็อกอินเพื่อสะสมแต้ม</button>`}</div>
+          <div class="mt-1 text-[13px] font-medium">${me ? esc(me.user.display_name) : `<button type="button" class="underline" id="shopLogin">เข้าสู่ระบบเพื่อสะสมแต้ม</button>`}</div>
         </div>
         <div class="perf grid w-24 place-items-center text-[40px]">${me ? esc(me.user.avatar) : "🚌"}</div>
       </div>
@@ -668,7 +682,7 @@
         <div class="eyebrow px-4 pt-3 pb-1">ได้แต้มจาก</div>
         ${EARN.map(([k, v]) => `<div class="flex items-center border-t border-line px-4 py-2.5 text-[14px]"><span class="flex-1">${k}</span><b class="num text-ok">${v}</b></div>`).join("")}
       </div>`;
-    $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth("", null, "register"));
+    $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth());
   }
 
   // ---------- ฉัน ----------
@@ -680,11 +694,10 @@
         <div class="plate !rounded-b-none" style="--body:#f3e6c8;--band-c:#2346d6"><div class="fleet !text-[44px]">+20 <span class="z">แต้ม</span></div></div>
         <div class="p-5">
           <h2 class="font-display text-[21px] font-bold leading-tight">รีวิวรถเมล์คันที่นั่ง แล้วสะสมแต้ม</h2>
-          <p class="mt-1 text-[14px] text-mute">สมัครด้วยอีเมล ได้ 20 แต้มทันที · ใช้แลกสติกเกอร์และรูปโปรไฟล์</p>
-          <div class="mt-4 grid gap-2"><button class="btn-primary" type="button" id="meReg">สมัครสมาชิก</button><button class="btn-quiet" type="button" id="meLogin">มีบัญชีแล้ว เข้าสู่ระบบ</button></div>
+          <p class="mt-1 text-[14px] text-mute">เข้าด้วยบัญชี Google ครั้งแรกได้ 20 แต้ม · ใช้แลกสติกเกอร์และรูปโปรไฟล์</p>
+          <button class="btn-google mt-4 w-full" type="button" id="meLogin"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
         </div></div>`;
-      $("#meReg").onclick = () => openAuth("", null, "register");
-      $("#meLogin").onclick = () => openAuth("", null, "login");
+      $("#meLogin").onclick = () => openAuth();
       return;
     }
     el.innerHTML = `<div class="card rise overflow-hidden">

@@ -121,6 +121,8 @@
   .btn-primary { @apply bg-route text-white hover:bg-route-ink dark:text-paper; }
   .btn-quiet { @apply bg-sunk text-ink hover:bg-line; }
   .btn-alarm { @apply bg-alarm-soft text-alarm; }
+  /* ปุ่ม Google: พื้นขาวตามแนวทางของ Google ทั้งธีมสว่างและมืด */
+  .btn-google { @apply inline-flex min-h-12 items-center justify-center gap-3 rounded-2xl border border-[#dadce0] bg-white px-4 text-[15px] font-semibold text-[#1f1f1f] shadow-sm transition hover:bg-[#f8f9fa] active:scale-[.97] disabled:opacity-50; }
   .icon-btn { @apply grid h-10 w-10 place-items-center rounded-full text-[17px] text-mute transition hover:bg-sunk active:scale-90; }
   .hb { @apply inline-flex items-center gap-1.5 rounded-full bg-sunk px-3 py-1 text-[12.5px] font-semibold text-ink transition active:scale-95; }
   .hb.on { @apply bg-route-soft text-route; }

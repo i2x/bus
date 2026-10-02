@@ -4,12 +4,17 @@
 CREATE TABLE IF NOT EXISTS users (
   id            serial PRIMARY KEY,
   email         text NOT NULL UNIQUE,
-  password_hash text NOT NULL,
+  password_hash text,                      -- ไม่ใช้แล้ว (เข้าสู่ระบบด้วย Google เท่านั้น)
+  google_sub    text UNIQUE,               -- รหัสบัญชี Google (โหมดจำลอง: 'mock:<email>')
   display_name  text NOT NULL,
   avatar        text NOT NULL DEFAULT '🙂',
   role          text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'moderator')),
   created_at    timestamptz NOT NULL DEFAULT now()
 );
+
+-- ฐานข้อมูลเดิมที่สร้างก่อนเปลี่ยนเป็น Google Sign-In
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub text UNIQUE;
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
 -- รถ 1 คัน = เลขข้างรถรวมเขต เช่น 7-3077 · สร้างเมื่อมีรีวิวแรก
 CREATE TABLE IF NOT EXISTS buses (

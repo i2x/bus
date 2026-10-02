@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 
@@ -76,34 +75,27 @@ app.get("/api/health", wrap(async (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 }));
 
-app.post("/api/auth/register", wrap(async (req, res) => {
+// เข้าสู่ระบบด้วย Google — ตอนนี้เป็นโหมดจำลอง (mock): ยังไม่ได้ตรวจ ID token กับ Google
+// จึงรับเฉพาะอีเมล @example.com (บัญชีทดสอบ) เพื่อไม่ให้ใครใช้ช่องนี้สวมรอยบัญชีจริงได้
+// ครั้งแรกที่เข้า = สร้างบัญชี + 20 แต้ม · ไม่มีรหัสผ่านในระบบ
+app.post("/api/auth/google", wrap(async (req, res) => {
   const email = str(req.body.email, 120).toLowerCase();
-  const password = typeof req.body.password === "string" ? req.body.password : "";
-  const name = str(req.body.display_name, 30);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw bad("อีเมลไม่ถูกต้อง");
-  if (password.length < 8 || password.length > 72) throw bad("รหัสผ่านต้องยาว 8–72 ตัวอักษร");
-  if (name.length < 2) throw bad("ชื่อที่แสดงต้องมีอย่างน้อย 2 ตัวอักษร");
-  if (hasBlocked(name)) throw bad("ชื่อที่แสดงมีคำไม่เหมาะสม");
-  const hash = await bcrypt.hash(password, 10);
-  const avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-  const user = await tx(async c => {
-    const r = await c.query(
-      "INSERT INTO users (email, password_hash, display_name, avatar) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id, display_name, avatar",
-      [email, hash, name, avatar]);
-    if (!r.rowCount) throw new HttpError(409, "อีเมลนี้สมัครแล้ว");
+  const name = str(req.body.name, 30);
+  if (!/^[a-z0-9._-]+@example\.com$/.test(email)) throw bad("โหมดจำลองรับเฉพาะบัญชีทดสอบ @example.com");
+  if (name.length < 2 || hasBlocked(name)) throw bad("ชื่อบัญชีไม่ถูกต้อง");
+  const sub = "mock:" + email;
+  const out = await tx(async c => {
+    let r = await c.query("SELECT id, display_name, avatar FROM users WHERE google_sub = $1", [sub]);
+    if (!r.rowCount) {
+      r = await c.query("UPDATE users SET google_sub = $1 WHERE email = $2 AND google_sub IS NULL RETURNING id, display_name, avatar", [sub, email]);
+    }
+    if (r.rowCount) return { user: r.rows[0], created: false };
+    const avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+    r = await c.query("INSERT INTO users (email, display_name, avatar, google_sub) VALUES ($1, $2, $3, $4) RETURNING id, display_name, avatar", [email, name, avatar, sub]);
     await addPoints(c, r.rows[0].id, PTS.signup, "signup");
-    return r.rows[0];
+    return { user: r.rows[0], created: true };
   });
-  res.status(201).json({ token: signToken(user), user });
-}));
-
-app.post("/api/auth/login", wrap(async (req, res) => {
-  const email = str(req.body.email, 120).toLowerCase();
-  const password = typeof req.body.password === "string" ? req.body.password : "";
-  const r = await pool.query("SELECT id, display_name, avatar, password_hash FROM users WHERE email = $1", [email]);
-  const u = r.rows[0];
-  if (!u || !(await bcrypt.compare(password, u.password_hash))) throw new HttpError(401, "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-  res.json({ token: signToken(u), user: { id: u.id, display_name: u.display_name, avatar: u.avatar } });
+  res.status(out.created ? 201 : 200).json({ token: signToken(out.user), ...out });
 }));
 
 app.get("/api/me", requireAuth, wrap(async (req, res) => {
