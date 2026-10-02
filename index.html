@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>รถเมล์คันนี้คือคันไหน</title>
-<meta name="description" content="กรอกหมายเลขข้างรถโดยสาร ขสมก. แล้วดูว่าเป็นรถยี่ห้อ/รุ่นอะไร สังกัดเขตการเดินรถไหน สีอะไร ค่าโดยสารเท่าไหร่">
+<title>คันนี้ดีไหม? — ค้นหาและรีวิวรถเมล์ ขสมก. รายคัน</title>
+<meta name="description" content="กรอกหมายเลขข้างรถโดยสาร ขสมก. ดูรุ่น เขต อู่ ค่าโดยสาร และรีวิวการขับ การจอดป้าย สภาพรถ ของคันนั้นจากผู้โดยสาร">
 <meta name="theme-color" content="#d3222a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="รถเมล์คันไหน">
+<meta name="apple-mobile-web-app-title" content="คันนี้ดีไหม">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23d3222a'/><text x='50' y='72' text-anchor='middle' font-size='60'>🚌</text></svg>">
 
@@ -29,7 +29,7 @@
   [data-bs-theme="light"] { --bs-body-bg: #f6f3ec; --bs-tertiary-bg: #ece7db; --bs-secondary-bg: #f0ece2; }
   [data-bs-theme="dark"]  { --bs-body-bg: #121110; --bs-tertiary-bg: #1f1d1a; --bs-secondary-bg: #262320; --bs-border-color: #35312b; }
   html { -webkit-text-size-adjust: 100%; }
-  body { padding-bottom: calc(16px + var(--safe-b)); -webkit-tap-highlight-color: transparent; }
+  body { padding-bottom: calc(76px + var(--safe-b)); -webkit-tap-highlight-color: transparent; }
   .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
   .btn-primary { --bs-btn-bg: var(--bmta); --bs-btn-border-color: var(--bmta); --bs-btn-hover-bg: #b81c23; --bs-btn-hover-border-color: #b81c23; --bs-btn-active-bg: #a0181f; }
   @media (min-width: 768px) { .container-app { max-width: 640px; } }
@@ -97,6 +97,62 @@
   .ref-item .pf .x { opacity: .4; }
   .ref-item .m { font-weight: 600; font-size: 14px; line-height: 1.2; }
   .ref-item .d { font-size: 11.5px; color: var(--bs-secondary-color); }
+
+  /* app: แต้ม, แท็บล่าง, view */
+  .pts { display: inline-flex; align-items: center; gap: 4px; background: #ffe8b3; color: #7a4d00; border-radius: 999px; padding: 2px 10px; font-size: 12.5px; font-weight: 700; font-family: "IBM Plex Mono", monospace; border: 0; }
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; background: var(--bs-body-bg); border-top: 1px solid var(--bs-border-color); padding-bottom: var(--safe-b); }
+  .tabbar .in { display: flex; max-width: 640px; margin: 0 auto; }
+  .tabbar button { flex: 1; border: 0; background: none; padding: 7px 0 8px; font-size: 11px; color: var(--bs-secondary-color); }
+  .tabbar button i { display: block; font-size: 18px; margin-bottom: 2px; }
+  .tabbar button.on { color: var(--bmta); font-weight: 600; }
+  .view-h { display: flex; align-items: center; gap: 6px; padding: 4px 0 8px; }
+  .pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--bs-tertiary-bg); border: 0; color: inherit; }
+  .pill.on { background: var(--bs-body-color); color: var(--bs-body-bg); }
+  .soon { font-size: 10.5px; font-weight: 700; background: #dfe9fb; color: #2b6fd6; border-radius: 999px; padding: 1px 8px; vertical-align: 2px; }
+
+  /* รีวิว */
+  .rating { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; padding: 12px; border-top: 1px solid var(--bs-border-color); }
+  .rating .avg { font-family: "IBM Plex Mono", monospace; font-size: 38px; font-weight: 700; line-height: 1; }
+  .stars, .rv .st { color: #e0a100; letter-spacing: 1px; }
+  .stars { font-size: 14px; }
+  .bar { display: grid; grid-template-columns: 58px 1fr 26px; gap: 8px; align-items: center; font-size: 12.5px; }
+  .bar + .bar { margin-top: 4px; }
+  .bar .t { height: 8px; border-radius: 99px; background: var(--bs-tertiary-bg); overflow: hidden; }
+  .bar .t i { display: block; height: 100%; background: var(--bmta); border-radius: 99px; }
+  .bar b { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; }
+  .rv { padding: 10px 12px; border-top: 1px solid var(--bs-border-color); }
+  .rv .who { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--bs-secondary-color); margin-bottom: 4px; min-width: 0; flex-wrap: wrap; }
+  .rv .av { width: 28px; height: 28px; border-radius: 50%; background: var(--bs-tertiary-bg); display: grid; place-items: center; font-size: 16px; }
+  .rv .st { font-size: 12px; }
+  .rv .txt { font-size: 14px; line-height: 1.45; white-space: pre-line; overflow-wrap: anywhere; }
+  .rv .busref { font-family: "IBM Plex Mono", monospace; font-weight: 700; color: var(--bs-body-color); border: 0; background: none; padding: 0; }
+  .re { display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--bs-secondary-color); }
+  .hb { font-size: 12px; background: var(--bs-tertiary-bg); color: var(--bs-body-color); border: 0; border-radius: 999px; padding: 3px 10px; }
+  .hb.on { background: #fde3e4; color: var(--bmta); font-weight: 600; }
+  .hb:disabled { opacity: 1; }
+  .inc { color: var(--bmta); font-weight: 700; font-size: 12px; }
+  .starrow { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--bs-border-color); }
+  .starrow .s button { border: 0; background: none; padding: 2px 3px; font-size: 26px; line-height: 1; color: #d9d4c8; }
+  .starrow .s button.on { color: #e0a100; }
+  [data-bs-theme="dark"] .starrow .s button { color: #4a453d; }
+  [data-bs-theme="dark"] .starrow .s button.on { color: #e0a100; }
+
+  /* แลกของ / ฉัน */
+  .wallet { background: #1a1a1a; color: #fff; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+  .wallet .n { font-family: "IBM Plex Mono", monospace; font-size: 34px; font-weight: 700; line-height: 1; }
+  .shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stk { background: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-radius: 14px; text-align: center; padding: 12px 6px 10px; }
+  [data-bs-theme="light"] .stk { background: #fff; }
+  .stk .face { font-size: 38px; line-height: 1.1; }
+  .stk b { display: block; font-size: 13px; margin-top: 4px; }
+  .stk .cost { font-size: 11px; font-weight: 700; color: #7a4d00; background: #ffe8b3; border-radius: 99px; padding: 1px 8px; display: inline-block; margin-top: 4px; font-family: "IBM Plex Mono", monospace; }
+  .stat3 { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+  .stat3 b { display: block; font-family: "IBM Plex Mono", monospace; font-size: 22px; }
+  .stat3 span { font-size: 12px; color: var(--bs-secondary-color); }
+  .ledger { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid var(--bs-border-color); font-size: 13.5px; }
+  .ledger .d { font-family: "IBM Plex Mono", monospace; font-weight: 700; min-width: 42px; text-align: right; }
+  .toastx { position: fixed; left: 50%; bottom: calc(76px + var(--safe-b)); transform: translate(-50%, 20px); z-index: 1060; background: #1a1a1a; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: .2s; pointer-events: none; max-width: 90vw; }
+  .toastx.show { opacity: 1; transform: translate(-50%, 0); }
 </style>
 </head>
 <body>
@@ -104,7 +160,8 @@
 <nav class="appbar">
   <div class="container-app container d-flex align-items-center py-1">
     <i class="fa-solid fa-bus me-2"></i>
-    <div class="brand flex-grow-1">รถเมล์คันนี้คือคันไหน?</div>
+    <div class="brand flex-grow-1">คันนี้ดีไหม?</div>
+    <button class="pts me-1" id="ptsPill" type="button" hidden aria-label="แต้มของฉัน"><i class="fa-solid fa-coins"></i><span>0</span></button>
     <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#models" aria-label="รุ่นรถทั้งหมด"><i class="fa-solid fa-list"></i></button>
     <button class="btn btn-sm px-2" id="themeBtn" type="button" aria-label="สลับธีมสว่าง/มืด"><i class="fa-solid fa-moon"></i></button>
     <button class="btn btn-sm px-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#help" aria-label="วิธีใช้"><i class="fa-solid fa-circle-question"></i></button>
@@ -113,6 +170,7 @@
 
 <main class="container-app container pt-2">
 
+ <section class="view" id="v-search">
   <form id="form" class="search" autocomplete="off">
     <div class="numwrap">
       <i class="fa-solid fa-hashtag lead-ic"></i>
@@ -128,8 +186,74 @@
   </form>
 
   <div id="out" class="mt-2"></div>
+ </section>
+
+ <section class="view" id="v-feed" hidden>
+  <div class="view-h">
+    <button class="pill on" type="button" data-feed="new">ล่าสุด</button>
+    <button class="pill" type="button" data-feed="top">มีประโยชน์</button>
+    <button class="pill" type="button" data-feed="incident"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ</button>
+    <button class="btn btn-sm ms-auto text-secondary" type="button" id="feedReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button>
+  </div>
+  <div id="feedList"></div>
+ </section>
+
+ <section class="view" id="v-shop" hidden></section>
+ <section class="view" id="v-me" hidden></section>
 
 </main>
+
+<nav class="tabbar" aria-label="เมนูหลัก"><div class="in">
+  <button type="button" data-tab="search" class="on"><i class="fa-solid fa-magnifying-glass"></i>ค้นหา</button>
+  <button type="button" data-tab="feed"><i class="fa-solid fa-newspaper"></i>Feed</button>
+  <button type="button" data-tab="shop"><i class="fa-solid fa-store"></i>แลกของ</button>
+  <button type="button" data-tab="me"><i class="fa-solid fa-user"></i>ฉัน</button>
+</div></nav>
+
+<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="writeSheet" style="height:auto;max-height:94vh">
+  <div class="offcanvas-header pb-1">
+    <h5 class="offcanvas-title fw-bold fs-6"><span id="wTitle">รีวิว</span> <span class="mono" id="wBus"></span></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+  </div>
+  <div class="offcanvas-body pt-1">
+    <form id="wForm" novalidate>
+      <div class="btn-group w-100 mb-1" role="group" aria-label="ประเภท">
+        <input type="radio" class="btn-check" name="wType" id="wtR" value="review" checked><label class="btn btn-outline-secondary btn-sm" for="wtR"><i class="fa-solid fa-star me-1"></i>รีวิว</label>
+        <input type="radio" class="btn-check" name="wType" id="wtI" value="incident"><label class="btn btn-outline-secondary btn-sm" for="wtI"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ</label>
+      </div>
+      <div id="wStars"></div>
+      <textarea id="wText" class="form-control mt-2" rows="3" maxlength="500" style="font-size:14px"></textarea>
+      <div class="row g-2 mt-0">
+        <div class="col-7"><label class="form-label small text-secondary mb-0" for="wStop">ป้ายที่ขึ้น</label><input id="wStop" class="form-control form-control-sm" maxlength="80" placeholder="เช่น ฟิวเจอร์พาร์ค"></div>
+        <div class="col-5"><label class="form-label small text-secondary mb-0" for="wTime">เวลา</label><input id="wTime" class="form-control form-control-sm" type="time"></div>
+      </div>
+      <div class="small text-secondary mt-2" id="wHint"></div>
+      <div class="small text-danger mt-1" id="wErr" role="alert"></div>
+      <div class="d-grid mt-2"><button class="btn btn-primary fw-bold" id="wSubmit" type="submit">ส่ง</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="offcanvas offcanvas-bottom rounded-top-4" tabindex="-1" id="authSheet" style="height:auto;max-height:94vh">
+  <div class="offcanvas-header pb-1">
+    <h5 class="offcanvas-title fw-bold fs-6"><i class="fa-solid fa-user me-2 text-primary"></i><span id="aTitle">เข้าสู่ระบบ</span></h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="ปิด"></button>
+  </div>
+  <div class="offcanvas-body pt-1">
+    <div class="small text-secondary mb-2" id="aWhy"></div>
+    <div class="d-flex gap-2 mb-2"><button class="pill on" type="button" data-amode="login">มีบัญชีแล้ว</button><button class="pill" type="button" data-amode="register">สมัครใหม่ +20 แต้ม</button></div>
+    <form id="aForm" novalidate>
+      <input id="aName" class="form-control mb-2" maxlength="30" placeholder="ชื่อที่แสดง (คนอื่นเห็น)" autocomplete="nickname" hidden>
+      <input id="aEmail" class="form-control mb-2" type="email" placeholder="อีเมล" autocomplete="email" inputmode="email">
+      <input id="aPass" class="form-control mb-1" type="password" placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" autocomplete="current-password">
+      <div class="small text-danger" id="aErr" role="alert"></div>
+      <div class="d-grid mt-2"><button class="btn btn-primary fw-bold" id="aSubmit" type="submit">เข้าสู่ระบบ</button></div>
+    </form>
+    <p class="text-secondary mt-2 mb-0" style="font-size:11.5px"><i class="fa-solid fa-shield-halved me-1"></i>เก็บแค่อีเมลกับชื่อที่แสดง · ไม่เก็บตำแหน่ง · รหัสผ่านเก็บแบบ bcrypt</p>
+  </div>
+</div>
+
+<div class="toastx" id="toast" role="status" aria-live="polite"></div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="models" style="width:min(100vw,420px)">
   <div class="offcanvas-header border-bottom py-2">
@@ -299,9 +423,11 @@
         <div class="collapse" id="dFare"><div class="detail">${fareDetail(liv.fare)}</div></div>
 
       </article>
-      ${alt}`;
+      ${alt}
+      <section class="card rounded-3 overflow-hidden shadow-sm border-0 mt-2" id="rvbox"></section>`;
 
     pushRecent(label);
+    loadBus(r.zone ? label : null, r.num);
   }
 
 
@@ -364,7 +490,9 @@
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-q]"); if (!b) return;
     bootstrap.Offcanvas.getInstance($("#models"))?.hide();
+    showTab("search");
     setAndLookup(b.dataset.q);
+    scrollTo(0, 0);
   });
 
   $("#refgrid").innerHTML = MODELS.map(m => {
@@ -379,6 +507,280 @@
       <i class="fa-solid fa-chevron-right text-secondary" style="font-size:11px"></i>
     </button>`;
   }).join("");
+
+  // ---------- รีวิว / แต้ม / feed (Sprint 1) — คุยกับ REST API ที่ /api ใน origin เดียวกัน ----------
+  let token = store.get("token"), me = null, curBus = null, rvSort = "new", rvCtrl = null, feedSort = "new", pendingAfterAuth = null;
+  const sheet = id => bootstrap.Offcanvas.getOrCreateInstance($(id));
+  const OFFLINE_MSG = "ระบบรีวิวเปิดใช้บนเซิร์ฟเวอร์ของโปรเจกต์ (หน้านี้เป็นเวอร์ชันค้นหาอย่างเดียว)";
+
+  async function api(path, { method = "GET", body, signal } = {}) {
+    const headers = {};
+    if (body) headers["Content-Type"] = "application/json";
+    if (token) headers.Authorization = "Bearer " + token;
+    let r;
+    try { r = await fetch("/api" + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal }); }
+    catch (e) { if (e.name === "AbortError") throw e; throw Object.assign(new Error("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้"), { offline: true }); }
+    const j = await r.json().catch(() => null);
+    if (!j) throw Object.assign(new Error(OFFLINE_MSG), { offline: true });
+    if (r.status === 401 && token && !path.startsWith("/auth")) setToken(null);
+    if (!r.ok) throw Object.assign(new Error(j.error || "เกิดข้อผิดพลาด"), { status: r.status });
+    return j;
+  }
+
+  let toastT;
+  function toast(msg) { const el = $("#toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("show"), 2600); }
+
+  const starsTxt = v => { const n = Math.round(v || 0); return "★".repeat(n) + "☆".repeat(5 - n); };
+  function ago(iso) {
+    const d = new Date(iso), s = (Date.now() - d) / 1000;
+    if (s < 60) return "เมื่อกี้";
+    if (s < 3600) return Math.floor(s / 60) + " นาทีที่แล้ว";
+    if (s < 86400) return Math.floor(s / 3600) + " ชม.ที่แล้ว";
+    if (s < 172800) return "เมื่อวาน";
+    if (s < 604800) return Math.floor(s / 86400) + " วันก่อน";
+    return d.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  }
+  function modelOf(fleet) {
+    const m = String(fleet).match(/^(\d)-(\d+)$/); if (!m) return "";
+    const ms = matchModel(m[2]), x = ms.find(k => k.zones[m[1]]) || ms[0];
+    return x ? x.brand + " " + x.model : "";
+  }
+
+  function reviewItem(r, showBus) {
+    const inc = r.type === "incident";
+    const avg = inc ? 0 : (r.stars_driving + r.stars_stops + r.stars_condition) / 3;
+    const meta = [ago(r.created_at), r.ride_time ? r.ride_time + " น." : "", r.stop_name ? esc(r.stop_name) : ""].filter(Boolean).join(" · ");
+    return `<div class="rv">
+      ${showBus ? `<div class="mb-1" style="font-size:12.5px"><button class="busref" type="button" data-q="${esc(r.fleet_no)}"><i class="fa-solid fa-bus me-1 text-secondary"></i>${esc(r.fleet_no)}</button> <span class="text-secondary">${esc(modelOf(r.fleet_no))}</span></div>` : ""}
+      <div class="who"><span class="av">${esc(r.avatar)}</span><b class="text-body">${esc(r.display_name)}</b><span>· ${meta}</span>
+        <span class="ms-auto">${inc ? `<span class="inc"><i class="fa-solid fa-triangle-exclamation"></i> แจ้งเหตุ</span>` : `<span class="st">${starsTxt(avg)}</span>`}</span></div>
+      <div class="txt">${esc(r.text)}</div>
+      <div class="re">
+        <button class="hb ${r.voted ? "on" : ""}" type="button" data-helpful="${r.id}" ${r.voted || r.mine ? "disabled" : ""}>${inc ? `<i class="fa-solid fa-check me-1"></i>ยืนยัน` : `<i class="fa-solid fa-thumbs-up me-1"></i>มีประโยชน์`} <b>${r.helpful_count}</b></button>
+        ${inc ? "" : `<span>ขับ ${r.stars_driving} · จอดป้าย ${r.stars_stops} · สภาพ ${r.stars_condition}</span>`}
+        ${r.mine ? `<span class="ms-auto">ของฉัน</span>` : ""}
+      </div>
+    </div>`;
+  }
+
+  function loadBus(fleet, num) {
+    const box = $("#rvbox"); curBus = fleet;
+    if (!box) return;
+    rvCtrl?.abort();
+    if (!fleet) {
+      box.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-star me-1"></i>เลือก<b>เขต</b>ด้านบนเพื่อดูรีวิวของคันนี้ — เลข ${esc(num)} มีได้หลายเขต แต่ละเขตคนละคัน</div>`;
+      return;
+    }
+    box.innerHTML = `<div class="p-3 small text-secondary"><span class="spinner-border spinner-border-sm me-2"></span>กำลังโหลดรีวิว…</div>`;
+    rvCtrl = new AbortController();
+    const signal = rvCtrl.signal;
+    Promise.all([api(`/buses/${fleet}`, { signal }), api(`/buses/${fleet}/reviews?sort=${rvSort}`, { signal })])
+      .then(([b, list]) => { if (curBus === fleet) box.innerHTML = rvBox(b, list.items); })
+      .catch(e => { if (e.name !== "AbortError" && curBus === fleet) box.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-plug-circle-xmark me-1"></i>${esc(e.message)}</div>`; });
+  }
+  function rvBox(b, items) {
+    const s = b.stats;
+    const bar = (l, v) => `<div class="bar"><span>${l}</span><div class="t"><i style="width:${(v || 0) * 20}%"></i></div><b>${v ? v.toFixed(1) : "–"}</b></div>`;
+    return `
+      <div class="px-3 pt-2 fw-bold"><i class="fa-solid fa-star text-warning me-1"></i>คันนี้ดีไหม? <span class="mono">${esc(b.fleet_no)}</span></div>
+      <div class="rating" style="border-top:0">
+        <div class="text-center"><div class="avg">${s.avg ? s.avg.toFixed(1) : "–"}</div><div class="stars">${starsTxt(s.avg)}</div><div class="small text-secondary">${s.reviews} รีวิว</div></div>
+        <div>${bar("การขับ", s.driving)}${bar("จอดป้าย", s.stops)}${bar("สภาพรถ", s.condition)}</div>
+      </div>
+      <div class="d-flex gap-2 px-3 pb-2">
+        <button class="btn btn-primary fw-bold flex-grow-1" type="button" data-write="review"><i class="fa-solid fa-pen me-1"></i>รีวิวคันนี้ <span class="opacity-75 small">+10 แต้ม</span></button>
+        <button class="btn btn-outline-danger" type="button" data-write="incident"><i class="fa-solid fa-triangle-exclamation me-1"></i>แจ้งเหตุ${s.incidents ? ` <span class="badge text-bg-danger">${s.incidents}</span>` : ""}</button>
+      </div>
+      ${items.length ? `<div class="px-3 pb-2 d-flex gap-2"><button class="pill ${rvSort === "new" ? "on" : ""}" type="button" data-rvsort="new">ล่าสุด</button><button class="pill ${rvSort === "helpful" ? "on" : ""}" type="button" data-rvsort="helpful">มีประโยชน์</button></div>`
+        + items.map(r => reviewItem(r)).join("")
+        : `<div class="rv text-center text-secondary small py-3">ยังไม่มีรีวิวคันนี้ — เป็นคนแรกที่รีวิวสิ</div>`}`;
+  }
+
+  // ---------- เขียนรีวิว / แจ้งเหตุ ----------
+  const ASPECTS = [["stars_driving", "การขับขี่"], ["stars_stops", "จอดรับ-ส่งที่ป้าย"], ["stars_condition", "สภาพรถ / แอร์ / ความสะอาด"]];
+  $("#wStars").innerHTML = ASPECTS.map(([k, l]) => `<div class="starrow" data-k="${k}" data-v="0"><span class="small">${l}</span><span class="s">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-star="${i}" aria-label="${i} ดาว">★</button>`).join("")}</span></div>`).join("");
+  $("#wStars").addEventListener("click", e => {
+    const b = e.target.closest("[data-star]"); if (!b) return;
+    const row = b.closest(".starrow"), v = +b.dataset.star;
+    row.dataset.v = v;
+    row.querySelectorAll("[data-star]").forEach(x => x.classList.toggle("on", +x.dataset.star <= v));
+  });
+  function setWriteType(type) {
+    const inc = type === "incident";
+    $(inc ? "#wtI" : "#wtR").checked = true;
+    $("#wStars").hidden = inc;
+    $("#wTitle").textContent = inc ? "แจ้งเหตุ" : "รีวิว";
+    $("#wText").placeholder = inc ? "เกิดอะไรขึ้น เช่น รถเสีย จอดกลางถนน อุบัติเหตุ" : "เล่าสั้น ๆ: ขับเป็นไง จอดชิดป้ายไหม แอร์เย็นไหม";
+    $("#wHint").innerHTML = inc
+      ? `<i class="fa-solid fa-circle-info me-1"></i>มีคนกด "ยืนยัน" ครบ 3 คน ได้ +20 แต้ม`
+      : `<i class="fa-solid fa-circle-info me-1"></i>ส่งได้ +10 · ใส่ป้ายและเวลาด้วยได้อีก +5 · รีวิว "คัน" ไม่ใช่ "คน" ห้ามระบุชื่อคนขับ · 1 รีวิว/คัน/วัน`;
+    $("#wSubmit").innerHTML = inc ? "ส่งแจ้งเหตุ" : `ส่งรีวิว <span class="opacity-75">+10 แต้ม</span>`;
+  }
+  document.querySelectorAll("[name=wType]").forEach(r => r.addEventListener("change", () => setWriteType(r.value)));
+  function openWrite(type) {
+    if (!curBus) return;
+    if (!token) return openAuth("ล็อกอินก่อน แล้วค่อยรีวิว — สมัครใหม่ได้ 20 แต้มเลย", () => openWrite(type));
+    $("#wBus").textContent = curBus;
+    $("#wForm").reset();
+    $("#wStars").querySelectorAll(".starrow").forEach(r => { r.dataset.v = 0; r.querySelectorAll("button").forEach(b => b.classList.remove("on")); });
+    const now = new Date(); $("#wTime").value = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+    $("#wErr").textContent = "";
+    setWriteType(type);
+    sheet("#writeSheet").show();
+  }
+  $("#wForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const type = $("#wtI").checked ? "incident" : "review";
+    const body = { fleet_no: curBus, type, text: $("#wText").value, stop_name: $("#wStop").value, ride_time: $("#wTime").value };
+    $("#wStars").querySelectorAll(".starrow").forEach(r => { body[r.dataset.k] = +r.dataset.v || null; });
+    if (type === "review" && ASPECTS.some(([k]) => !body[k])) return $("#wErr").textContent = "ให้ดาวให้ครบ 3 ด้านก่อน";
+    if (!body.text.trim()) return $("#wErr").textContent = "เขียนอะไรสักหน่อยก่อนส่ง";
+    const btn = $("#wSubmit"); btn.disabled = true;
+    try {
+      const r = await api("/reviews", { method: "POST", body });
+      sheet("#writeSheet").hide();
+      toast(r.earned ? `ส่งแล้ว +${r.earned} แต้ม 🎉` : "ส่งแจ้งเหตุแล้ว ขอบคุณ");
+      rvSort = "new"; loadBus(curBus); refreshMe();
+    } catch (err) { $("#wErr").textContent = err.message; }
+    finally { btn.disabled = false; }
+  });
+
+  // ---------- ล็อกอิน / สมัคร ----------
+  let authMode = "login";
+  function setAuthMode(m) {
+    authMode = m;
+    document.querySelectorAll("[data-amode]").forEach(b => b.classList.toggle("on", b.dataset.amode === m));
+    $("#aName").hidden = m !== "register";
+    $("#aTitle").textContent = $("#aSubmit").textContent = m === "register" ? "สมัครสมาชิก" : "เข้าสู่ระบบ";
+    $("#aPass").autocomplete = m === "register" ? "new-password" : "current-password";
+    $("#aErr").textContent = "";
+  }
+  function openAuth(why, then, mode = "login") {
+    pendingAfterAuth = then || null;
+    $("#aWhy").textContent = why || "";
+    setAuthMode(mode);
+    sheet("#authSheet").show();
+  }
+  document.querySelectorAll("[data-amode]").forEach(b => b.onclick = () => setAuthMode(b.dataset.amode));
+  $("#aForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("#aSubmit"); btn.disabled = true;
+    try {
+      const body = { email: $("#aEmail").value, password: $("#aPass").value };
+      if (authMode === "register") body.display_name = $("#aName").value;
+      const r = await api("/auth/" + authMode, { method: "POST", body });
+      setToken(r.token);
+      $("#aForm").reset();
+      sheet("#authSheet").hide();
+      toast(authMode === "register" ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
+      if (curBus) loadBus(curBus);
+      const next = pendingAfterAuth; pendingAfterAuth = null;
+      if (next) $("#authSheet").addEventListener("hidden.bs.offcanvas", next, { once: true });
+    } catch (err) { $("#aErr").textContent = err.message; }
+    finally { btn.disabled = false; }
+  });
+  function setToken(t) { token = t; t ? store.set("token", t) : localStorage.removeItem("token"); if (!t) { me = null; updatePts(); } else refreshMe(); }
+  async function refreshMe() {
+    if (!token) { me = null; updatePts(); return; }
+    try { me = await api("/me"); } catch { me = null; }
+    updatePts();
+  }
+  function updatePts() {
+    $("#ptsPill").hidden = !me;
+    if (me) $("#ptsPill span").textContent = me.points;
+    if (!$("#v-me").hidden) renderMe();
+    if (!$("#v-shop").hidden) renderShop();
+  }
+  $("#ptsPill").onclick = () => showTab("me");
+
+  // กดมีประโยชน์ / ยืนยัน · เปลี่ยนการเรียง · ปุ่มเขียน
+  document.addEventListener("click", async e => {
+    const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
+    const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
+    const h = e.target.closest("[data-helpful]"); if (!h) return;
+    if (!token) return openAuth("ล็อกอินก่อนกดมีประโยชน์");
+    h.disabled = true;
+    try {
+      const r = await api(`/reviews/${h.dataset.helpful}/helpful`, { method: "POST" });
+      h.classList.add("on"); h.querySelector("b").textContent = r.helpful_count;
+      toast("ขอบคุณ — ผู้เขียนได้ +2 แต้ม");
+    } catch (err) { toast(err.message); if (err.status !== 409) h.disabled = false; }
+  });
+
+  // ---------- Feed ----------
+  async function loadFeed() {
+    const el = $("#feedList");
+    el.innerHTML = `<div class="p-3 small text-secondary"><span class="spinner-border spinner-border-sm me-2"></span>กำลังโหลด…</div>`;
+    const q = feedSort === "incident" ? "?type=incident" : feedSort === "top" ? "?sort=top" : "";
+    try {
+      const r = await api("/feed" + q);
+      el.innerHTML = r.items.length
+        ? `<div class="card rounded-3 overflow-hidden shadow-sm border-0">${r.items.map(x => reviewItem(x, true)).join("").replace('<div class="rv">', '<div class="rv" style="border-top:0">')}</div>`
+        : `<div class="p-4 text-center text-secondary small">ยังไม่มีรีวิว — ไปที่แท็บค้นหา กรอกเลขรถคันที่นั่งอยู่ แล้วรีวิวเป็นคนแรก</div>`;
+    } catch (e) { el.innerHTML = `<div class="p-3 small text-secondary"><i class="fa-solid fa-plug-circle-xmark me-1"></i>${esc(e.message)}</div>`; }
+  }
+  document.querySelectorAll("[data-feed]").forEach(b => b.onclick = () => {
+    feedSort = b.dataset.feed;
+    document.querySelectorAll("[data-feed]").forEach(x => x.classList.toggle("on", x === b));
+    loadFeed();
+  });
+  $("#feedReload").onclick = loadFeed;
+
+  // ---------- แลกของ (mock — เปิดแลกจริง Sprint 2) ----------
+  const REWARDS = [
+    ["สติกเกอร์ reaction", [["🦖", "Yee", 20], ["🫡", "ลุงขับดี", 20], ["🫳🫴", "67", 30], ["🐂", "Niu Lai", 50], ["😱", "หวาดเสียว", 20], ["🗿", "จอดกลางถนน", 40]]],
+    ["Avatar", [["🧔", "ลุงคนขับ", 80], ["🚌", "สาย 8", 100], ["🐸", "กบ", 60]]],
+  ];
+  function renderShop() {
+    const pts = me ? me.points : 0;
+    $("#v-shop").innerHTML = `
+      <div class="wallet"><div style="font-size:34px">${me ? esc(me.user.avatar) : "🪙"}</div><div><div class="n">${pts}</div>
+        <div class="small opacity-75">${me ? `แต้มสะสม · ${esc(me.user.display_name)}` : "ล็อกอินเพื่อสะสมแต้ม"}</div></div></div>
+      <div class="alert alert-info alert-compact mt-2 mb-0"><i class="fa-solid fa-hammer mt-1"></i><div>ร้านแลกของเปิดใน <b>Sprint 2</b> — ตอนนี้แต้มสะสมไว้ใน ledger แล้ว แลกได้เมื่อร้านเปิด</div></div>
+      ${REWARDS.map(([h, items]) => `<div class="fw-bold small mt-3 mb-2">${h} <span class="soon">Sprint 2</span></div>
+        <div class="shop">${items.map(([f, n, c]) => `<div class="stk" style="${pts >= c ? "" : "opacity:.6"}"><div class="face">${f}</div><b>${n}</b><span class="cost">${c} แต้ม</span></div>`).join("")}</div>`).join("")}
+      <div class="small text-secondary mt-3"><i class="fa-solid fa-circle-info me-1"></i>ได้แต้มจาก: สมัคร +20 · เขียนรีวิว +10 · แนบป้าย/เวลา +5 · คนกดมีประโยชน์ +2/ครั้ง (สูงสุด 30/วัน) · แจ้งเหตุที่มีคนยืนยัน 3 คน +20</div>`;
+  }
+
+  // ---------- ฉัน ----------
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ระบุป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ" };
+  function renderMe() {
+    const el = $("#v-me");
+    if (!token || !me) {
+      el.innerHTML = `<div class="card rounded-3 shadow-sm border-0 p-4 text-center">
+        <div style="font-size:44px">🚌</div>
+        <div class="fw-bold mt-1">รีวิวรถเมล์คันที่นั่ง แล้วสะสมแต้ม</div>
+        <div class="small text-secondary mb-3">สมัครใหม่รับ 20 แต้ม · ใช้แค่อีเมล</div>
+        <div class="d-grid gap-2"><button class="btn btn-primary fw-bold" type="button" id="meReg">สมัครสมาชิก</button><button class="btn btn-outline-secondary" type="button" id="meLogin">เข้าสู่ระบบ</button></div></div>`;
+      $("#meReg").onclick = () => openAuth("", null, "register");
+      $("#meLogin").onclick = () => openAuth("", null, "login");
+      return;
+    }
+    el.innerHTML = `<div class="card rounded-3 shadow-sm border-0 overflow-hidden">
+        <div class="d-flex align-items-center gap-3 p-3"><div style="font-size:42px">${esc(me.user.avatar)}</div>
+          <div class="min-w-0 flex-grow-1"><div class="fw-bold fs-5">${esc(me.user.display_name)}</div><div class="small text-secondary text-truncate">${esc(me.user.email)}</div></div></div>
+        <div class="stat3 pb-3"><div><b>${me.points}</b><span>แต้ม</span></div><div><b>${me.reviews}</b><span>รีวิว/แจ้งเหตุ</span></div><div><b>${me.helpful}</b><span>ถูกกดมีประโยชน์</span></div></div>
+      </div>
+      <div class="card rounded-3 shadow-sm border-0 overflow-hidden mt-2">
+        <div class="px-3 pt-2 pb-1 fw-bold small"><i class="fa-solid fa-receipt me-1 text-primary"></i>ประวัติแต้ม</div>
+        ${me.ledger.map(l => `<div class="ledger"><span class="d ${l.delta > 0 ? "text-success" : "text-danger"}">${l.delta > 0 ? "+" : ""}${l.delta}</span><span class="flex-grow-1">${REASON[l.reason] || esc(l.reason)}</span><span class="small text-secondary">${ago(l.created_at)}</span></div>`).join("")}
+      </div>
+      <div class="d-grid mt-3"><button class="btn btn-outline-secondary btn-sm" type="button" id="logout"><i class="fa-solid fa-right-from-bracket me-1"></i>ออกจากระบบ</button></div>`;
+    $("#logout").onclick = () => { setToken(null); toast("ออกจากระบบแล้ว"); if (curBus) loadBus(curBus); };
+  }
+
+  // ---------- แท็บ ----------
+  function showTab(name) {
+    document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "v-" + name);
+    document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+    if (name === "feed") loadFeed();
+    if (name === "shop") renderShop();
+    if (name === "me") { renderMe(); refreshMe(); }
+  }
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
+  refreshMe();
+  const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
+  if (["feed", "shop", "me"].includes(tab0)) showTab(tab0);
 
   const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
   addEventListener("hashchange", fromHash);

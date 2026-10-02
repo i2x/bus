@@ -1,0 +1,17 @@
+[Unit]
+Description=คันนี้ดีไหม? REST API (Node.js)
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+User=busapi
+Group=busapi
+WorkingDirectory=/opt/bus-api
+EnvironmentFile=/etc/bus-api.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
