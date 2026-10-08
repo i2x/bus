@@ -1,0 +1,209 @@
+// ทดสอบ API กับ PostgreSQL จริง (ฐานข้อมูลทิ้งได้ bus_test) — npm test
+// เปิด server.js เป็น process แยก แล้วยิง HTTP ทุกกรณีที่ต้องผ่าน/ต้องถูกปฏิเสธ
+const { test, before, after } = require("node:test");
+const assert = require("node:assert/strict");
+const { spawn } = require("child_process");
+const path = require("path");
+const { Pool } = require("pg");
+const { hasBlocked, hasPhone } = require("./wordfilter");
+
+const PORT = 3999;
+const BASE = `http://127.0.0.1:${PORT}/api`;
+const DATABASE_URL = process.env.TEST_DATABASE_URL || "postgres:///bus_test";
+let srv, pool;
+
+before(async () => {
+  pool = new Pool({ connectionString: DATABASE_URL });
+  await pool.query("TRUNCATE users, buses, reviews, review_votes, points_ledger, user_rewards, review_reactions, reports, refresh_tokens RESTART IDENTITY CASCADE");
+  srv = spawn(process.execPath, [path.join(__dirname, "server.js")], {
+    env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), MODERATOR_EMAILS: "mod@example.com",
+      COOKIE_SECURE: "0", REFRESH_GRACE_MS: "0", GOOGLE_CLIENT_ID: "" },
+    stdio: ["ignore", "ignore", "inherit"],
+  });
+  for (let i = 0; i < 50; i++) {
+    try { if ((await fetch(BASE + "/health")).ok) return; } catch {}
+    await new Promise(r => setTimeout(r, 100));
+  }
+  throw new Error("server did not start");
+});
+after(async () => { srv?.kill(); await pool?.end(); });
+
+// ---------- helpers ----------
+async function call(method, p, { token, body, cookie } = {}) {
+  const headers = {};
+  if (body) headers["content-type"] = "application/json";
+  if (token) headers.authorization = "Bearer " + token;
+  if (cookie) headers.cookie = cookie;
+  const r = await fetch(BASE + p, { method, headers, body: body ? JSON.stringify(body) : undefined });
+  const set = r.headers.get("set-cookie") || "";
+  const m = set.match(/bus_rt=([^;]*)/);
+  return { status: r.status, body: await r.json(), cookie: m && m[1] ? "bus_rt=" + m[1] : null, setCookie: set };
+}
+const login = async (email, name = "ทดสอบ") => {
+  const r = await call("POST", "/auth/google", { body: { email, name } });
+  assert.ok([200, 201].includes(r.status), JSON.stringify(r.body));
+  return { token: r.body.token, cookie: r.cookie, id: r.body.user.id, created: r.body.created };
+};
+const points = async u => (await call("GET", "/me", { token: u.token })).body.points;
+const grant = (u, delta) => pool.query("INSERT INTO points_ledger (user_id, delta, reason) VALUES ($1, $2, 'test')", [u.id, delta]);
+const review = (u, fleet_no, extra = {}) => call("POST", "/reviews", { token: u.token, body: {
+  fleet_no, type: "review", stars_driving: 4, stars_stops: 3, stars_condition: 5, text: "แอร์เย็น ขับนิ่ม", ...extra } });
+
+let A, B, C, D, M, aReview, bReview;
+
+test("config: ยังไม่มี Google client ID → ใช้โหมดจำลอง", async () => {
+  const r = await call("GET", "/config");
+  assert.deepEqual(r.body, { google_client_id: null, mock_login: true });
+});
+
+test("เข้าสู่ระบบ: ครั้งแรก +20 · ได้ refresh cookie แบบ HttpOnly · อีเมลจริงถูกปฏิเสธในโหมดจำลอง", async () => {
+  A = await login("alice@example.com", "Alice");
+  assert.equal(A.created, true);
+  assert.equal(await points(A), 20);
+  const r = await call("POST", "/auth/google", { body: { email: "alice@example.com", name: "Alice" } });
+  assert.equal(r.status, 200);
+  assert.match(r.setCookie, /HttpOnly/i);
+  assert.match(r.setCookie, /SameSite=Strict/i);
+  assert.match(r.setCookie, /Path=\/api\/auth/);
+  assert.equal(await points(A), 20, "เข้าซ้ำไม่ได้แต้มซ้ำ");
+  assert.equal((await call("POST", "/auth/google", { body: { email: "someone@gmail.com", name: "x y" } })).status, 400);
+  B = await login("bob@example.com", "Bob");
+  C = await login("carol@example.com", "Carol");
+  D = await login("dave@example.com", "Dave");
+  M = await login("mod@example.com", "Mod");
+  assert.equal((await call("GET", "/me", { token: M.token })).body.user.role, "moderator");
+});
+
+test("รีวิว: +10 +5 · รีวิวซ้ำวันเดียวกัน 409 · คำหยาบ/เบอร์โทร 400", async () => {
+  let r = await review(A, "7-3077", { stop_name: "ฟิวเจอร์พาร์ค", ride_time: "08:15" });
+  assert.equal(r.status, 201); assert.equal(r.body.earned, 15); aReview = r.body.id;
+  assert.equal(await points(A), 35);
+  assert.equal((await review(A, "7-3077")).status, 409);
+  r = await review(B, "2-70235"); assert.equal(r.status, 201); assert.equal(r.body.earned, 10); bReview = r.body.id;
+  assert.equal((await review(B, "1-1234", { text: "คนขับ เ หี้ ย มาก" })).status, 400);
+  assert.equal((await review(B, "1-1234", { text: "ลืมของ โทร 081-234-5678" })).status, 400);
+  assert.equal((await review(B, "1-1234", { text: "ok", stop_name: "f.u.c.k" })).status, 400);
+});
+
+test("word filter: จับแบบเลี่ยงตัวสะกด แต่ไม่จับคำปกติ", () => {
+  for (const t of ["เหี้ยยยย", "ส ั ส", "f.u.c.k", "sh1t", "มึงขับดีๆ"]) assert.equal(hasBlocked(t), true, t);
+  assert.equal(hasBlocked("ขับโหดเหี้ยม"), false);
+  assert.equal(hasBlocked("ใช้กูเกิลแมพดูสาย"), false);
+  assert.equal(hasBlocked("แอร์เย็น คนขับใจดี"), false);
+  assert.equal(hasPhone("โทร 0812345678"), true);
+  assert.equal(hasPhone("+66 81 234 5678"), true);
+  assert.equal(hasPhone("รถ 7-3077 สาย 8 ราคา 15 บาท"), false);
+});
+
+test("มีประโยชน์: +2 ให้ผู้เขียน · ซ้ำ 409 · กดของตัวเอง 400", async () => {
+  assert.equal((await call("POST", `/reviews/${aReview}/helpful`, { token: B.token })).status, 200);
+  assert.equal((await call("POST", `/reviews/${aReview}/helpful`, { token: B.token })).status, 409);
+  assert.equal((await call("POST", `/reviews/${aReview}/helpful`, { token: A.token })).status, 400);
+  assert.equal(await points(A), 37);
+});
+
+test("แลกของ: แต้มไม่พอ 400 · แลกได้หักแต้ม · ซ้ำ 409 · ledger บันทึก", async () => {
+  let r = await call("POST", "/rewards/st-niulai/redeem", { token: A.token });
+  assert.equal(r.status, 400); assert.match(r.body.error, /ขาดอีก 13/);
+  r = await call("POST", "/rewards/st-yee/redeem", { token: A.token });
+  assert.equal(r.status, 201); assert.equal(r.body.points, 17);
+  assert.equal((await call("POST", "/rewards/st-yee/redeem", { token: A.token })).status, 409);
+  assert.equal((await call("POST", "/rewards/nope/redeem", { token: A.token })).status, 404);
+  assert.equal((await call("POST", "/rewards/st-yee/redeem")).status, 401);
+  const me = (await call("GET", "/me", { token: A.token })).body;
+  assert.equal(me.points, 17);
+  assert.deepEqual(me.owned, ["st-yee"]);
+  assert.deepEqual([me.ledger[0].delta, me.ledger[0].reason, me.ledger[0].note], [-20, "redeem", "Yee"]);
+  const list = (await call("GET", "/rewards", { token: A.token })).body.items;
+  assert.equal(list.find(x => x.id === "st-yee").owned, true);
+  assert.equal(list.find(x => x.id === "st-67").owned, false);
+});
+
+test("แลกของ: กดพร้อมกัน 2 ชิ้นด้วยแต้มที่พอแค่ชิ้นเดียว → ได้ชิ้นเดียว แต้มไม่ติดลบ", async () => {
+  const E = await login("eve@example.com", "Eve");   // 20 แต้ม
+  const rs = await Promise.all(["st-yee", "st-salute", "st-scary"].map(id => call("POST", `/rewards/${id}/redeem`, { token: E.token })));
+  assert.deepEqual(rs.map(r => r.status).sort(), [201, 400, 400]);
+  assert.equal(await points(E), 0);
+});
+
+test("รูปโปรไฟล์: ต้องแลกก่อน · แลกแล้วใช้ได้", async () => {
+  assert.equal((await call("POST", "/me/avatar", { token: M.token, body: { reward_id: "av-frog" } })).status, 403);
+  await grant(M, 100);
+  assert.equal((await call("POST", "/rewards/av-frog/redeem", { token: M.token })).status, 201);
+  assert.equal((await call("POST", "/me/avatar", { token: M.token, body: { reward_id: "st-yee" } })).status, 403);
+  const r = await call("POST", "/me/avatar", { token: M.token, body: { reward_id: "av-frog" } });
+  assert.equal(r.status, 200); assert.equal(r.body.avatar, "🐸");
+});
+
+test("สติกเกอร์: ต้องแลกก่อน · กดซ้ำ = ถอน · โชว์ในรายการรีวิว", async () => {
+  assert.equal((await call("POST", `/reviews/${bReview}/react`, { token: C.token, body: { sticker_id: "st-yee" } })).status, 403);
+  let r = await call("POST", `/reviews/${bReview}/react`, { token: A.token, body: { sticker_id: "st-yee" } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.reactions, [{ id: "st-yee", emoji: "🦖", n: 1 }]);
+  assert.equal(r.body.my_reaction, "st-yee");
+  const list = (await call("GET", "/buses/2-70235/reviews", { token: A.token })).body.items;
+  assert.equal(list[0].my_reaction, "st-yee");
+  assert.equal(list[0].reactions[0].n, 1);
+  r = await call("POST", `/reviews/${bReview}/react`, { token: A.token, body: { sticker_id: "st-yee" } });
+  assert.deepEqual(r.body.reactions, []); assert.equal(r.body.my_reaction, null);
+  assert.equal(await points(B), 30, "สติกเกอร์ไม่ให้แต้ม");
+});
+
+test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ่อนอัตโนมัติ", async () => {
+  assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: A.token, body: { reason: "spam" } })).status, 400);
+  assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "whatever" } })).status, 400);
+  let r = await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "rude" } });
+  assert.equal(r.status, 201); assert.equal(r.body.hidden, false);
+  assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "rude" } })).status, 409);
+  const mine = (await call("GET", "/buses/7-3077/reviews", { token: B.token })).body.items[0];
+  assert.equal(mine.reported, true);
+  await call("POST", `/reviews/${aReview}/report`, { token: C.token, body: { reason: "fake" } });
+  r = await call("POST", `/reviews/${aReview}/report`, { token: D.token, body: { reason: "spam" } });
+  assert.equal(r.body.hidden, true);
+  assert.equal((await call("GET", "/buses/7-3077/reviews")).body.items.length, 0);
+  assert.equal((await call("GET", "/buses/7-3077")).body.stats.reviews, 0);
+});
+
+test("moderator: คนทั่วไป 403 · ยืนยันว่าผิด → ซ่อน + หัก −20 ครั้งเดียว · ไม่ผิด → แสดงกลับ", async () => {
+  assert.equal((await call("GET", "/mod/reports", { token: B.token })).status, 403);
+  assert.equal((await call("GET", "/mod/reports")).status, 401);
+  let q = (await call("GET", "/mod/reports", { token: M.token })).body.items;
+  assert.equal(q.length, 1); assert.equal(q[0].id, aReview); assert.equal(q[0].reports, 3);
+  assert.deepEqual(q[0].reasons, ["rude", "fake", "spam"]);
+  let r = await call("POST", `/mod/reviews/${aReview}/resolve`, { token: M.token, body: { action: "hide" } });
+  assert.equal(r.status, 200); assert.equal(r.body.penalty, -20); assert.equal(r.body.resolved, 3);
+  assert.equal(await points(A), -3);
+  assert.equal((await call("POST", `/mod/reviews/${aReview}/resolve`, { token: M.token, body: { action: "hide" } })).status, 409);
+
+  await call("POST", `/reviews/${bReview}/report`, { token: A.token, body: { reason: "fake" } });
+  r = await call("POST", `/mod/reviews/${bReview}/resolve`, { token: M.token, body: { action: "keep" } });
+  assert.equal(r.body.status, "visible"); assert.equal(r.body.penalty, 0);
+  assert.equal(await points(B), 30);
+  q = (await call("GET", "/mod/reports", { token: M.token })).body.items;
+  assert.equal(q.length, 0);
+});
+
+test("refresh token: หมุนทุกครั้ง · เอาอันเก่ามาใช้ซ้ำ = เพิกถอนทั้งชุด · logout แล้วใช้ไม่ได้", async () => {
+  assert.equal((await call("POST", "/auth/refresh")).status, 401);
+  const u = await login("frank@example.com", "Frank");
+  const r1 = await call("POST", "/auth/refresh", { cookie: u.cookie });
+  assert.equal(r1.status, 200); assert.ok(r1.body.token); assert.ok(r1.cookie); assert.notEqual(r1.cookie, u.cookie);
+  assert.equal((await call("GET", "/me", { token: r1.body.token })).status, 200);
+  assert.equal((await call("POST", "/auth/refresh", { cookie: u.cookie })).status, 401, "ใช้ token เก่าซ้ำ");
+  assert.equal((await call("POST", "/auth/refresh", { cookie: r1.cookie })).status, 401, "ทั้ง family ถูกเพิกถอน");
+
+  const v = await login("frank@example.com", "Frank");
+  assert.equal((await call("POST", "/auth/logout", { cookie: v.cookie })).status, 200);
+  assert.equal((await call("POST", "/auth/refresh", { cookie: v.cookie })).status, 401);
+  assert.equal((await call("GET", "/me", { token: "Bearer.x.y" })).status, 401);
+});
+
+test("ลบบัญชี: ข้อมูลหาย · token ใช้ไม่ได้ · จำนวนมีประโยชน์ของรีวิวคนอื่นลดตาม", async () => {
+  assert.equal((await call("POST", `/reviews/${bReview}/helpful`, { token: D.token })).status, 200);
+  assert.equal((await call("DELETE", "/me", { token: D.token })).status, 200);
+  assert.equal((await call("GET", "/me", { token: D.token })).status, 401);
+  const n = (await pool.query("SELECT count(*)::int AS n FROM users WHERE email = 'dave@example.com'")).rows[0].n;
+  assert.equal(n, 0);
+  const hc = (await pool.query("SELECT helpful_count FROM reviews WHERE id = $1", [bReview])).rows[0].helpful_count;
+  assert.equal(hc, 0);
+});

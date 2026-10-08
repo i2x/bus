@@ -1,15 +1,16 @@
 {
   "name": "bus-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "คันนี้ดีไหม? — REST API (Sprint 1)",
+  "description": "คันนี้ดีไหม? — REST API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "db:init": "node db-init.js"
+    "db:init": "node db-init.js",
+    "test": "dropdb --if-exists bus_test && createdb bus_test && DATABASE_URL=postgres:///bus_test node db-init.js && node --test test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "express": "^4.21.2",

@@ -65,3 +65,71 @@ CREATE TABLE IF NOT EXISTS points_ledger (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS ledger_user ON points_ledger (user_id, created_at DESC);
+
+-- ---------- Sprint 2 ----------
+
+-- ของที่แลกได้ (สติกเกอร์ไว้กดในรีวิว · รูปโปรไฟล์) · seed ซ้ำได้
+CREATE TABLE IF NOT EXISTS rewards (
+  id    text PRIMARY KEY,
+  type  text NOT NULL CHECK (type IN ('sticker', 'avatar')),
+  name  text NOT NULL,
+  emoji text NOT NULL,
+  cost  int  NOT NULL CHECK (cost > 0),
+  sort  int  NOT NULL DEFAULT 0
+);
+INSERT INTO rewards (id, type, name, emoji, cost, sort) VALUES
+  ('st-yee',    'sticker', 'Yee',          '🦖',   20, 1),
+  ('st-salute', 'sticker', 'ลุงขับดี',     '🫡',   20, 2),
+  ('st-67',     'sticker', '67',           '🫳🫴', 30, 3),
+  ('st-niulai', 'sticker', 'Niu Lai',      '🐂',   50, 4),
+  ('st-scary',  'sticker', 'หวาดเสียว',    '😱',   20, 5),
+  ('st-moai',   'sticker', 'จอดกลางถนน',   '🗿',   40, 6),
+  ('av-uncle',  'avatar',  'ลุงคนขับ',     '🧔',   80, 1),
+  ('av-bus8',   'avatar',  'สาย 8',        '🚌',  100, 2),
+  ('av-frog',   'avatar',  'กบ',           '🐸',   60, 3)
+ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, name = EXCLUDED.name, emoji = EXCLUDED.emoji, cost = EXCLUDED.cost, sort = EXCLUDED.sort;
+
+CREATE TABLE IF NOT EXISTS user_rewards (
+  user_id    int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reward_id  text NOT NULL REFERENCES rewards(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, reward_id)
+);
+
+-- กดสติกเกอร์ในรีวิว: คนละ 1 อันต่อรีวิว (เปลี่ยน/ถอนได้) · ไม่ให้แต้ม
+CREATE TABLE IF NOT EXISTS review_reactions (
+  review_id  int  NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  user_id    int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sticker_id text NOT NULL REFERENCES rewards(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (review_id, user_id)
+);
+
+-- รายงานรีวิว → moderator ตัดสิน · คนละครั้งต่อรีวิว
+CREATE TABLE IF NOT EXISTS reports (
+  id          serial PRIMARY KEY,
+  review_id   int  NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  reporter_id int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason      text NOT NULL CHECK (reason IN ('spam', 'rude', 'personal', 'fake')),
+  status      text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'upheld', 'dismissed')),
+  resolved_by int  REFERENCES users(id) ON DELETE SET NULL,
+  resolved_at timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (review_id, reporter_id)
+);
+CREATE INDEX IF NOT EXISTS reports_open ON reports (review_id) WHERE status = 'open';
+
+-- refresh token: เก็บแค่ sha256 · หมุนทุกครั้งที่ใช้ · family เดียวกันถูกเพิกถอนทั้งชุดถ้าเจอใช้ซ้ำ
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id          serial PRIMARY KEY,
+  user_id     int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  family      uuid NOT NULL,
+  token_hash  text NOT NULL UNIQUE,
+  expires_at  timestamptz NOT NULL,
+  revoked_at  timestamptz,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS refresh_family ON refresh_tokens (family);
+
+-- หมายเหตุของแต้ม เช่น ชื่อของที่แลก
+ALTER TABLE points_ledger ADD COLUMN IF NOT EXISTS note text;
