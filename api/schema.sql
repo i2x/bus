@@ -74,20 +74,14 @@ CREATE TABLE IF NOT EXISTS rewards (
   type  text NOT NULL CHECK (type IN ('sticker', 'avatar')),
   name  text NOT NULL,
   emoji text NOT NULL,
-  cost  int  NOT NULL CHECK (cost > 0),
+  cost  int  NOT NULL CHECK (cost >= 0),
   sort  int  NOT NULL DEFAULT 0
 );
-INSERT INTO rewards (id, type, name, emoji, cost, sort) VALUES
-  ('st-yee',    'sticker', 'Yee',          '🦖',   20, 1),
-  ('st-salute', 'sticker', 'ลุงขับดี',     '🫡',   20, 2),
-  ('st-67',     'sticker', '67',           '🫳🫴', 30, 3),
-  ('st-niulai', 'sticker', 'Niu Lai',      '🐂',   50, 4),
-  ('st-scary',  'sticker', 'หวาดเสียว',    '😱',   20, 5),
-  ('st-moai',   'sticker', 'จอดกลางถนน',   '🗿',   40, 6),
-  ('av-uncle',  'avatar',  'ลุงคนขับ',     '🧔',   80, 1),
-  ('av-bus8',   'avatar',  'สาย 8',        '🚌',  100, 2),
-  ('av-frog',   'avatar',  'กบ',           '🐸',   60, 3)
-ON CONFLICT (id) DO UPDATE SET type = EXCLUDED.type, name = EXCLUDED.name, emoji = EXCLUDED.emoji, cost = EXCLUDED.cost, sort = EXCLUDED.sort;
+-- รายการของอยู่ใน api/rewards.json (db-init.js upsert ให้) · ราคา 0 = ฟรี ทุกคนใช้ได้ไม่ต้องแลก
+ALTER TABLE rewards ADD COLUMN IF NOT EXISTS img text;      -- path รูป เช่น stickers/st-rofl.webp (null = ใช้ emoji)
+ALTER TABLE rewards ADD COLUMN IF NOT EXISTS credit text;   -- ที่มาของรูป (fluent / dicebear-<style>)
+ALTER TABLE rewards DROP CONSTRAINT IF EXISTS rewards_cost_check;
+ALTER TABLE rewards ADD CONSTRAINT rewards_cost_check CHECK (cost >= 0);
 
 CREATE TABLE IF NOT EXISTS user_rewards (
   user_id    int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -133,3 +127,6 @@ CREATE INDEX IF NOT EXISTS refresh_family ON refresh_tokens (family);
 
 -- หมายเหตุของแต้ม เช่น ชื่อของที่แลก
 ALTER TABLE points_ledger ADD COLUMN IF NOT EXISTS note text;
+
+-- รูปโปรไฟล์แบบรูปภาพ (avatar = emoji สำรอง)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_img text;

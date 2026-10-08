@@ -69,6 +69,8 @@ const requireAuth = (req, _res, next) => { req.user = readAuth(req); next(req.us
 const str = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
 const star = v => Number.isInteger(v) && v >= 1 && v <= 5 ? v : null;
 const forbidden = (status, msg) => new HttpError(status, msg);
+// ของราคา 0 = ฟรี ทุกคนใช้ได้ · ของที่มีราคาต้องแลกก่อน
+const OWNS = (w, uid) => `(${w}.cost = 0 OR EXISTS (SELECT 1 FROM user_rewards ur WHERE ur.reward_id = ${w}.id AND ur.user_id = ${uid}))`;
 
 // role อ่านจาก DB ทุกครั้ง (ถอดสิทธิ์แล้วมีผลทันที ไม่ต้องรอ token หมดอายุ)
 const requireMod = wrap(async (req, _res, next) => {
@@ -108,13 +110,13 @@ const addPoints = (c, userId, delta, reason, refId = null) =>
 
 // คอลัมน์รีวิว + สิ่งที่ "ฉัน" ทำกับรีวิวนั้น ($me = เลข parameter ของ user id, null = ไม่ได้เข้าสู่ระบบ)
 const reviewCols = me => `r.id, r.fleet_no, r.type, r.stars_driving, r.stars_stops, r.stars_condition, r.text, r.stop_name,
-  to_char(r.ride_time, 'HH24:MI') AS ride_time, r.helpful_count, r.created_at, u.display_name, u.avatar, r.user_id,
+  to_char(r.ride_time, 'HH24:MI') AS ride_time, r.helpful_count, r.created_at, u.display_name, u.avatar, u.avatar_img, r.user_id,
   EXISTS (SELECT 1 FROM review_votes v WHERE v.review_id = r.id AND v.user_id = ${me}) AS voted,
   EXISTS (SELECT 1 FROM reports p WHERE p.review_id = r.id AND p.reporter_id = ${me}) AS reported,
   (SELECT sticker_id FROM review_reactions x WHERE x.review_id = r.id AND x.user_id = ${me}) AS my_reaction,
-  (SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]')
-     FROM (SELECT x.sticker_id, w.emoji, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
-           WHERE x.review_id = r.id GROUP BY 1, 2) a) AS reactions`;
+  (SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]')
+     FROM (SELECT x.sticker_id, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
+           WHERE x.review_id = r.id GROUP BY 1, 2, 3) a) AS reactions`;
 function shapeReview(r, me) {
   const { user_id, ...rest } = r;
   return { ...rest, mine: !!me && user_id === me.sub, voted: !!r.voted, reported: !!r.reported };
@@ -166,8 +168,11 @@ app.post("/api/auth/google", wrap(async (req, res) => {
     }
     let created = false;
     if (!r.rowCount) {
-      const avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-      r = await c.query("INSERT INTO users (email, display_name, avatar, google_sub) VALUES ($1, $2, $3, $4) RETURNING id, display_name, avatar", [acc.email, name, avatar, acc.sub]);
+      // รูปโปรไฟล์เริ่มต้น: สุ่มจากรูปฟรี (เปลี่ยนเองได้ทันที)
+      const free = (await c.query("SELECT emoji, img FROM rewards WHERE type = 'avatar' AND cost = 0 ORDER BY random() LIMIT 1")).rows[0]
+        || { emoji: AVATARS[Math.floor(Math.random() * AVATARS.length)], img: null };
+      r = await c.query("INSERT INTO users (email, display_name, avatar, avatar_img, google_sub) VALUES ($1, $2, $3, $4, $5) RETURNING id, display_name, avatar",
+        [acc.email, name, free.emoji, free.img, acc.sub]);
       await addPoints(c, r.rows[0].id, PTS.signup, "signup");
       created = true;
     }
@@ -216,7 +221,7 @@ app.post("/api/auth/logout", wrap(async (req, res) => {
 app.get("/api/me", requireAuth, wrap(async (req, res) => {
   const id = req.user.sub;
   const [u, pts, ledger, cnt, owned] = await Promise.all([
-    pool.query("SELECT id, email, display_name, avatar, role, created_at FROM users WHERE id = $1", [id]),
+    pool.query("SELECT id, email, display_name, avatar, avatar_img, role, created_at FROM users WHERE id = $1", [id]),
     pool.query("SELECT COALESCE(SUM(delta), 0)::int AS points FROM points_ledger WHERE user_id = $1", [id]),
     pool.query("SELECT delta, reason, ref_id, note, created_at FROM points_ledger WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT 20", [id]),
     pool.query("SELECT count(*)::int AS reviews, COALESCE(SUM(helpful_count), 0)::int AS helpful FROM reviews WHERE user_id = $1 AND status = 'visible'", [id]),
@@ -239,18 +244,16 @@ app.delete("/api/me", requireAuth, wrap(async (req, res) => {
 
 // ใช้รูปโปรไฟล์ที่แลกมาแล้ว
 app.post("/api/me/avatar", requireAuth, wrap(async (req, res) => {
-  const r = await pool.query(`UPDATE users u SET avatar = w.emoji FROM rewards w
-    JOIN user_rewards ur ON ur.reward_id = w.id AND ur.user_id = $1
-    WHERE u.id = $1 AND w.id = $2 AND w.type = 'avatar' RETURNING u.avatar`, [req.user.sub, String(req.body.reward_id || "")]);
+  const r = await pool.query(`UPDATE users u SET avatar = w.emoji, avatar_img = w.img FROM rewards w
+    WHERE u.id = $1 AND w.id = $2 AND w.type = 'avatar' AND ${OWNS("w", "$1")} RETURNING u.avatar, u.avatar_img`, [req.user.sub, String(req.body.reward_id || "")]);
   if (!r.rowCount) throw forbidden(403, "ต้องแลกรูปนี้ก่อน");
-  res.json({ avatar: r.rows[0].avatar });
+  res.json(r.rows[0]);
 }));
 
 // ---------- แลกของ ----------
 app.get("/api/rewards", optionalAuth, wrap(async (req, res) => {
-  const r = await pool.query(`SELECT w.id, w.type, w.name, w.emoji, w.cost,
-      EXISTS (SELECT 1 FROM user_rewards ur WHERE ur.reward_id = w.id AND ur.user_id = $1) AS owned
-    FROM rewards w ORDER BY w.type DESC, w.sort, w.id`, [req.user ? req.user.sub : null]);
+  const r = await pool.query(`SELECT w.id, w.type, w.name, w.emoji, w.img, w.cost, ${OWNS("w", "$1")} AS owned
+    FROM rewards w ORDER BY w.type DESC, w.cost = 0 DESC, w.cost, w.sort`, [req.user ? req.user.sub : null]);
   res.json({ items: r.rows });
 }));
 
@@ -260,8 +263,9 @@ app.post("/api/rewards/:id/redeem", requireAuth, wrap(async (req, res) => {
     // ล็อกแถวผู้ใช้ → กดแลกพร้อมกันหลายแท็บก็ไม่ติดลบ
     const u = await c.query("SELECT id FROM users WHERE id = $1 FOR UPDATE", [uid]);
     if (!u.rowCount) throw new HttpError(401, "กรุณาเข้าสู่ระบบใหม่");
-    const w = (await c.query("SELECT id, type, name, emoji, cost FROM rewards WHERE id = $1", [req.params.id])).rows[0];
+    const w = (await c.query("SELECT id, type, name, emoji, img, cost FROM rewards WHERE id = $1", [req.params.id])).rows[0];
     if (!w) throw new HttpError(404, "ไม่พบของชิ้นนี้");
+    if (w.cost === 0) throw bad("ชิ้นนี้ฟรี ใช้ได้เลยไม่ต้องแลก");
     const have = (await c.query("SELECT 1 FROM user_rewards WHERE user_id = $1 AND reward_id = $2", [uid, w.id])).rowCount;
     if (have) throw new HttpError(409, "มีชิ้นนี้แล้ว");
     const bal = (await c.query("SELECT COALESCE(SUM(delta), 0)::int AS p FROM points_ledger WHERE user_id = $1", [uid])).rows[0].p;
@@ -374,15 +378,14 @@ app.post("/api/reviews/:id/react", requireAuth, wrap(async (req, res) => {
   const out = await tx(async c => {
     const rv = (await c.query("SELECT id FROM reviews WHERE id = $1 AND status = 'visible'", [id])).rows[0];
     if (!rv) throw new HttpError(404, "ไม่พบรีวิวนี้");
-    const own = await c.query(`SELECT 1 FROM user_rewards ur JOIN rewards w ON w.id = ur.reward_id
-      WHERE ur.user_id = $1 AND ur.reward_id = $2 AND w.type = 'sticker'`, [uid, sticker]);
+    const own = await c.query(`SELECT 1 FROM rewards w WHERE w.id = $2 AND w.type = 'sticker' AND ${OWNS("w", "$1")}`, [uid, sticker]);
     if (!own.rowCount) throw forbidden(403, "ต้องแลกสติกเกอร์นี้ที่ร้านก่อน");
     const del = await c.query("DELETE FROM review_reactions WHERE review_id = $1 AND user_id = $2 AND sticker_id = $3", [id, uid, sticker]);
     if (!del.rowCount) await c.query(`INSERT INTO review_reactions (review_id, user_id, sticker_id) VALUES ($1, $2, $3)
       ON CONFLICT (review_id, user_id) DO UPDATE SET sticker_id = EXCLUDED.sticker_id, created_at = now()`, [id, uid, sticker]);
-    const r = await c.query(`SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]') AS reactions
-      FROM (SELECT x.sticker_id, w.emoji, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
-            WHERE x.review_id = $1 GROUP BY 1, 2) a`, [id]);
+    const r = await c.query(`SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]') AS reactions
+      FROM (SELECT x.sticker_id, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
+            WHERE x.review_id = $1 GROUP BY 1, 2, 3) a`, [id]);
     return { id, reactions: r.rows[0].reactions, my_reaction: del.rowCount ? null : sticker };
   });
   res.json(out);
@@ -412,7 +415,7 @@ app.post("/api/reviews/:id/report", requireAuth, wrap(async (req, res) => {
 // ---------- moderator ----------
 app.get("/api/mod/reports", requireMod, wrap(async (_req, res) => {
   const r = await pool.query(`
-    SELECT r.id, r.fleet_no, r.type, r.text, r.status, r.created_at, u.display_name, u.avatar,
+    SELECT r.id, r.fleet_no, r.type, r.text, r.status, r.created_at, u.display_name, u.avatar, u.avatar_img,
            count(*)::int AS reports, json_agg(p.reason ORDER BY p.created_at) AS reasons, min(p.created_at) AS first_report
     FROM reports p JOIN reviews r ON r.id = p.review_id JOIN users u ON u.id = r.user_id
     WHERE p.status = 'open'

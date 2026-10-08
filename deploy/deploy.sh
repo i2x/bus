@@ -45,6 +45,8 @@ REMOTE
 npm run --silent build:css
 put index.html privacy.html data.js app.css sw.js manifest.webmanifest "$WEB_HOST:/var/www/bus/"
 put icons/ "$WEB_HOST:/var/www/bus/icons/"
+put stickers/ "$WEB_HOST:/var/www/bus/stickers/"
+put avatars/ "$WEB_HOST:/var/www/bus/avatars/"
 put pitch/ "$WEB_HOST:/var/www/bus/pitch/"
 put deploy/nginx-bus.conf "$WEB_HOST:/etc/nginx/sites-available/bus"
 put deploy/bus-headers.conf "$WEB_HOST:/etc/nginx/snippets/bus-headers.conf"

@@ -132,14 +132,31 @@ test("รูปโปรไฟล์: ต้องแลกก่อน · แ�
   assert.equal((await call("POST", "/rewards/av-frog/redeem", { token: M.token })).status, 201);
   assert.equal((await call("POST", "/me/avatar", { token: M.token, body: { reward_id: "st-yee" } })).status, 403);
   const r = await call("POST", "/me/avatar", { token: M.token, body: { reward_id: "av-frog" } });
-  assert.equal(r.status, 200); assert.equal(r.body.avatar, "🐸");
+  assert.equal(r.status, 200); assert.equal(r.body.avatar, "🐸"); assert.equal(r.body.avatar_img, "avatars/av-frog.webp");
+});
+
+test("ของฟรี: สติกเกอร์/รูปโปรไฟล์ราคา 0 ใช้ได้ทันที · แลกของฟรีไม่ได้ · สมัครใหม่ได้รูปฟรี", async () => {
+  const list = (await call("GET", "/rewards", { token: C.token })).body.items;
+  const freeSt = list.find(x => x.type === "sticker" && x.cost === 0), freeAv = list.find(x => x.type === "avatar" && x.cost === 0);
+  assert.ok(freeSt && freeAv && freeSt.owned && freeAv.owned && freeSt.img);
+  assert.equal(list.filter(x => x.cost === 0).length >= 12, true);
+  assert.equal((await call("POST", `/rewards/${freeSt.id}/redeem`, { token: C.token })).status, 400);
+  let r = await call("POST", `/reviews/${bReview}/react`, { token: C.token, body: { sticker_id: freeSt.id } });
+  assert.equal(r.status, 200); assert.equal(r.body.reactions[0].img, freeSt.img);
+  await call("POST", `/reviews/${bReview}/react`, { token: C.token, body: { sticker_id: freeSt.id } });
+  r = await call("POST", "/me/avatar", { token: C.token, body: { reward_id: freeAv.id } });
+  assert.equal(r.status, 200); assert.equal(r.body.avatar_img, freeAv.img);
+  const me = (await call("GET", "/me", { token: C.token })).body.user;
+  assert.equal(me.avatar_img, freeAv.img);
+  const n = await login("newbie@example.com", "Newbie");
+  assert.ok((await call("GET", "/me", { token: n.token })).body.user.avatar_img, "สมัครใหม่ได้รูปฟรีแบบสุ่ม");
 });
 
 test("สติกเกอร์: ต้องแลกก่อน · กดซ้ำ = ถอน · โชว์ในรายการรีวิว", async () => {
   assert.equal((await call("POST", `/reviews/${bReview}/react`, { token: C.token, body: { sticker_id: "st-yee" } })).status, 403);
   let r = await call("POST", `/reviews/${bReview}/react`, { token: A.token, body: { sticker_id: "st-yee" } });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.reactions, [{ id: "st-yee", emoji: "🦖", n: 1 }]);
+  assert.deepEqual(r.body.reactions, [{ id: "st-yee", emoji: "🦖", img: "stickers/st-yee.webp", n: 1 }]);
   assert.equal(r.body.my_reaction, "st-yee");
   const list = (await call("GET", "/buses/2-70235/reviews", { token: A.token })).body.items;
   assert.equal(list[0].my_reaction, "st-yee");

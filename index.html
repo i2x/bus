@@ -115,6 +115,19 @@
   </form>
 </dialog>
 
+<!-- เลือกรูปโปรไฟล์ -->
+<dialog class="sheet" id="avatarSheet" aria-labelledby="avTitle">
+  <div class="grab"></div>
+  <div class="px-5 pb-6">
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="avTitle">เลือกหน้าตาของคุณ</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="mb-3 text-[13px] text-mute" id="avWhy">รูปนี้จะโชว์ข้างชื่อในทุกรีวิว · เปลี่ยนได้ตลอดที่แท็บ "ฉัน"</p>
+    <div id="avList"></div>
+  </div>
+</dialog>
+
 <!-- เลือกสติกเกอร์ -->
 <dialog class="sheet" id="stickerSheet" aria-labelledby="sTitle">
   <div class="grab"></div>
@@ -201,6 +214,11 @@
   let zone = "";
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const thumb = p => IMG + p + "/960px-" + p.split("/").pop();
+  // รูปของในร้าน (สติกเกอร์/รูปโปรไฟล์) — มีไฟล์รูปใช้รูป ไม่มีใช้ emoji
+  const pic = (x, px) => x.img
+    ? `<img src="${esc(x.img)}" alt="${esc(x.name || "")}" width="${px}" height="${px}" class="inline-block shrink-0 object-contain" style="width:${px}px;height:${px}px" loading="lazy" decoding="async">`
+    : `<span class="inline-block shrink-0 text-center leading-none" style="font-size:${Math.round(px * .8)}px">${esc(x.emoji || "")}</span>`;
+  const avatar = (u, px, cls = "") => `<span class="grid shrink-0 place-items-center overflow-hidden rounded-full bg-sunk ${cls}" style="width:${px}px;height:${px}px">${pic({ img: u.avatar_img, emoji: u.avatar, name: "" }, u.avatar_img ? px : Math.round(px * .62))}</span>`;
   const commons = f => "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(f.replace(/ /g, "_"));
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }, del(k) { try { localStorage.removeItem(k); } catch {} } };
   const EXAMPLES = ["7-3077", "2-70235", "8-80040", "1-46001", "3-40481"];
@@ -493,7 +511,7 @@
     return `<article class="${first ? "" : "border-t border-line"} px-4 py-3.5">
       ${showBus ? `<button class="mb-2.5 flex items-center gap-2 text-left" type="button" data-q="${esc(r.fleet_no)}">${miniPlate(r.fleet_no)}<span class="text-[12.5px] text-mute">${m ? esc(m.brand + " " + m.model) : ""}</span></button>` : ""}
       <div class="flex items-center gap-2.5">
-        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sunk text-[18px]">${esc(r.avatar)}</span>
+        ${avatar(r, 36)}
         <div class="min-w-0 flex-1 leading-tight"><div class="truncate text-[14.5px] font-semibold">${esc(r.display_name)}${r.mine ? ` <span class="tag ml-1 bg-sunk !py-0 text-[11px] text-mute">ของฉัน</span>` : ""}</div><div class="truncate text-[12px] text-mute">${meta}</div></div>
         ${inc ? `<span class="tag bg-alarm-soft text-alarm"><i class="fa-solid fa-triangle-exclamation"></i>แจ้งเหตุ</span>` : `<span class="text-[14px] tracking-wider text-ticket" aria-label="${avg.toFixed(1)} ดาว">${starsTxt(avg)}</span>`}
       </div>
@@ -509,7 +527,7 @@
     </article>`;
   }
   // สติกเกอร์ที่คนกดให้รีวิวนี้ + ปุ่มใส่สติกเกอร์
-  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}"><span class="text-[15px] leading-none">${esc(x.emoji)}</span><b class="num">${x.n}</b></button>`).join("")
+  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}">${pic(x, 20)}<b class="num">${x.n}</b></button>`).join("")
     + `<button class="hb !px-2.5 text-mute" type="button" data-react-pick="${r.id}" data-mine-rx="${esc(r.my_reaction || "")}" aria-label="ใส่สติกเกอร์"><i class="fa-regular fa-face-smile"></i><i class="fa-solid fa-plus text-[9px]"></i></button>`;
 
   function loadBus(fleet, n) {
@@ -658,6 +676,7 @@
       const r = await api("/auth/google", { method: "POST", body });
       setToken(r.token);
       toast(r.created ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
+      if (r.created) { const next = pendingAfterAuth; pendingAfterAuth = () => openAvatarPicker(next, true); }
       if (curBus) loadBus(curBus);
       sheet("#authSheet").hide();
     } catch (err) { $("#aErr").textContent = err.message; }
@@ -724,8 +743,8 @@
     try {
       const own = (await loadRewards()).filter(x => x.type === "sticker" && x.owned);
       el.innerHTML = own.length
-        ? `<div class="grid grid-cols-3 gap-2">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}">
-            <div class="text-[34px] leading-tight">${esc(x.emoji)}</div><div class="mt-1 truncate text-[12.5px] font-semibold">${esc(x.name)}</div></button>`).join("")}</div>
+        ? `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}">
+            <div class="flex justify-center">${pic(x, 48)}</div><div class="mt-1 truncate text-[12.5px] font-semibold">${esc(x.name)}</div></button>`).join("")}</div>
            <p class="mt-3 text-[12.5px] text-mute">${mine ? "กดอันที่ใส่อยู่อีกครั้งเพื่อเอาออก · " : ""}คนละ 1 สติกเกอร์ต่อรีวิว</p>`
         : `<p class="text-[14px]">ยังไม่มีสติกเกอร์ — แลกด้วยแต้มจากการรีวิวได้ที่ร้าน</p><button class="btn-primary mt-3 w-full" type="button" data-tab-go="shop" data-close><i class="fa-solid fa-gift"></i>ไปร้านแลกของ</button>`;
     } catch (err) { el.innerHTML = problem(err.message); }
@@ -784,7 +803,7 @@
           <div class="num text-[48px] leading-none font-bold">${pts}</div>
           <div class="mt-1 text-[13px] font-medium">${me ? esc(me.user.display_name) : `<button type="button" class="underline" id="shopLogin">เข้าสู่ระบบเพื่อสะสมแต้ม</button>`}</div>
         </div>
-        <div class="perf grid w-24 place-items-center text-[40px]">${me ? esc(me.user.avatar) : "🚌"}</div>
+        <div class="perf grid w-24 place-items-center text-[40px]">${me ? avatar(me.user, 60) : "🚌"}</div>
       </div>`;
     const earn = `<div class="card mt-5 overflow-hidden">
         <div class="eyebrow px-4 pt-3 pb-1">ได้แต้มจาก</div>
@@ -795,17 +814,25 @@
     try { items = await loadRewards(); }
     catch (err) { el.innerHTML = head + `<div class="card mt-3">${problem(err.message)}</div>` + earn; return; }
     const card = x => {
-      const using = x.type === "avatar" && me && me.user.avatar === x.emoji;
+      const using = x.type === "avatar" && me && (me.user.avatar_img ? me.user.avatar_img === x.img : me.user.avatar === x.emoji);
       const act = x.owned
-        ? (x.type === "avatar" ? (using ? `<span class="tag bg-route-soft text-route">ใช้อยู่</span>` : `<button class="hb" type="button" data-use-avatar="${esc(x.id)}">ใช้รูปนี้</button>`) : `<span class="tag bg-ok-soft text-ok"><i class="fa-solid fa-check"></i>มีแล้ว</span>`)
+        ? (x.type === "avatar" ? (using ? `<span class="tag bg-route-soft text-route">ใช้อยู่</span>` : `<button class="hb" type="button" data-use-avatar="${esc(x.id)}">ใช้รูปนี้</button>`)
+          : x.cost ? `<span class="tag bg-ok-soft text-ok"><i class="fa-solid fa-check"></i>มีแล้ว</span>` : `<span class="tag bg-ok-soft text-ok">ฟรี</span>`)
         : `<button class="hb ${pts >= x.cost ? "!bg-ticket !text-ticket-ink" : ""}" type="button" data-redeem="${esc(x.id)}" ${me && pts < x.cost ? "disabled" : ""}><b class="num">${x.cost}</b> แต้ม</button>`;
-      return `<div class="card flex flex-col items-center p-3 text-center ${me && !x.owned && pts < x.cost ? "opacity-60" : ""}">
-        <div class="text-[38px] leading-tight">${esc(x.emoji)}</div><div class="mt-1 w-full truncate text-[13px] font-semibold">${esc(x.name)}</div>
-        <div class="mt-2">${act}</div></div>`;
+      return `<div class="card flex flex-col items-center px-1.5 py-2.5 text-center ${me && !x.owned && pts < x.cost ? "opacity-60" : ""}">
+        ${pic(x, 52)}<div class="mt-1 w-full truncate text-[12.5px] font-semibold">${esc(x.name)}</div>
+        <div class="mt-1.5">${act}</div></div>`;
     };
-    const group = (h, type, sub) => `<div class="mt-5 mb-2 flex items-baseline gap-2"><div class="eyebrow">${h}</div><div class="text-[12px] text-mute">${sub}</div></div>
-      <div class="grid grid-cols-3 gap-2">${items.filter(x => x.type === type).map(card).join("")}</div>`;
-    el.innerHTML = head + group("สติกเกอร์", "sticker", "ไว้กดในรีวิวของคนอื่น") + group("รูปโปรไฟล์", "avatar", "โชว์ข้างชื่อในทุกรีวิว") + earn;
+    const group = (h, sub, list) => list.length ? `<div class="mt-5 mb-2 flex items-baseline gap-2"><div class="eyebrow">${h}</div><div class="text-[12px] text-mute">${sub}</div></div>
+      <div class="grid grid-cols-4 gap-1.5">${list.map(card).join("")}</div>` : "";
+    const of = (type, free) => items.filter(x => x.type === type && !x.cost === free);
+    el.innerHTML = head
+      + group("สติกเกอร์ฟรี", "ใช้ได้เลย กดในรีวิวคนอื่น", of("sticker", true))
+      + group("สติกเกอร์แลกแต้ม", "แลกครั้งเดียว ใช้ได้ตลอด", of("sticker", false))
+      + group("รูปโปรไฟล์ฟรี", "โชว์ข้างชื่อในทุกรีวิว", of("avatar", true))
+      + group("รูปโปรไฟล์แลกแต้ม", "", of("avatar", false))
+      + earn
+      + `<p class="mt-3 px-1 text-[11.5px] leading-snug text-mute">รูปสติกเกอร์: Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์: DiceBear — Notionists, Lorelei, Thumbs (CC0), Fun Emoji โดย Davis Uche (CC BY 4.0) · <a class="underline" href="privacy.html#credits">เครดิต</a></p>`;
     $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth());
   }
   $("#v-shop").addEventListener("click", async e => {
@@ -814,13 +841,44 @@
     if (!token) return openAuth("เข้าสู่ระบบก่อนแลกของ");
     const x = (rewards || []).find(w => w.id === (rd || av).dataset[rd ? "redeem" : "useAvatar"]);
     if (!x) return;
-    if (rd && !confirm(`แลก ${x.emoji} ${x.name} ด้วย ${x.cost} แต้ม?`)) return;
+    if (rd && !confirm(`แลก "${x.name}" ด้วย ${x.cost} แต้ม?`)) return;
     (rd || av).disabled = true;
     try {
-      if (rd) { await api(`/rewards/${x.id}/redeem`, { method: "POST" }); toast(`ได้ ${x.emoji} ${x.name} แล้ว`); }
-      else { await api("/me/avatar", { method: "POST", body: { reward_id: x.id } }); toast(`เปลี่ยนรูปโปรไฟล์เป็น ${x.emoji} แล้ว`); }
+      if (rd) { await api(`/rewards/${x.id}/redeem`, { method: "POST" }); toast(`ได้ "${x.name}" แล้ว`); }
+      else { await api("/me/avatar", { method: "POST", body: { reward_id: x.id } }); toast(`เปลี่ยนรูปโปรไฟล์เป็น "${x.name}" แล้ว`); }
       rewards = null; await refreshMe();
     } catch (err) { toast(err.message); (rd || av).disabled = false; }
+  });
+
+  // ---------- เลือกรูปโปรไฟล์ (ครั้งแรกหลังสมัคร + จากแท็บ "ฉัน") ----------
+  let afterAvatar = null;
+  async function openAvatarPicker(then, welcome) {
+    afterAvatar = then || null;
+    $("#avTitle").textContent = welcome ? "เลือกหน้าตาของคุณ" : "เปลี่ยนรูปโปรไฟล์";
+    $("#avWhy").textContent = welcome ? "ยินดีต้อนรับ! ได้ 20 แต้มแล้ว · รูปนี้จะโชว์ข้างชื่อในทุกรีวิว เปลี่ยนได้ตลอดที่แท็บ \"ฉัน\"" : "รูปฟรีเลือกได้เลย · รูปอื่นแลกด้วยแต้มที่แท็บ \"แลกของ\"";
+    const el = $("#avList");
+    el.innerHTML = loading("กำลังโหลด…");
+    sheet("#avatarSheet").show();
+    try {
+      const list = (await loadRewards()).filter(x => x.type === "avatar" && x.owned);
+      const cur = me && me.user;
+      el.innerHTML = `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto p-0.5">${list.map(x => {
+          const on = cur && (cur.avatar_img ? cur.avatar_img === x.img : cur.avatar === x.emoji);
+          return `<button type="button" class="card grid place-items-center p-2 transition active:scale-95 ${on ? "ring-2 ring-route" : ""}" data-pick-avatar="${esc(x.id)}" aria-label="${esc(x.name)}">${avatar({ avatar: x.emoji, avatar_img: x.img }, 56)}<span class="mt-1 w-full truncate text-[11.5px] font-medium">${esc(x.name)}</span></button>`; }).join("")}</div>
+        <button class="btn-quiet mt-3 w-full text-[14px]" type="button" data-tab-go="shop"><i class="fa-solid fa-gift"></i>ดูรูปที่แลกด้วยแต้ม</button>`;
+    } catch (err) { el.innerHTML = problem(err.message); }
+  }
+  $("#avatarSheet").addEventListener("close", () => { const next = afterAvatar; afterAvatar = null; if (next && token) setTimeout(next, 50); });
+  $("#avList").addEventListener("click", async e => {
+    const b = e.target.closest("[data-pick-avatar]"); if (!b) return;
+    $$("#avList [data-pick-avatar]").forEach(x => x.disabled = true);
+    try {
+      await api("/me/avatar", { method: "POST", body: { reward_id: b.dataset.pickAvatar } });
+      await refreshMe();
+      sheet("#avatarSheet").hide();
+      toast("ตั้งรูปโปรไฟล์แล้ว");
+      if (curBus) loadBus(curBus);
+    } catch (err) { toast(err.message); $$("#avList [data-pick-avatar]").forEach(x => x.disabled = false); }
   });
 
   // ---------- ฉัน ----------
@@ -840,7 +898,7 @@
       return;
     }
     el.innerHTML = `<div class="card rise overflow-hidden">
-        <div class="flex items-center gap-3.5 p-4"><div class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sunk text-[36px]">${esc(me.user.avatar)}</div>
+        <div class="flex items-center gap-3.5 p-4"><button type="button" class="relative shrink-0 transition active:scale-95" id="meAvatar" aria-label="เปลี่ยนรูปโปรไฟล์">${avatar(me.user, 64)}<span class="absolute -right-0.5 -bottom-0.5 grid h-6 w-6 place-items-center rounded-full bg-route text-[11px] text-white shadow"><i class="fa-solid fa-pen"></i></span></button>
           <div class="min-w-0 flex-1"><div class="truncate font-display text-[22px] font-bold leading-tight">${esc(me.user.display_name)}</div><div class="truncate text-[13px] text-mute">${esc(me.user.email)}</div></div></div>
         <dl class="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
           ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
@@ -853,6 +911,7 @@
       ${me.user.role === "moderator" ? `<section class="card mt-3 overflow-hidden"><div class="flex items-center px-4 pt-3 pb-1"><div class="eyebrow flex-1"><i class="fa-solid fa-shield-halved mr-1"></i>คิวรายงาน (ผู้ดูแล)</div><button class="icon-btn !h-8 !w-8" type="button" id="modReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button></div><div id="modList">${loading("กำลังโหลด…")}</div></section>` : ""}
       <button class="btn-quiet mt-3 w-full text-[14px]" type="button" id="logout"><i class="fa-solid fa-right-from-bracket"></i>ออกจากระบบ</button>
       <button class="mt-2 w-full py-2 text-[12.5px] text-mute underline" type="button" id="delAcc">ลบบัญชีและข้อมูลทั้งหมด</button>`;
+    $("#meAvatar").onclick = () => openAvatarPicker();
     $("#logout").onclick = async () => { await logout(); toast("ออกจากระบบแล้ว"); if (curBus) loadBus(curBus); };
     $("#delAcc").onclick = async () => {
       if (!confirm("ลบบัญชีถาวร? รีวิว แต้ม และของที่แลกไว้จะหายทั้งหมด กู้คืนไม่ได้")) return;
@@ -868,7 +927,7 @@
     try {
       const { items } = await api("/mod/reports");
       el.innerHTML = items.length ? items.map(r => `<article class="border-t border-line px-4 py-3.5">
-          <div class="flex items-center gap-2">${miniPlate(r.fleet_no)}<span class="truncate text-[13px] text-mute">${esc(r.avatar)} ${esc(r.display_name)} · ${ago(r.created_at)}</span>
+          <div class="flex items-center gap-2">${miniPlate(r.fleet_no)}${avatar(r, 22)}<span class="truncate text-[13px] text-mute">${esc(r.display_name)} · ${ago(r.created_at)}</span>
             ${r.status === "hidden" ? `<span class="tag ml-auto bg-sunk text-mute">ซ่อนไว้ก่อน</span>` : ""}</div>
           <p class="mt-2 text-[14px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">${esc(r.text)}</p>
           <div class="mt-2 flex flex-wrap gap-1"><span class="tag bg-alarm-soft text-alarm"><i class="fa-solid fa-flag"></i>${r.reports}</span>${[...new Set(r.reasons)].map(k => `<span class="tag bg-sunk text-mute">${REPORT_LABEL[k] || esc(k)}</span>`).join("")}</div>
