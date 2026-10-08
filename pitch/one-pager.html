@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>คันนี้ดีไหม — One-Pager</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 0; }
+  :root { --bg:#f6f3ec; --card:#fff; --line:#e3ded2; --soft:#ece7db; --fg:#1d1b18; --muted:#6b6760; --red:#d3222a; --green:#1d9a6c; --blue:#2b6fd6; --amber:#b7791f; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font-family:"IBM Plex Sans Thai",system-ui,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page { width:210mm; height:297mm; padding:7mm 9mm 6mm; display:flex; flex-direction:column; gap:1.6mm; overflow:hidden; }
+  .m { font-family:"IBM Plex Mono",monospace; }
+  header { display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid var(--red); padding-bottom:1.8mm; }
+  header h1 { margin:0; font-size:22pt; line-height:1; }
+  header .tag { font-size:8.4pt; color:var(--muted); margin-top:1.2mm; }
+  header .meta { text-align:right; font-size:7.6pt; color:var(--muted); line-height:1.4; }
+  header .meta b { color:var(--fg); }
+  h2 { font-size:7.6pt; letter-spacing:.08em; text-transform:uppercase; color:var(--red); margin:0 0 1.2mm; font-weight:700; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:2.6mm; padding:2.2mm 2.6mm; }
+  p, li { font-size:7.8pt; line-height:1.34; margin:0; }
+  ul { margin:0; padding-left:3.4mm; } li + li { margin-top:.4mm; }
+  .muted { color:var(--muted); } .small { font-size:7.2pt; }
+  b { font-weight:700; }
+  .row { display:flex; gap:2.6mm; } .col { display:flex; flex-direction:column; gap:2.4mm; }
+  table { border-collapse:collapse; width:100%; font-size:7.2pt; }
+  th { text-align:left; font-size:6.6pt; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; padding:.6mm 1.4mm; border-bottom:1px solid var(--line); }
+  td { padding:.5mm 1.4mm; white-space:normal; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:0; }
+  .phones { display:flex; gap:2.4mm; }
+  .ph { flex:1; text-align:center; }
+  .ph img { width:100%; aspect-ratio:1/1.0; object-fit:cover; object-position:top; border-radius:2.4mm; border:1.4px solid #2b2b2b; display:block; background:#fff; }
+  .ph.done img { border-color:var(--green); }
+  .ph .cap { font-size:6.9pt; line-height:1.3; margin-top:1mm; color:var(--muted); }
+  .ph .cap b { display:block; color:var(--fg); font-size:7.4pt; }
+  .pill { display:inline-block; font-size:6.4pt; font-weight:700; border-radius:99px; padding:0 1.6mm; background:#dcf3ea; color:var(--green); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div>
+    <h1>🚌 คันนี้ดีไหม?</h1>
+    <div class="tag">ระบบรีวิวและให้คะแนน<b>รถโดยสารสาธารณะรายคัน</b> ค้นหาด้วยเลขข้างรถ พร้อมระบบแต้มและ feed เพื่อจูงใจให้คนรีวิว</div>
+  </div>
+  <div class="meta"><b>Sprint 0 · One-Pager</b><br>ทีม 3 คน · MVP 3 สัปดาห์ · กันยายน 2569<br>ต้นแบบค้นหา: <span class="m">i2x.github.io/bus</span></div>
+</header>
+
+<div class="row">
+  <div class="card" style="flex:1.2">
+    <h2>ปัญหา</h2>
+    <ul>
+      <li>ViaBus / แอป ขสมก. บอก<b>ตำแหน่งและสาย</b> แต่ไม่บอกว่าคันนั้น<b>แอร์หรือพัดลม</b> รุ่นอะไร ค่าโดยสารเท่าไร</li>
+      <li>ไม่มีช่องทางประเมิน<b>คุณภาพการขับ</b>: ขับหวาดเสียว ไม่จอดป้าย จอดกลางถนนส่งคน</li>
+      <li>ร้องเรียน 1348 ได้ แต่ผู้โดยสารไม่เห็นผล และคนอื่นไม่ได้ประโยชน์ — ต่างจาก Grab / LINE MAN ที่ให้ดาวคนขับได้ทุกเที่ยว</li>
+    </ul>
+  </div>
+  <div class="card" style="flex:1">
+    <h2>ลูกค้า</h2>
+    <ul>
+      <li><b>ผู้โดยสารประจำ (กลุ่มหลัก)</b> — รู้ก่อนขึ้นว่าคันไหนดี มีที่สะท้อนปัญหาที่คนอื่นเห็นด้วย</li>
+      <li><b>ผู้ประกอบการเดินรถ (B2B, Phase 2)</b> — feedback รายคันแบบทันเวลา ใช้ประเมินคนขับ</li>
+      <li><b>หน่วยงานกำกับ (อนาคต)</b> — ข้อมูลรวมด้านความปลอดภัยแยกสาย / เขต / อู่</li>
+    </ul>
+  </div>
+</div>
+
+<div>
+  <h2>โซลูชัน — ค้นเลขข้างรถ → รีวิวรายคัน → ได้แต้ม → แลกของ / feed</h2>
+  <div class="phones">
+    <div class="ph done"><img src="img/real-search.png" alt=""><div class="cap"><b>1. ค้นหาเลขข้างรถ <span class="pill">ใช้ได้แล้ว</span></b>รุ่น สี ปี เขต อู่ ค่าโดยสาร (13 รุ่น 8 เขต)</div></div>
+    <div class="ph"><img src="img/mock-bus.png" alt=""><div class="cap"><b>2. หน้ารถ 1 คัน</b>คะแนนเฉลี่ย + แยก 3 ด้าน · รีวิว / แจ้งเหตุ</div></div>
+    <div class="ph"><img src="img/mock-review.png" alt=""><div class="cap"><b>3. เขียนรีวิว</b>ดาว 3 ด้าน + ข้อความ + ป้าย/เวลา → +10 แต้ม</div></div>
+    <div class="ph"><img src="img/mock-feed.png" alt=""><div class="cap"><b>4. Feed</b>ใหม่ / ยอดนิยม / สายที่ติดตาม · แจ้งเหตุที่มีคนยืนยัน</div></div>
+    <div class="ph"><img src="img/mock-shop.png" alt=""><div class="cap"><b>5. แลกของ</b>สติกเกอร์ reaction · avatar · badge</div></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card" style="flex:1">
+    <h2>ระบบแต้ม</h2>
+    <table>
+      <tr><td>เขียนรีวิว + ให้ดาว</td><td class="m" style="color:var(--green);text-align:right">+10</td></tr>
+      <tr><td>ระบุป้ายและเวลาที่ขึ้น</td><td class="m" style="color:var(--green);text-align:right">+5</td></tr>
+      <tr><td>มีคนกด "มีประโยชน์" (ต่อครั้ง, สูงสุด 30/วัน)</td><td class="m" style="color:var(--green);text-align:right">+2</td></tr>
+      <tr><td>แจ้งเหตุที่มีคนยืนยัน ≥ 3</td><td class="m" style="color:var(--green);text-align:right">+20</td></tr>
+      <tr><td>ถูก report และผู้ดูแลยืนยันว่าผิดกติกา</td><td class="m" style="color:var(--red);text-align:right">−20</td></tr>
+    </table>
+    <p class="small muted" style="margin-top:1mm">แลก: สติกเกอร์มีม 20–50 · avatar 60–100 · badge จากยอดรีวิว</p>
+  </div>
+  <div class="card" style="flex:1.1">
+    <h2>กติกาและการป้องกัน</h2>
+    <ul class="small">
+      <li>ต้องมีบัญชี · 1 รีวิวต่อคันต่อวัน · โหวตได้คนละครั้งต่อรีวิว (UNIQUE) · เพดานแต้มจากโหวตต่อวัน</li>
+      <li>รีวิว "คัน" ไม่ใช่ "คน": ห้ามชื่อ/รูปคนขับ · กรองคำหยาบ · ไม่รับรูปใน MVP</li>
+      <li>ปุ่ม report ทุกรีวิว · moderator ซ่อนและหักแต้มได้ · ทุกการเปลี่ยนแต้มบันทึกใน ledger</li>
+    </ul>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card" style="flex:1.75;padding:1.6mm 2.2mm">
+    <h2>สถาปัตยกรรม — Two-Tier Network</h2>
+    <svg viewBox="0 0 1160 300" width="100%" style="max-height:30mm;display:block" font-family="IBM Plex Sans Thai, sans-serif">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6b6760"/></marker>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d3222a"/></marker>
+      </defs>
+      <rect x="10" y="95" width="150" height="110" rx="18" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="85" y="150" text-anchor="middle" font-size="42">📱</text>
+      <text x="85" y="190" text-anchor="middle" font-size="19" font-weight="700" fill="#1d1b18">ผู้ใช้ (Internet)</text>
+      <rect x="200" y="8" width="950" height="284" rx="20" fill="none" stroke="#2b6fd6" stroke-dasharray="8 6" stroke-width="2.5"/>
+      <text x="218" y="36" font-size="18" fill="#2b6fd6" font-weight="700">VPC 10.0.0.0/16</text>
+      <rect x="225" y="52" width="360" height="222" rx="16" fill="#eef8f3" stroke="#1d9a6c" stroke-width="2"/>
+      <text x="243" y="80" font-size="19" fill="#1d9a6c" font-weight="700">Public subnet 10.0.1.0/24</text>
+      <rect x="250" y="98" width="310" height="156" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="405" y="138" text-anchor="middle" font-size="25" font-weight="700" fill="#1d1b18">🖥️ Web tier — Nginx</text>
+      <text x="405" y="166" text-anchor="middle" font-size="16" fill="#6b6760">static frontend + reverse proxy /api → App</text>
+      <text x="405" y="200" text-anchor="middle" font-size="20" fill="#1d9a6c" font-family="IBM Plex Mono" font-weight="700">inbound 443 เท่านั้น</text>
+      <text x="405" y="230" text-anchor="middle" font-size="15" fill="#6b6760">public IP · TLS Let's Encrypt · rate limit</text>
+      <rect x="615" y="52" width="515" height="222" rx="16" fill="#fff5f5" stroke="#d3222a" stroke-width="2"/>
+      <text x="633" y="80" font-size="19" fill="#d3222a" font-weight="700">Private subnet 10.0.2.0/24 — ไม่มี public IP</text>
+      <rect x="640" y="98" width="260" height="72" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="770" y="128" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App tier — REST API :3000</text>
+      <text x="770" y="154" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">Node.js · JWT · รับจาก sg-web เท่านั้น</text>
+      <rect x="640" y="190" width="260" height="72" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="770" y="220" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data tier — PostgreSQL :5432</text>
+      <text x="770" y="246" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">รับจาก sg-app เท่านั้น</text>
+      <rect x="935" y="105" width="175" height="60" rx="14" fill="#f6f3ec" stroke="#e3ded2" stroke-dasharray="5 4" stroke-width="2"/>
+      <text x="1022" y="130" text-anchor="middle" font-size="18" font-weight="700" fill="#1d1b18">NAT Gateway</text>
+      <text x="1022" y="152" text-anchor="middle" font-size="13" fill="#6b6760">outbound เท่านั้น</text>
+      <text x="1022" y="225" text-anchor="middle" font-size="14" fill="#6b6760">ssh 22: IP ทีมเท่านั้น</text>
+      <line x1="160" y1="150" x2="248" y2="150" stroke="#d3222a" stroke-width="4" marker-end="url(#arr)"/>
+      <text x="204" y="136" text-anchor="middle" font-size="15" fill="#d3222a" font-family="IBM Plex Mono" font-weight="700">HTTPS</text>
+      <line x1="560" y1="134" x2="638" y2="134" stroke="#6b6760" stroke-width="3" marker-end="url(#ar)"/>
+      <line x1="770" y1="170" x2="770" y2="188" stroke="#6b6760" stroke-width="3" marker-end="url(#ar)"/>
+      <line x1="900" y1="134" x2="933" y2="134" stroke="#6b6760" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+    </svg>
+  </div>
+  <div class="card" style="flex:1;padding:1.6mm 2.2mm">
+    <h2>Security — เปิดสู่ Internet เฉพาะ 443</h2>
+    <table>
+      <tr><th>SG</th><th>Inbound</th><th>จาก</th></tr>
+      <tr><td><b>sg-web</b></td><td class="m">443 (80→443)</td><td class="m">0.0.0.0/0</td></tr>
+      <tr><td></td><td class="m">22</td><td class="m">IP ทีม</td></tr>
+      <tr><td><b>sg-app</b></td><td class="m">3000</td><td class="m">sg-web</td></tr>
+      <tr><td><b>sg-db</b></td><td class="m">5432</td><td class="m">sg-app</td></tr>
+    </table>
+    <p class="small muted" style="margin-top:1.2mm">JWT + bcrypt · validate ทุก endpoint · parameterized SQL · rate limit · HSTS/CSP · secret ไม่อยู่ใน git · ไม่เก็บตำแหน่งผู้ใช้ · nmap จากภายนอกก่อนส่ง</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card" style="flex:1.3;padding:1.6mm 2.2mm">
+    <h2>REST API (private subnet)</h2>
+    <table>
+      <tr><td class="m" style="color:var(--green)">GET</td><td class="m">/api/buses/{fleetNo}</td><td class="muted">ข้อมูลรถ + คะแนน 3 ด้าน</td></tr>
+      <tr><td class="m" style="color:var(--green)">GET</td><td class="m">/api/buses/{fleetNo}/reviews</td><td class="muted">รีวิวของคันนั้น (แบ่งหน้า)</td></tr>
+      <tr><td class="m" style="color:var(--amber)">POST</td><td class="m">/api/reviews</td><td class="muted">สร้างรีวิว → +10 (JWT)</td></tr>
+      <tr><td class="m" style="color:var(--amber)">POST</td><td class="m">/api/reviews/{id}/helpful</td><td class="muted">กดมีประโยชน์ +2 (JWT)</td></tr>
+      <tr><td class="m" style="color:var(--green)">GET</td><td class="m">/api/feed?sort=new|top</td><td class="muted">feed</td></tr>
+      <tr><td class="m" style="color:var(--amber)">POST</td><td class="m">/api/auth/register · /login</td><td class="muted">สมัคร / ล็อกอิน → JWT</td></tr>
+      <tr><td class="m" style="color:var(--amber)">POST</td><td class="m">/api/rewards/{id}/redeem</td><td class="muted">แลกของ (JWT)</td></tr>
+    </table>
+  </div>
+  <div class="card" style="flex:1;padding:1.6mm 2.2mm">
+    <h2>ตารางข้อมูล (PostgreSQL)</h2>
+    <table class="small">
+      <tr><td class="m">users</td><td>email, password_hash, name, avatar_id, role</td></tr>
+      <tr><td class="m">buses</td><td>fleet_no, zone, model, ac, fare (seed จาก data.js)</td></tr>
+      <tr><td class="m" style="color:var(--red)">reviews</td><td>user_id, fleet_no, stars ×3, text, type, status</td></tr>
+      <tr><td class="m">review_votes</td><td>UNIQUE(review_id, user_id)</td></tr>
+      <tr><td class="m">points_ledger</td><td>delta, reason, ref_id — ยอด = SUM(delta)</td></tr>
+      <tr><td class="m">rewards</td><td>type, cost, asset · user_rewards</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card" style="flex:1.3;padding:1.6mm 2.2mm">
+    <h2>ความเสี่ยงและวิธีรับมือ</h2>
+    <table class="small">
+      <tr><td><b>รีวิวปลอม / ปั่นแต้ม</b></td><td>ล็อกอิน · 1 รีวิว/คัน/วัน · เพดานแต้ม · rate limit · report + moderator</td></tr>
+      <tr><td><b>หมิ่นประมาท / PDPA</b></td><td>รีวิวคันไม่ใช่คน · ไม่รับรูป · กรองคำ · ซ่อนทันที · เก็บข้อมูลน้อยสุด</td></tr>
+      <tr><td><b>ไม่มีรีวิวช่วงแรก</b></td><td>หน้าค้นหาใช้ได้เองอยู่แล้ว · เริ่ม 2–3 สายรอบมหาวิทยาลัย · แต้มเริ่มต้น</td></tr>
+            <tr><td><b>ทำไม่ทัน</b></td><td>ตัดรูปภาพ, login โซเชียล, dashboard · deploy จริงตั้งแต่สัปดาห์ 2</td></tr>
+    </table>
+  </div>
+  <div class="card" style="flex:1;padding:1.6mm 2.2mm">
+    <h2>แผน 3 สัปดาห์ · ทีม 3 คน</h2>
+    <table class="small">
+      <tr><td style="color:var(--red);white-space:nowrap"><b>สัปดาห์ 1</b></td><td>One-pager · ตั้ง VPC, 2 subnet, security group</td></tr>
+      <tr><td style="color:var(--blue);white-space:nowrap"><b>สัปดาห์ 2</b></td><td>API auth/buses/reviews · DB + seed · Nginx + HTTPS · หน้ารถ/ฟอร์มรีวิว · deploy ครั้งแรก</td></tr>
+      <tr><td style="color:var(--green);white-space:nowrap"><b>สัปดาห์ 3</b></td><td>points ledger · ร้านแลกของ · feed · report · nmap · demo</td></tr>
+    </table>
+    <p class="small" style="margin-top:1mm">🎨 <b>Frontend & UX</b> · ⚙️ <b>Backend</b> (API, DB, แต้ม) · 🛠️ <b>Infra & Security</b> (VPC, SG, Nginx/TLS)</p>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+Warning: Hostname env-0241390.proen.app.ruk-com.cloud resolves to 2 IPs. Using 202.151.188.100.
+Nmap scan report for env-0241390.proen.app.ruk-com.cloud (202.151.188.100)
+Host is up (0.0070s latency).
+Other addresses for env-0241390.proen.app.ruk-com.cloud (not scanned): 202.151.188.200
+rDNS record for 202.151.188.100: ppp-202.151.188.100.revip.proen.co.th
+PORT     STATE    SERVICE
+22/tcp   filtered ssh
+80/tcp   open     http
+443/tcp  open     https
+3000/tcp filtered ppp
+3022/tcp open     csregagent
+5432/tcp filtered postgresql
+8080/tcp open     http-proxy
+Nmap done: 1 IP address (1 host up) scanned in 1.81 seconds

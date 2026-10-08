@@ -1,16 +1,20 @@
 # คันนี้ดีไหม? — ค้นหาและรีวิวรถเมล์ ขสมก. รายคัน
 
 กรอกหมายเลขข้างรถ เช่น `7-3077` หรือ `2-70235` แล้วดูยี่ห้อ/รุ่น สีรถ ปีที่เริ่มให้บริการ เขตการเดินรถ อู่
-อัตราค่าโดยสาร และคะแนน/รีวิวของคันนั้นจากผู้โดยสาร (การขับ · การจอดป้าย · สภาพรถ) พร้อมระบบแต้ม
+อัตราค่าโดยสาร และคะแนน/รีวิวของคันนั้นจากผู้โดยสาร (การขับ · การจอดป้าย · สภาพรถ)
+รีวิวได้แต้ม → แลกสติกเกอร์/รูปโปรไฟล์ · รีวิวที่ผิดกติกา report ได้ ผู้ดูแลซ่อนและหักแต้ม · ติดตั้งเป็นแอปบนมือถือได้ (PWA)
 
-ใช้งานจริง: https://env-0241390.proen.app.ruk-com.cloud/ · สไลด์ Sprint 1: `/pitch/sprint1.html`
+ใช้งานจริง: https://env-0241390.proen.app.ruk-com.cloud/
+สไลด์: `/pitch/sprint2.html` (final) · `/pitch/sprint1.html` · รายงานสรุป: `/pitch/report.html` (`report.pdf`)
 
 - `index.html` — หน้าเว็บ (ค้นหา · รีวิว · Feed · แลกของ · ฉัน) เรียก API ที่ `/api` ใน origin เดียวกัน
+- `sw.js`, `manifest.webmanifest`, `icons/` — PWA (ไม่ cache `/api`)
 - `styles/app.css` — Tailwind CSS v4 (ต้นฉบับ) → `npm run build:css` ได้ `app.css` ที่หน้าเว็บใช้
 - `data.js` — ข้อมูลรุ่นรถ เขตการเดินรถ ค่าโดยสาร (คัดจาก
   [องค์การขนส่งมวลชนกรุงเทพ — วิกิพีเดีย](https://th.wikipedia.org/wiki/องค์การขนส่งมวลชนกรุงเทพ), CC BY-SA) — API ใช้ไฟล์เดียวกัน
-- `api/` — REST API (Node.js / Express / PostgreSQL) · `schema.sql` คือโครงสร้างตาราง
-- `deploy/` — Nginx, systemd unit, สคริปต์ติดตั้งและ deploy ไป ruk-com
+- `api/` — REST API (Node.js 22 / Express / PostgreSQL) · `schema.sql` คือโครงสร้างตาราง · `test.js` คือ test
+- `deploy/` — Nginx, systemd (API + backup timer), สคริปต์ติดตั้งและ deploy ไป ruk-com
+- `pitch/` — สไลด์ แต่ละ sprint, one-pager, รายงาน, ภาพหน้าจอ
 
 ## รันในเครื่อง
 
@@ -18,10 +22,30 @@
 createdb bus_dev
 cd api && npm install
 DATABASE_URL=postgres:///bus_dev JWT_SECRET=$(openssl rand -hex 32) npm run db:init
-DATABASE_URL=postgres:///bus_dev JWT_SECRET=... npm start      # API ที่ 127.0.0.1:3000
+DATABASE_URL=postgres:///bus_dev JWT_SECRET=... COOKIE_SECURE=0 npm start      # API ที่ 127.0.0.1:3000
 ```
 
 หน้าเว็บ: `npm install && npm run watch:css` แล้ว `python3 -m http.server 8765` เปิด http://localhost:8765 (ไม่มี API = ค้นหาได้อย่างเดียว)
+
+### Test
+
+```bash
+cd api && npm test
+```
+
+สร้างฐานข้อมูล `bus_test` ใหม่ทุกครั้ง เปิด API จริงที่พอร์ต 3999 แล้วยิง HTTP ทุกกรณี (แต้ม แลกของ report moderator refresh token ลบบัญชี)
+
+### ตัวแปรใน `/etc/bus-api.env`
+
+| ตัวแปร | ใช้ทำอะไร |
+| --- | --- |
+| `DATABASE_URL`, `JWT_SECRET` | ฐานข้อมูล · secret ของ JWT (≥ 32 ตัว) |
+| `HOST`, `PORT` | address ที่ API ฟัง (เครื่องเดียว `127.0.0.1`) |
+| `GOOGLE_CLIENT_ID` | ใส่แล้วเปิด Google Sign-In จริง (ตรวจ ID token) · ไม่ใส่ = โหมดจำลอง `@example.com` |
+| `MOCK_LOGIN=0` | ปิดโหมดจำลองเมื่อใช้ Google จริงแล้ว |
+| `MODERATOR_EMAILS` | อีเมลผู้ดูแล คั่นด้วย `,` (ได้ role ตอนเข้าสู่ระบบ) |
+| `ALLOW_FROM`, `TRUST_PROXY` | ตอนแยก node: IP ของ web node ที่ยอมให้ต่อ API |
+| `COOKIE_SECURE=0` | สำหรับรันในเครื่องผ่าน http เท่านั้น |
 
 ## Deploy
 
@@ -29,5 +53,18 @@ DATABASE_URL=postgres:///bus_dev JWT_SECRET=... npm start      # API ที่ 1
 ./deploy/deploy.sh
 ```
 
-ติดตั้ง Node/PostgreSQL ถ้ายังไม่มี, rsync ไฟล์, `npm ci`, สร้างตาราง, restart `bus-api`, reload Nginx
-(สำรอง nginx default เดิมไว้ที่ `/root/nginx-default.before-bus`) · secret อยู่ใน `/etc/bus-api.env` บน server เท่านั้น
+ติดตั้ง Node 22 (จาก nodejs.org ตรวจ SHA256) / PostgreSQL / Nginx ถ้ายังไม่มี, rsync ไฟล์, `npm ci`, migrate, restart `bus-api`,
+เปิด `bus-backup.timer`, reload Nginx · secret อยู่ใน `/etc/bus-api.env` บน server เท่านั้น
+
+แยก API + DB ไป node ที่ 2 (private network ของ ruk-com):
+
+```bash
+API_HOST=<node2>@gate.manage.ruk-com.cloud API_ADDR=<private IP node2> WEB_ADDR=<private IP node1> ./deploy/deploy.sh
+```
+
+API ฟัง private IP ของตัวเอง · iptables + `ALLOW_FROM` รับพอร์ต 3000 จาก web node เท่านั้น · Nginx proxy ไป `API_ADDR:3000`
+
+### Backup
+
+`pg_dump` ทุกวัน 03:00 (เวลาไทย) ไปที่ `/var/backups/bus` เก็บ 7 วัน · ทดสอบกู้คืน: `bus-restore-test.sh` บน server ·
+ดึงออกนอกเครื่อง: `./deploy/pull-backup.sh` (ลง `./backups/` ไม่อยู่ใน git)

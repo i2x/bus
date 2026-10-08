@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คันนี้ดีไหม — Sprint 0 Pitch</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f6f3ec; --card:#fff; --line:#e3ded2; --soft:#ece7db; --fg:#1d1b18; --muted:#6b6760; --red:#d3222a; --green:#1d9a6c; --blue:#2b6fd6; --amber:#b7791f; --purple:#7c4dff; --W:1280; --H:720; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--fg); font-family:"IBM Plex Sans Thai",system-ui,sans-serif; overflow:hidden; }
+  .m { font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; }
+  #viewport { position:fixed; inset:0; overflow:hidden; }
+  #stage { width:calc(var(--W)*1px); height:calc(var(--H)*1px); position:absolute; left:50%; top:50%; margin-left:calc(var(--W)*-.5px); margin-top:calc(var(--H)*-.5px); transform-origin:center; }
+  section.slide { position:absolute; inset:0; padding:56px 72px 56px; display:none; flex-direction:column; }
+  section.slide.active { display:flex; animation:in .3s cubic-bezier(.2,.7,.2,1); }
+  @keyframes in { from { opacity:0; transform:translateX(20px); } }
+
+  .kicker { color:var(--red); font-weight:700; font-size:15px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px; }
+  h1 { font-size:76px; line-height:1.05; margin:0 0 14px; font-weight:700; }
+  h2 { font-size:36px; line-height:1.15; margin:0 0 18px; font-weight:700; }
+  h2 em { color:var(--red); font-style:normal; }
+  h3 { font-size:19px; margin:0 0 8px; font-weight:700; }
+  p, li { font-size:17px; line-height:1.45; margin:0; }
+  ul { margin:0; padding-left:20px; } li + li { margin-top:5px; }
+  .muted { color:var(--muted); } .small { font-size:14.5px; }
+  b { font-weight:700; }
+  .tag { display:inline-block; padding:2px 12px; border-radius:999px; font-size:14px; font-weight:700; background:var(--soft); color:var(--muted); }
+  .tag.red { background:#fde3e4; color:var(--red); } .tag.green { background:#dcf3ea; color:var(--green); } .tag.blue { background:#dfe9fb; color:var(--blue); }
+  .grid { display:grid; gap:16px; } .g2 { grid-template-columns:1fr 1fr; } .g3 { grid-template-columns:repeat(3,1fr); }
+  .card { background:var(--card); border:1.5px solid var(--line); border-radius:16px; padding:16px 20px; }
+  .card.red { border-color:var(--red); background:#fff7f7; }
+  .fill { flex:1; min-height:0; }
+  .row { display:flex; gap:16px; align-items:stretch; }
+  table { border-collapse:collapse; width:100%; font-size:15.5px; }
+  th, td { padding:6px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; }
+  tr:last-child td { border-bottom:0; }
+  .get { color:var(--green); font-weight:700; } .post { color:var(--amber); font-weight:700; }
+  .nowrap { white-space:nowrap; }
+
+  .phones { display:flex; gap:18px; justify-content:center; align-items:flex-start; }
+  .ph { flex:1; max-width:212px; text-align:center; }
+  .ph img { width:100%; aspect-ratio:1/2; object-fit:cover; object-position:top; border-radius:18px; border:4px solid #2b2b2b; display:block; background:#fff; }
+  .ph .cap { margin-top:8px; font-size:14px; line-height:1.3; }
+  .ph .cap b { display:block; font-size:15px; }
+  .ph.done img { border-color:var(--green); }
+
+  .title { justify-content:center; background:radial-gradient(900px 500px at 12% 95%, rgba(211,34,42,.16), transparent 60%), radial-gradient(700px 400px at 92% 5%, rgba(43,111,214,.12), transparent 60%); }
+  .title .sub { font-size:26px; color:var(--muted); margin-bottom:30px; max-width:900px; }
+  .title .meta { display:flex; gap:12px; flex-wrap:wrap; }
+
+  .foot { position:absolute; left:72px; right:72px; bottom:20px; display:flex; justify-content:space-between; color:var(--muted); font-size:13px; pointer-events:none; }
+  #bar { position:fixed; left:0; top:0; height:5px; background:var(--red); width:0; transition:width .3s; z-index:5; }
+  #nav { position:fixed; right:16px; top:16px; display:flex; gap:8px; z-index:5; opacity:.5; }
+  #nav:hover { opacity:1; }
+  #nav button { width:38px; height:38px; border-radius:10px; border:1.5px solid var(--line); background:var(--card); color:var(--fg); font-size:18px; cursor:pointer; }
+  #count { position:fixed; left:18px; top:22px; color:var(--muted); font-family:"IBM Plex Mono",monospace; font-size:13px; z-index:5; }
+  @media print {
+    html, body { overflow:visible; height:auto; }
+    #viewport { position:static; } #stage { transform:none !important; position:static; margin:0; width:auto; height:auto; }
+    section.slide { position:relative; display:flex !important; width:1280px; height:720px; page-break-after:always; background:var(--bg); animation:none; margin:0 auto; }
+    #nav, #count, #bar { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="viewport"><div id="stage">
+
+<!-- 1 -->
+<section class="slide title">
+  <div class="kicker">Sprint 0 · One-Pager · Technical Review Board</div>
+  <h1>🚌 คันนี้ดีไหม?</h1>
+  <div class="sub">ระบบรีวิวและให้คะแนน<b>รถโดยสารสาธารณะรายคัน</b> ค้นหาด้วยเลขข้างรถ พร้อมระบบแต้มและ feed เพื่อจูงใจให้คนรีวิว</div>
+  <div class="meta"><span class="tag red">ทีม 3 คน</span><span class="tag">MVP ภายใน 3 สัปดาห์</span><span class="tag blue">Two-Tier Network · REST API</span><span class="tag green">ต้นแบบค้นหาใช้งานได้แล้ว: i2x.github.io/bus</span></div>
+  <div class="foot"><span>Sprint 0 — ปัญหา / ลูกค้า / โซลูชัน · Architecture · ความเสี่ยง</span><span>กันยายน 2569</span></div>
+</section>
+
+<!-- 2 problem + customer -->
+<section class="slide">
+  <div class="kicker">Problem · Customer</div>
+  <h2>ผู้โดยสารรู้ว่ารถอยู่ไหน แต่ไม่รู้ว่า<em>คันนี้ควรขึ้นไหม</em></h2>
+  <div class="row fill">
+    <div class="card" style="flex:1.15">
+      <h3>ปัญหา</h3>
+      <ul>
+        <li>ViaBus / แอป ขสมก. บอก<b>ตำแหน่งและสาย</b> แต่ไม่บอกว่าคันนั้น<b>แอร์หรือพัดลม</b> รุ่นอะไร ค่าโดยสารเท่าไร</li>
+        <li>ไม่มีช่องทางประเมิน<b>คุณภาพการขับ</b>: ขับหวาดเสียว ไม่จอดป้าย จอดกลางถนนส่งคน</li>
+        <li>ร้องเรียนผ่านสายด่วน 1348 ได้ แต่ผู้โดยสาร<b>ไม่เห็นผล</b>และคนอื่นไม่ได้ประโยชน์</li>
+        <li>บริการเรียกรถอย่าง Grab / LINE MAN ให้ดาวและคอมเมนต์คนขับได้ทุกเที่ยว รถสาธารณะที่คนใช้มากกว่ากลับไม่มี</li>
+      </ul>
+      <p class="muted small" style="margin-top:12px">ข้อมูลรถแต่ละคัน (รุ่น เขต อู่ ค่าโดยสาร) มีอยู่แล้วในวิกิพีเดีย แต่ยังไม่มีใครผูกกับ "ประสบการณ์ผู้โดยสาร"</p>
+    </div>
+    <div style="flex:1" class="grid" style="align-content:stretch">
+      <div class="card red"><h3>🎒 ผู้โดยสารประจำ <span class="tag red">กลุ่มหลัก</span></h3><p class="small">นักเรียน นักศึกษา คนทำงาน ที่ขึ้นสายเดิมทุกวัน — ได้รู้ก่อนขึ้นว่าคันไหนดี และมีที่สะท้อนปัญหาที่คนอื่นเห็นด้วย</p></div>
+      <div class="card"><h3>🏢 ผู้ประกอบการเดินรถ <span class="tag">B2B · Phase 2</span></h3><p class="small">ขสมก. / รถร่วม — ได้ feedback รายคันแบบทันเวลา ใช้ประกอบการประเมินคนขับ ถูกกว่าและเร็วกว่าระบบร้องเรียน</p></div>
+      <div class="card"><h3>🏛️ หน่วยงานกำกับ <span class="tag">อนาคต</span></h3><p class="small">ข้อมูลรวมด้านความปลอดภัยและคุณภาพบริการ แยกตามสาย / เขต / อู่</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ปัญหาและลูกค้า</span></div>
+</section>
+
+<!-- 3 solution screens -->
+<section class="slide">
+  <div class="kicker">Solution</div>
+  <h2>ค้นเลขข้างรถ → รีวิวรายคัน → ได้แต้ม → แลกของ / feed</h2>
+  <div class="phones fill">
+    <div class="ph done"><img src="img/real-search.png" alt=""><div class="cap"><b>1. ค้นหาเลขข้างรถ <span class="tag green">ใช้ได้แล้ว</span></b>รุ่น สี ปี เขต อู่ ค่าโดยสาร<br>ข้อมูล 13 รุ่น 8 เขต จากวิกิพีเดีย</div></div>
+    <div class="ph"><img src="img/mock-bus.png" alt=""><div class="cap"><b>2. หน้ารถ 1 คัน</b>คะแนนเฉลี่ย + แยก 3 ด้าน<br>รีวิว / แจ้งเหตุ / reaction</div></div>
+    <div class="ph"><img src="img/mock-review.png" alt=""><div class="cap"><b>3. เขียนรีวิว</b>ดาว 3 ด้าน + ข้อความ + ป้าย/เวลา<br>ส่งแล้วได้ +10 แต้ม</div></div>
+    <div class="ph"><img src="img/mock-feed.png" alt=""><div class="cap"><b>4. Feed</b>รีวิวใหม่ / ยอดนิยม / สายที่ติดตาม<br>แจ้งเหตุที่มีคนยืนยัน</div></div>
+    <div class="ph"><img src="img/mock-shop.png" alt=""><div class="cap"><b>5. แลกของ</b>สติกเกอร์ reaction · avatar · badge<br>ยอดแต้มและประวัติ</div></div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>หน้า 2–5 เป็น mock ที่จะสร้างใน Sprint 1–2</span></div>
+</section>
+
+<!-- 4 points -->
+<section class="slide">
+  <div class="kicker">Incentive</div>
+  <h2>ระบบแต้ม: จูงใจให้เขียนรีวิวที่<em>มีประโยชน์</em> ไม่ใช่เขียนเยอะ</h2>
+  <div class="row fill">
+    <div class="card" style="flex:1">
+      <h3>ได้แต้มเมื่อ</h3>
+      <table>
+        <tr><td>เขียนรีวิว + ให้ดาว</td><td class="m" style="color:var(--green);text-align:right">+10</td></tr>
+        <tr><td>ระบุป้ายและเวลาที่ขึ้น</td><td class="m" style="color:var(--green);text-align:right">+5</td></tr>
+        <tr><td>มีคนกด "มีประโยชน์" ให้ (ต่อครั้ง, สูงสุด 30/วัน)</td><td class="m" style="color:var(--green);text-align:right">+2</td></tr>
+        <tr><td>แจ้งเหตุ (รถเสีย/อุบัติเหตุ) ที่มีคนยืนยัน ≥ 3</td><td class="m" style="color:var(--green);text-align:right">+20</td></tr>
+        <tr><td>รีวิวถูก report แล้วผู้ดูแลยืนยันว่าผิดกติกา</td><td class="m" style="color:var(--red);text-align:right">−20</td></tr>
+      </table>
+      <h3 style="margin-top:14px">แลกได้</h3>
+      <p class="small">สติกเกอร์ reaction จากมีม (67, Yee, Niu Lai, …) 20–50 แต้ม · avatar 60–100 แต้ม · badge จากยอดรีวิว · Phase 2: คูปองร้านค้าใกล้ป้าย</p>
+    </div>
+    <div class="card" style="flex:1">
+      <h3>กติกาและการป้องกัน</h3>
+      <ul class="small">
+        <li>ต้องมีบัญชี · <b>1 รีวิวต่อคันต่อวัน</b>ต่อผู้ใช้</li>
+        <li>โหวต "มีประโยชน์" ได้คนละครั้งต่อรีวิว (unique constraint) · มี cooldown</li>
+        <li>แต้มจากโหวตมีเพดานต่อวัน กันการโหวตให้กันเอง</li>
+        <li>รีวิว "คัน" ไม่ใช่ "คน": ห้ามระบุชื่อ/รูปคนขับ · กรองคำหยาบ</li>
+        <li>ปุ่ม report ทุกรีวิว · moderator ซ่อนและหักแต้มได้</li>
+        <li>ทุกการเปลี่ยนแต้มบันทึกใน ledger ตรวจย้อนหลังได้</li>
+      </ul>
+      <p class="muted small" style="margin-top:12px">ตัวเลขแต้มเป็นค่าเริ่มต้น จะปรับหลังทดลองกับผู้ใช้จริงในสัปดาห์ 3</p>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ระบบแต้ม</span></div>
+</section>
+
+<!-- 5 architecture -->
+<section class="slide">
+  <div class="kicker">Architecture</div>
+  <h2>Two-Tier Network: web ใน <em>public subnet</em> · API และ DB ใน <em>private subnet</em></h2>
+  <div class="row fill">
+    <svg viewBox="0 0 1160 430" style="flex:1.6;max-height:470px" font-family="IBM Plex Sans Thai, sans-serif">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6b6760"/></marker>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#d3222a"/></marker>
+      </defs>
+      <rect x="10" y="150" width="160" height="120" rx="18" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="90" y="205" text-anchor="middle" font-size="42">📱</text>
+      <text x="90" y="248" text-anchor="middle" font-size="19" font-weight="700" fill="#1d1b18">ผู้ใช้ (Internet)</text>
+      <rect x="205" y="10" width="945" height="410" rx="20" fill="none" stroke="#2b6fd6" stroke-dasharray="8 6" stroke-width="2"/>
+      <text x="223" y="38" font-size="17" fill="#2b6fd6" font-weight="700">VPC 10.0.0.0/16</text>
+      <rect x="230" y="60" width="360" height="335" rx="16" fill="#eef8f3" stroke="#1d9a6c" stroke-width="2"/>
+      <text x="248" y="90" font-size="18" fill="#1d9a6c" font-weight="700">Public subnet 10.0.1.0/24</text>
+      <text x="248" y="112" font-size="14" fill="#6b6760">route → Internet Gateway · มี public IP</text>
+      <rect x="255" y="130" width="310" height="205" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="410" y="178" text-anchor="middle" font-size="24" font-weight="700" fill="#1d1b18">🖥️ Web Tier — Nginx</text>
+      <text x="410" y="206" text-anchor="middle" font-size="15" fill="#6b6760">static frontend (HTML/JS, PWA)</text>
+      <text x="410" y="228" text-anchor="middle" font-size="15" fill="#6b6760">reverse proxy /api/* → App Tier</text>
+      <text x="410" y="264" text-anchor="middle" font-size="17" fill="#1d9a6c" font-family="IBM Plex Mono" font-weight="700">inbound: 443 เท่านั้น (80 → 443)</text>
+      <text x="410" y="292" text-anchor="middle" font-size="14" fill="#6b6760">TLS Let's Encrypt · rate limit · security headers</text>
+      <rect x="620" y="60" width="505" height="335" rx="16" fill="#fff5f5" stroke="#d3222a" stroke-width="2"/>
+      <text x="638" y="90" font-size="18" fill="#d3222a" font-weight="700">Private subnet 10.0.2.0/24</text>
+      <text x="638" y="112" font-size="14" fill="#6b6760">ไม่มี public IP · ไม่มี route จาก Internet เข้าโดยตรง</text>
+      <rect x="650" y="130" width="250" height="105" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="775" y="168" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App Tier — REST API</text>
+      <text x="775" y="193" text-anchor="middle" font-size="15" fill="#6b6760">Node.js / Express · JWT</text>
+      <text x="775" y="218" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">:3000 รับจาก sg-web เท่านั้น</text>
+      <rect x="650" y="275" width="250" height="100" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
+      <text x="775" y="312" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data Tier — PostgreSQL</text>
+      <text x="775" y="342" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">:5432 รับจาก sg-app เท่านั้น</text>
+      <rect x="935" y="150" width="170" height="80" rx="14" fill="#f6f3ec" stroke="#e3ded2" stroke-dasharray="5 4" stroke-width="2"/>
+      <text x="1020" y="184" text-anchor="middle" font-size="16" font-weight="700" fill="#1d1b18">NAT Gateway</text>
+      <text x="1020" y="206" text-anchor="middle" font-size="13" fill="#6b6760">outbound เท่านั้น (apt/npm)</text>
+      <text x="1020" y="300" text-anchor="middle" font-size="13" fill="#6b6760">ssh: จาก IP ทีมเท่านั้น</text>
+      <text x="1020" y="320" text-anchor="middle" font-size="13" fill="#6b6760">(หรือใช้ SSM แล้วปิด 22)</text>
+      <line x1="170" y1="210" x2="253" y2="210" stroke="#d3222a" stroke-width="3" marker-end="url(#arr)"/>
+      <text x="212" y="196" text-anchor="middle" font-size="14" fill="#d3222a" font-family="IBM Plex Mono" font-weight="700">HTTPS 443</text>
+      <line x1="565" y1="182" x2="648" y2="182" stroke="#6b6760" stroke-width="2.5" marker-end="url(#ar)"/>
+      <text x="606" y="169" text-anchor="middle" font-size="13" fill="#6b6760" font-family="IBM Plex Mono">HTTP 3000</text>
+      <line x1="775" y1="235" x2="775" y2="273" stroke="#6b6760" stroke-width="2.5" marker-end="url(#ar)"/>
+      <text x="820" y="260" font-size="13" fill="#6b6760" font-family="IBM Plex Mono">5432</text>
+      <line x1="900" y1="182" x2="933" y2="186" stroke="#6b6760" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+    </svg>
+    <div class="card" style="flex:.8">
+      <h3>องค์ประกอบ</h3>
+      <ul class="small">
+        <li><b>Web tier</b> (public): Nginx เสิร์ฟหน้าเว็บที่มีอยู่แล้ว + reverse proxy ไป API ผ่าน private IP</li>
+        <li><b>App tier</b> (private): REST API Node.js/Express, JWT auth, กฎแต้มทั้งหมดอยู่ที่นี่</li>
+        <li><b>Data tier</b> (private): PostgreSQL, backup รายวัน</li>
+        <li><b>NAT</b> ให้ private subnet ออกไปติดตั้งแพ็กเกจได้ แต่ขาเข้าไม่มี</li>
+      </ul>
+      <h3 style="margin-top:14px">Stack</h3>
+      <p class="small">Docker Compose ต่อเครื่อง · deploy บน AWS VPC (2 subnet, 2 EC2) หรือ cloud อื่นที่มี VPC/subnet เทียบเท่า · frontend เรียก API ผ่าน <span class="m">/api</span> ที่ origin เดียวกัน จึงไม่ต้องเปิด CORS</p>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>Architecture — 2 subnet / 3 tier</span></div>
+</section>
+
+<!-- 6 security -->
+<section class="slide">
+  <div class="kicker">Security</div>
+  <h2>เปิดสู่ Internet เฉพาะ <em>443</em> — ที่เหลืออ้างอิง security group ต่อกันเป็นชั้น</h2>
+  <div class="row fill">
+    <div style="flex:1.3">
+      <table>
+        <thead><tr><th>Security group</th><th>Inbound</th><th>จาก</th><th>เหตุผล</th></tr></thead>
+        <tbody>
+          <tr><td><b>sg-web</b> <span class="muted small">public</span></td><td class="m">443/tcp</td><td class="m">0.0.0.0/0</td><td>ผู้ใช้เข้าเว็บผ่าน HTTPS</td></tr>
+          <tr><td></td><td class="m">80/tcp</td><td class="m">0.0.0.0/0</td><td>redirect ไป 443 และต่ออายุ cert เท่านั้น</td></tr>
+          <tr><td></td><td class="m">22/tcp</td><td class="m">IP ทีม</td><td>ดูแลระบบ (ถ้าใช้ SSM ได้ก็ปิด 22)</td></tr>
+          <tr><td><b>sg-app</b> <span class="muted small">private</span></td><td class="m">3000/tcp</td><td class="m">sg-web</td><td>รับ request ผ่าน reverse proxy เท่านั้น</td></tr>
+          <tr><td><b>sg-db</b> <span class="muted small">private</span></td><td class="m">5432/tcp</td><td class="m">sg-app</td><td>เฉพาะ API ที่คุยกับ DB ได้</td></tr>
+        </tbody>
+      </table>
+      <p class="muted small" style="margin-top:10px">Outbound ของ private subnet ออกผ่าน NAT Gateway · NACL default deny ขาเข้าที่ไม่ตรงข้างต้น · ก่อนส่งงานจะ nmap จากภายนอกเพื่อยืนยันว่าเห็นแค่ 443/80</p>
+    </div>
+    <div class="card" style="flex:.85">
+      <h3>ชั้นแอปพลิเคชัน</h3>
+      <ul class="small">
+        <li><b>Auth:</b> JWT อายุสั้น + refresh token · รหัสผ่าน bcrypt</li>
+        <li><b>Input:</b> validate schema ทุก endpoint · parameterized SQL (กัน SQL injection) · escape output (กัน XSS ในรีวิว)</li>
+        <li><b>Rate limit:</b> ที่ Nginx และ API — กันสแปมรีวิว / brute-force login</li>
+        <li><b>Headers:</b> HSTS, CSP, X-Frame-Options</li>
+        <li><b>Secrets:</b> อยู่ใน env / secret manager ไม่อยู่ใน git</li>
+        <li><b>ข้อมูลส่วนบุคคล:</b> เก็บแค่อีเมล+ชื่อแสดง · ไม่เก็บตำแหน่งผู้ใช้ · ลบบัญชีได้ · ไม่มีรูปคนขับ</li>
+        <li><b>Backup:</b> DB snapshot รายวัน · log รวมที่ web tier</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>Security</span></div>
+</section>
+
+<!-- 7 api + data -->
+<section class="slide">
+  <div class="kicker">Backend</div>
+  <h2>REST API และตารางข้อมูล</h2>
+  <div class="row fill">
+    <div class="card" style="flex:1.35">
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>ทำอะไร</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td class="get">GET</td><td class="m nowrap">/api/buses/{fleetNo}</td><td>ข้อมูลรถ + คะแนนเฉลี่ย 3 ด้าน</td><td class="muted">—</td></tr>
+          <tr><td class="get">GET</td><td class="m nowrap">/api/buses/{fleetNo}/reviews</td><td>รีวิวของคันนั้น (แบ่งหน้า, เรียงตามใหม่/มีประโยชน์)</td><td class="muted">—</td></tr>
+          <tr><td class="post">POST</td><td class="m nowrap">/api/reviews</td><td>สร้างรีวิว/แจ้งเหตุ → บันทึกแต้ม +10</td><td>JWT</td></tr>
+          <tr><td class="post">POST</td><td class="m nowrap">/api/reviews/{id}/helpful</td><td>กดมีประโยชน์ / sticker → +2 ให้ผู้เขียน</td><td>JWT</td></tr>
+          <tr><td class="post">POST</td><td class="m nowrap">/api/reviews/{id}/report</td><td>รายงานรีวิว</td><td>JWT</td></tr>
+          <tr><td class="get">GET</td><td class="m nowrap">/api/feed?sort=new|top&route=29</td><td>feed รีวิว/แจ้งเหตุ</td><td class="muted">—</td></tr>
+          <tr><td class="post">POST</td><td class="m nowrap">/api/auth/register · /login</td><td>สมัคร / ล็อกอิน → JWT</td><td class="muted">—</td></tr>
+          <tr><td class="get">GET</td><td class="m nowrap">/api/me · /api/me/points</td><td>โปรไฟล์ + ยอดแต้ม + ประวัติ</td><td>JWT</td></tr>
+          <tr><td class="post">POST</td><td class="m nowrap">/api/rewards/{id}/redeem</td><td>แลกของ (หักแต้มใน transaction เดียว)</td><td>JWT</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="flex:.8">
+      <h3>ตาราง (PostgreSQL)</h3>
+      <table class="small">
+        <tr><td class="m">users</td><td>id, email, password_hash, display_name, avatar_id, role</td></tr>
+        <tr><td class="m">buses</td><td>fleet_no (PK), zone, model, ac, fare, year — seed จาก data.js ที่มีแล้ว</td></tr>
+        <tr><td class="m" style="color:var(--red)">reviews</td><td>user_id, fleet_no, stars_driving, stars_stops, stars_condition, text, type (review|incident), helpful_count, status</td></tr>
+        <tr><td class="m">review_votes</td><td>review_id, user_id, kind — UNIQUE(review_id, user_id)</td></tr>
+        <tr><td class="m">points_ledger</td><td>user_id, delta, reason, ref_id — ยอดแต้ม = SUM(delta)</td></tr>
+        <tr><td class="m">rewards / user_rewards</td><td>type (sticker|avatar|badge), cost, asset · ของที่ผู้ใช้แลกแล้ว</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>REST API · Data</span></div>
+</section>
+
+<!-- 8 risks + plan -->
+<section class="slide">
+  <div class="kicker">Risks · Plan</div>
+  <h2>ความเสี่ยงและแผน 3 สัปดาห์</h2>
+  <div class="row fill">
+    <div style="flex:1.2">
+      <table>
+        <thead><tr><th>ความเสี่ยง</th><th>วิธีรับมือ</th></tr></thead>
+        <tbody>
+          <tr><td><b>รีวิวปลอม / ปั่นแต้ม</b></td><td>ต้องล็อกอิน · 1 รีวิว/คัน/วัน · เพดานแต้มจากโหวต · rate limit · report + moderator</td></tr>
+          <tr><td><b>หมิ่นประมาท / PDPA</b></td><td>รีวิวคันไม่ใช่คน · ไม่รับรูปใน MVP · กรองคำ · ซ่อนได้ทันที · เก็บข้อมูลผู้ใช้น้อยที่สุด</td></tr>
+          <tr><td><b>ไม่มีรีวิวช่วงแรก</b></td><td>หน้าค้นหาใช้งานได้เองอยู่แล้ว · เริ่มโปรโมตที่ 2–3 สายรอบมหาวิทยาลัย · แต้มเริ่มต้นตอนสมัคร</td></tr>
+          <tr><td><b>ข้อมูลรถไม่ครบ/ไม่ตรง</b></td><td>รีวิวคันที่ไม่มีข้อมูลได้ (สร้าง record ว่าง) · ผู้ใช้เสนอแก้ข้อมูล</td></tr>
+          <tr><td><b>ทำไม่ทัน 3 สัปดาห์</b></td><td>ตัดรูปภาพ, login โซเชียล, dashboard ออก · deploy จริงตั้งแต่สัปดาห์ 2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="flex:1" class="grid" style="align-content:start">
+      <div class="card" style="border-color:var(--red)"><b><span class="tag red">สัปดาห์ 1</span> One-pager + โครงสร้างพื้นฐาน</b><p class="small muted">ปัญหา/ลูกค้า/โซลูชัน · architecture · ความเสี่ยง · ตั้ง VPC, 2 subnet, security group</p></div>
+      <div class="card" style="border-color:var(--blue)"><b><span class="tag blue">สัปดาห์ 2</span> แกนหลัก</b><p class="small muted">API auth/buses/reviews · DB + seed · Nginx + HTTPS · หน้ารถและฟอร์มรีวิว · deploy ครั้งแรก</p></div>
+      <div class="card" style="border-color:var(--green)"><b><span class="tag green">สัปดาห์ 3</span> แต้ม + feed + pitch</b><p class="small muted">points ledger · ร้านแลกของ · feed + reaction · report · nmap จากภายนอก · demo</p></div>
+      <div class="card"><b>ทีม 3 คน</b><p class="small muted">🎨 Frontend & UX — หน้ารีวิว/feed/ร้าน, PWA &nbsp;·&nbsp; ⚙️ Backend — API, DB, กฎแต้ม &nbsp;·&nbsp; 🛠️ Infra & Security — VPC, SG, Nginx/TLS, Docker, ทดสอบพอร์ต</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>คันนี้ดีไหม? · ต้นแบบ: i2x.github.io/bus</span><span>ความเสี่ยง · แผน</span></div>
+</section>
+
+</div></div>
+<div id="count">1 / 1</div>
+<div id="nav"><button id="prev" title="ก่อนหน้า (←)">‹</button><button id="next" title="ถัดไป (→ / Space)">›</button><button id="fs" title="เต็มจอ (F)">⛶</button></div>
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('section.slide')], stage = document.getElementById('stage'), bar = document.getElementById('bar'), count = document.getElementById('count');
+  let i = 0;
+  const fit = () => stage.style.transform = `scale(${Math.min(innerWidth / 1280, innerHeight / 720)})`;
+  function show(n, push = true) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    count.textContent = `${i + 1} / ${slides.length}`;
+    if (push) history.replaceState(null, '', '#' + (i + 1));
+  }
+  const fromHash = () => show((parseInt(location.hash.slice(1), 10) || 1) - 1, false);
+  const toggleFs = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  addEventListener('resize', fit); addEventListener('hashchange', fromHash);
+  addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowRight': case ' ': case 'Enter': case 'PageDown': e.preventDefault(); show(i + 1); break;
+      case 'ArrowLeft': case 'Backspace': case 'PageUp': e.preventDefault(); show(i - 1); break;
+      case 'Home': show(0); break; case 'End': show(slides.length - 1); break;
+      case 'f': case 'F': toggleFs(); break; case 'p': case 'P': print(); break;
+      default: if (/^[1-9]$/.test(e.key)) show(parseInt(e.key, 10) - 1);
+    }
+  });
+  document.getElementById('prev').onclick = () => show(i - 1);
+  document.getElementById('next').onclick = () => show(i + 1);
+  document.getElementById('fs').onclick = toggleFs;
+  stage.addEventListener('click', e => { if (e.target.closest('button')) return; const r = stage.getBoundingClientRect(); show((e.clientX - r.left) / r.width > .3 ? i + 1 : i - 1); });
+  let tx = null;
+  addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+  addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 50) show(dx < 0 ? i + 1 : i - 1); });
+  fit(); fromHash();
+})();
+</script>
+</body>
+</html>
