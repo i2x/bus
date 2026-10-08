@@ -209,12 +209,100 @@
   "credit": "fluent"
  },
  {
+  "id": "st-clean",
+  "type": "sticker",
+  "name": "สะอาดเอี่ยม",
+  "emoji": "✨",
+  "cost": 0,
+  "sort": 19,
+  "img": "stickers/st-clean.webp",
+  "source": "fluent:assets/Sparkles/3D/sparkles_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-seat",
+  "type": "sticker",
+  "name": "ที่นั่งว่าง",
+  "emoji": "🪑",
+  "cost": 0,
+  "sort": 20,
+  "img": "stickers/st-seat.webp",
+  "source": "fluent:assets/Chair/3D/chair_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-stop",
+  "type": "sticker",
+  "name": "จอดตรงป้าย",
+  "emoji": "🚏",
+  "cost": 0,
+  "sort": 21,
+  "img": "stickers/st-stop.webp",
+  "source": "fluent:assets/Bus stop/3D/bus_stop_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-jam",
+  "type": "sticker",
+  "name": "รถติดหนึบ",
+  "emoji": "🚦",
+  "cost": 0,
+  "sort": 22,
+  "img": "stickers/st-jam.webp",
+  "source": "fluent:assets/Vertical traffic light/3D/vertical_traffic_light_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-shake",
+  "type": "sticker",
+  "name": "รถสั่น",
+  "emoji": "🫨",
+  "cost": 0,
+  "sort": 23,
+  "img": "stickers/st-shake.webp",
+  "source": "fluent:assets/Shaking face/3D/shaking_face_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-music",
+  "type": "sticker",
+  "name": "เพลงดังลั่น",
+  "emoji": "🎶",
+  "cost": 0,
+  "sort": 24,
+  "img": "stickers/st-music.webp",
+  "source": "fluent:assets/Musical notes/3D/musical_notes_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-leak",
+  "type": "sticker",
+  "name": "หลังคารั่ว",
+  "emoji": "💧",
+  "cost": 0,
+  "sort": 25,
+  "img": "stickers/st-leak.webp",
+  "source": "fluent:assets/Droplet/3D/droplet_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-love",
+  "type": "sticker",
+  "name": "รักเลย",
+  "emoji": "❤️",
+  "cost": 0,
+  "sort": 26,
+  "img": "stickers/st-love.webp",
+  "source": "fluent:assets/Red heart/3D/red_heart_3d.png",
+  "credit": "fluent"
+ },
+ {
   "id": "st-yee",
   "type": "sticker",
   "name": "Yee",
   "emoji": "🦖",
   "cost": 20,
-  "sort": 19,
+  "sort": 27,
   "img": "stickers/st-yee.webp",
   "source": "fluent:assets/T-rex/3D/t-rex_3d.png",
   "credit": "fluent"
@@ -225,7 +313,7 @@
   "name": "67",
   "emoji": "🫳🫴",
   "cost": 30,
-  "sort": 20,
+  "sort": 28,
   "img": null,
   "credit": null
  },
@@ -235,7 +323,7 @@
   "name": "Niu Lai",
   "emoji": "🐂",
   "cost": 50,
-  "sort": 21,
+  "sort": 29,
   "img": "stickers/st-niulai.webp",
   "source": "fluent:assets/Ox/3D/ox_3d.png",
   "credit": "fluent"
@@ -246,7 +334,7 @@
   "name": "คิดหนัก",
   "emoji": "🤔",
   "cost": 10,
-  "sort": 22,
+  "sort": 30,
   "img": "stickers/st-think.webp",
   "source": "fluent:assets/Thinking face/3D/thinking_face_3d.png",
   "credit": "fluent"
@@ -257,7 +345,7 @@
   "name": "กลอกตา",
   "emoji": "🙄",
   "cost": 10,
-  "sort": 23,
+  "sort": 31,
   "img": "stickers/st-eyeroll.webp",
   "source": "fluent:assets/Face with rolling eyes/3D/face_with_rolling_eyes_3d.png",
   "credit": "fluent"
@@ -268,7 +356,7 @@
   "name": "ยิ้มเยาะ",
   "emoji": "😏",
   "cost": 10,
-  "sort": 24,
+  "sort": 32,
   "img": "stickers/st-smirk.webp",
   "source": "fluent:assets/Smirking face/3D/smirking_face_3d.png",
   "credit": "fluent"
@@ -279,7 +367,7 @@
   "name": "เบื่อ",
   "emoji": "😒",
   "cost": 10,
-  "sort": 25,
+  "sort": 33,
   "img": "stickers/st-meh.webp",
   "source": "fluent:assets/Unamused face/3D/unamused_face_3d.png",
   "credit": "fluent"
@@ -290,7 +378,7 @@
   "name": "ง่วง",
   "emoji": "🥱",
   "cost": 10,
-  "sort": 26,
+  "sort": 34,
   "img": "stickers/st-yawn.webp",
   "source": "fluent:assets/Yawning face/3D/yawning_face_3d.png",
   "credit": "fluent"
@@ -301,7 +389,7 @@
   "name": "น้ำตาจะไหล",
   "emoji": "🥹",
   "cost": 10,
-  "sort": 27,
+  "sort": 35,
   "img": "stickers/st-tears.webp",
   "source": "fluent:assets/Face holding back tears/3D/face_holding_back_tears_3d.png",
   "credit": "fluent"
@@ -312,7 +400,7 @@
   "name": "ร้อนละลาย",
   "emoji": "🫠",
   "cost": 10,
-  "sort": 28,
+  "sort": 36,
   "img": "stickers/st-melt.webp",
   "source": "fluent:assets/Melting face/3D/melting_face_3d.png",
   "credit": "fluent"
@@ -323,7 +411,7 @@
   "name": "มึนหัว",
   "emoji": "😵‍💫",
   "cost": 20,
-  "sort": 29,
+  "sort": 37,
   "img": "stickers/st-dizzy.webp",
   "source": "fluent:assets/Face with spiral eyes/3D/face_with_spiral_eyes_3d.png",
   "credit": "fluent"
@@ -334,7 +422,7 @@
   "name": "อ้วก",
   "emoji": "🤮",
   "cost": 20,
-  "sort": 30,
+  "sort": 38,
   "img": "stickers/st-puke.webp",
   "source": "fluent:assets/Face vomiting/3D/face_vomiting_3d.png",
   "credit": "fluent"
@@ -345,7 +433,7 @@
   "name": "หอยทาก",
   "emoji": "🐌",
   "cost": 20,
-  "sort": 31,
+  "sort": 39,
   "img": "stickers/st-snail.webp",
   "source": "fluent:assets/Snail/3D/snail_3d.png",
   "credit": "fluent"
@@ -356,7 +444,7 @@
   "name": "รถผี",
   "emoji": "👻",
   "cost": 20,
-  "sort": 32,
+  "sort": 40,
   "img": "stickers/st-ghost.webp",
   "source": "fluent:assets/Ghost/3D/ghost_3d.png",
   "credit": "fluent"
@@ -367,7 +455,7 @@
   "name": "จุ๊ ๆ",
   "emoji": "🤫",
   "cost": 20,
-  "sort": 33,
+  "sort": 41,
   "img": "stickers/st-shh.webp",
   "source": "fluent:assets/Shushing face/3D/shushing_face_3d.png",
   "credit": "fluent"
@@ -378,7 +466,7 @@
   "name": "ไม่เห็นไม่รู้",
   "emoji": "🙈",
   "cost": 20,
-  "sort": 34,
+  "sort": 42,
   "img": "stickers/st-noevil.webp",
   "source": "fluent:assets/See-no-evil monkey/3D/see-no-evil_monkey_3d.png",
   "credit": "fluent"
@@ -389,7 +477,7 @@
   "name": "แอบดู",
   "emoji": "🫣",
   "cost": 20,
-  "sort": 35,
+  "sort": 43,
   "img": "stickers/st-peek.webp",
   "source": "fluent:assets/Face with peeking eye/3D/face_with_peeking_eye_3d.png",
   "credit": "fluent"
@@ -400,7 +488,7 @@
   "name": "ล่องหน",
   "emoji": "🫥",
   "cost": 20,
-  "sort": 36,
+  "sort": 44,
   "img": "stickers/st-ghosted.webp",
   "source": "fluent:assets/Dotted line face/3D/dotted_line_face_3d.png",
   "credit": "fluent"
@@ -411,7 +499,7 @@
   "name": "ปาร์ตี้ท้ายรถ",
   "emoji": "🥳",
   "cost": 30,
-  "sort": 37,
+  "sort": 45,
   "img": "stickers/st-party.webp",
   "source": "fluent:assets/Partying face/3D/partying_face_3d.png",
   "credit": "fluent"
@@ -422,7 +510,7 @@
   "name": "เทพซิ่ง",
   "emoji": "😎",
   "cost": 30,
-  "sort": 38,
+  "sort": 46,
   "img": "stickers/st-cool.webp",
   "source": "fluent:assets/Smiling face with sunglasses/3D/smiling_face_with_sunglasses_3d.png",
   "credit": "fluent"
@@ -433,7 +521,7 @@
   "name": "หนูวิ่ง",
   "emoji": "🐀",
   "cost": 30,
-  "sort": 39,
+  "sort": 47,
   "img": "stickers/st-rat.webp",
   "source": "fluent:assets/Rat/3D/rat_3d.png",
   "credit": "fluent"
@@ -444,7 +532,7 @@
   "name": "สมองระเบิด",
   "emoji": "🤯",
   "cost": 40,
-  "sort": 40,
+  "sort": 48,
   "img": "stickers/st-boom.webp",
   "source": "fluent:assets/Exploding head/3D/exploding_head_3d.png",
   "credit": "fluent"
@@ -455,7 +543,7 @@
   "name": "ด่าในใจ",
   "emoji": "🤬",
   "cost": 40,
-  "sort": 41,
+  "sort": 49,
   "img": "stickers/st-curse.webp",
   "source": "fluent:assets/Face with symbols on mouth/3D/face_with_symbols_on_mouth_3d.png",
   "credit": "fluent"
@@ -466,7 +554,7 @@
   "name": "ไซเรน",
   "emoji": "🚨",
   "cost": 40,
-  "sort": 42,
+  "sort": 50,
   "img": "stickers/st-siren.webp",
   "source": "fluent:assets/Police car light/3D/police_car_light_3d.png",
   "credit": "fluent"
@@ -477,7 +565,7 @@
   "name": "ขี้",
   "emoji": "💩",
   "cost": 50,
-  "sort": 43,
+  "sort": 51,
   "img": "stickers/st-poo.webp",
   "source": "fluent:assets/Pile of poo/3D/pile_of_poo_3d.png",
   "credit": "fluent"
@@ -488,9 +576,108 @@
   "name": "มนุษย์ต่างดาว",
   "emoji": "👾",
   "cost": 50,
-  "sort": 44,
+  "sort": 52,
   "img": "stickers/st-alien.webp",
   "source": "fluent:assets/Alien monster/3D/alien_monster_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-wow",
+  "type": "sticker",
+  "name": "ประทับใจ",
+  "emoji": "🤩",
+  "cost": 10,
+  "sort": 53,
+  "img": "stickers/st-wow.webp",
+  "source": "fluent:assets/Star-struck/3D/star-struck_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-angry",
+  "type": "sticker",
+  "name": "หงุดหงิด",
+  "emoji": "😤",
+  "cost": 10,
+  "sort": 54,
+  "img": "stickers/st-angry.webp",
+  "source": "fluent:assets/Face with steam from nose/3D/face_with_steam_from_nose_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-woozy",
+  "type": "sticker",
+  "name": "โยกเยก",
+  "emoji": "🥴",
+  "cost": 20,
+  "sort": 55,
+  "img": "stickers/st-woozy.webp",
+  "source": "fluent:assets/Woozy face/3D/woozy_face_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-100",
+  "type": "sticker",
+  "name": "ร้อยเต็ม",
+  "emoji": "💯",
+  "cost": 20,
+  "sort": 56,
+  "img": "stickers/st-100.webp",
+  "source": "fluent:assets/Hundred points/3D/hundred_points_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-hearts",
+  "type": "sticker",
+  "name": "ใจให้เลย",
+  "emoji": "🫶",
+  "cost": 30,
+  "sort": 57,
+  "img": "stickers/st-hearts.webp",
+  "source": "fluent:assets/Heart hands/Default/3D/heart_hands_3d_default.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-rocket",
+  "type": "sticker",
+  "name": "ทะยาน",
+  "emoji": "🚀",
+  "cost": 40,
+  "sort": 58,
+  "img": "stickers/st-rocket.webp",
+  "source": "fluent:assets/Rocket/3D/rocket_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-crown",
+  "type": "sticker",
+  "name": "ราชาถนน",
+  "emoji": "👑",
+  "cost": 40,
+  "sort": 59,
+  "img": "stickers/st-crown.webp",
+  "source": "fluent:assets/Crown/3D/crown_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-ufo",
+  "type": "sticker",
+  "name": "ยานแม่",
+  "emoji": "🛸",
+  "cost": 50,
+  "sort": 60,
+  "img": "stickers/st-ufo.webp",
+  "source": "fluent:assets/Flying saucer/3D/flying_saucer_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "st-unicorn",
+  "type": "sticker",
+  "name": "ยูนิคอร์น",
+  "emoji": "🦄",
+  "cost": 50,
+  "sort": 61,
+  "img": "stickers/st-unicorn.webp",
+  "source": "fluent:assets/Unicorn/3D/unicorn_3d.png",
   "credit": "fluent"
  },
  {
@@ -499,7 +686,7 @@
   "name": "มะลิ",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 45,
+  "sort": 62,
   "img": "avatars/av-not-1.svg",
   "source": "dicebear:notionists:Mali&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-notionists"
@@ -510,7 +697,7 @@
   "name": "สมชาย",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 46,
+  "sort": 63,
   "img": "avatars/av-not-2.svg",
   "source": "dicebear:notionists:Somchai&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-notionists"
@@ -521,7 +708,7 @@
   "name": "พลอย",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 47,
+  "sort": 64,
   "img": "avatars/av-not-3.svg",
   "source": "dicebear:notionists:Ploy&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-notionists"
@@ -532,7 +719,7 @@
   "name": "กิตติ",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 48,
+  "sort": 65,
   "img": "avatars/av-not-4.svg",
   "source": "dicebear:notionists:Kitti&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-notionists"
@@ -543,7 +730,7 @@
   "name": "ฟ้า",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 49,
+  "sort": 66,
   "img": "avatars/av-lor-1.svg",
   "source": "dicebear:lorelei:Fah&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-lorelei"
@@ -554,7 +741,7 @@
   "name": "น้ำ",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 50,
+  "sort": 67,
   "img": "avatars/av-lor-2.svg",
   "source": "dicebear:lorelei:Nam&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-lorelei"
@@ -565,7 +752,7 @@
   "name": "มิ้นท์",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 51,
+  "sort": 68,
   "img": "avatars/av-lor-3.svg",
   "source": "dicebear:lorelei:Mint&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-lorelei"
@@ -576,7 +763,7 @@
   "name": "ไอซ์",
   "emoji": "🙂",
   "cost": 0,
-  "sort": 52,
+  "sort": 69,
   "img": "avatars/av-lor-4.svg",
   "source": "dicebear:lorelei:Ice&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
   "credit": "dicebear-lorelei"
@@ -587,7 +774,7 @@
   "name": "เจลลี่ฟ้า",
   "emoji": "👍",
   "cost": 0,
-  "sort": 53,
+  "sort": 70,
   "img": "avatars/av-thumb-1.svg",
   "source": "dicebear:thumbs:Bus8",
   "credit": "dicebear-thumbs"
@@ -598,7 +785,7 @@
   "name": "เจลลี่น้ำเงิน",
   "emoji": "👍",
   "cost": 0,
-  "sort": 54,
+  "sort": 71,
   "img": "avatars/av-thumb-2.svg",
   "source": "dicebear:thumbs:Bus29",
   "credit": "dicebear-thumbs"
@@ -609,7 +796,7 @@
   "name": "เจลลี่วุ้น",
   "emoji": "👍",
   "cost": 0,
-  "sort": 55,
+  "sort": 72,
   "img": "avatars/av-thumb-3.svg",
   "source": "dicebear:thumbs:Bus77",
   "credit": "dicebear-thumbs"
@@ -620,10 +807,98 @@
   "name": "เจลลี่หัวใจ",
   "emoji": "👍",
   "cost": 0,
-  "sort": 56,
+  "sort": 73,
   "img": "avatars/av-thumb-4.svg",
   "source": "dicebear:thumbs:Bus140",
   "credit": "dicebear-thumbs"
+ },
+ {
+  "id": "av-not-5",
+  "type": "avatar",
+  "name": "นก",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 74,
+  "img": "avatars/av-not-5.svg",
+  "source": "dicebear:notionists:Nok&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-notionists"
+ },
+ {
+  "id": "av-not-6",
+  "type": "avatar",
+  "name": "บอส",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 75,
+  "img": "avatars/av-not-6.svg",
+  "source": "dicebear:notionists:Boss&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-notionists"
+ },
+ {
+  "id": "av-lor-5",
+  "type": "avatar",
+  "name": "แพรว",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 76,
+  "img": "avatars/av-lor-5.svg",
+  "source": "dicebear:lorelei:Praew&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-lorelei"
+ },
+ {
+  "id": "av-lor-6",
+  "type": "avatar",
+  "name": "ต้น",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 77,
+  "img": "avatars/av-lor-6.svg",
+  "source": "dicebear:lorelei:Ton&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-lorelei"
+ },
+ {
+  "id": "av-peep-1",
+  "type": "avatar",
+  "name": "เบียร์",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 78,
+  "img": "avatars/av-peep-1.svg",
+  "source": "dicebear:open-peeps:Beer&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-open-peeps"
+ },
+ {
+  "id": "av-peep-2",
+  "type": "avatar",
+  "name": "แบม",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 79,
+  "img": "avatars/av-peep-2.svg",
+  "source": "dicebear:open-peeps:Bam&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-open-peeps"
+ },
+ {
+  "id": "av-peep-3",
+  "type": "avatar",
+  "name": "โอ๊ต",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 80,
+  "img": "avatars/av-peep-3.svg",
+  "source": "dicebear:open-peeps:Oat&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-open-peeps"
+ },
+ {
+  "id": "av-peep-4",
+  "type": "avatar",
+  "name": "เมย์",
+  "emoji": "🙂",
+  "cost": 0,
+  "sort": 81,
+  "img": "avatars/av-peep-4.svg",
+  "source": "dicebear:open-peeps:May&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-open-peeps"
  },
  {
   "id": "av-frog",
@@ -631,7 +906,7 @@
   "name": "กบ",
   "emoji": "🐸",
   "cost": 60,
-  "sort": 57,
+  "sort": 82,
   "img": "avatars/av-frog.webp",
   "source": "fluent:assets/Frog/3D/frog_3d.png",
   "credit": "fluent"
@@ -642,7 +917,7 @@
   "name": "ลุงคนขับ",
   "emoji": "🧔",
   "cost": 80,
-  "sort": 58,
+  "sort": 83,
   "img": null,
   "credit": null
  },
@@ -652,7 +927,7 @@
   "name": "สาย 8",
   "emoji": "🚌",
   "cost": 100,
-  "sort": 59,
+  "sort": 84,
   "img": "avatars/av-bus8.webp",
   "source": "fluent:assets/Bus/3D/bus_3d.png",
   "credit": "fluent"
@@ -663,7 +938,7 @@
   "name": "แมว",
   "emoji": "🐱",
   "cost": 40,
-  "sort": 60,
+  "sort": 85,
   "img": "avatars/av-cat.webp",
   "source": "fluent:assets/Cat face/3D/cat_face_3d.png",
   "credit": "fluent"
@@ -674,7 +949,7 @@
   "name": "หมา",
   "emoji": "🐶",
   "cost": 40,
-  "sort": 61,
+  "sort": 86,
   "img": "avatars/av-dog.webp",
   "source": "fluent:assets/Dog face/3D/dog_face_3d.png",
   "credit": "fluent"
@@ -685,7 +960,7 @@
   "name": "หมู",
   "emoji": "🐷",
   "cost": 40,
-  "sort": 62,
+  "sort": 87,
   "img": "avatars/av-pig.webp",
   "source": "fluent:assets/Pig face/3D/pig_face_3d.png",
   "credit": "fluent"
@@ -696,7 +971,7 @@
   "name": "ลิง",
   "emoji": "🐵",
   "cost": 40,
-  "sort": 63,
+  "sort": 88,
   "img": "avatars/av-monkey.webp",
   "source": "fluent:assets/Monkey face/3D/monkey_face_3d.png",
   "credit": "fluent"
@@ -707,7 +982,7 @@
   "name": "หนู",
   "emoji": "🐭",
   "cost": 40,
-  "sort": 64,
+  "sort": 89,
   "img": "avatars/av-mouse.webp",
   "source": "fluent:assets/Mouse face/3D/mouse_face_3d.png",
   "credit": "fluent"
@@ -718,7 +993,7 @@
   "name": "สล็อธ",
   "emoji": "🦥",
   "cost": 60,
-  "sort": 65,
+  "sort": 90,
   "img": "avatars/av-sloth.webp",
   "source": "fluent:assets/Sloth/3D/sloth_3d.png",
   "credit": "fluent"
@@ -729,7 +1004,7 @@
   "name": "เนิร์ด",
   "emoji": "🤓",
   "cost": 60,
-  "sort": 66,
+  "sort": 91,
   "img": "avatars/av-nerd.webp",
   "source": "fluent:assets/Nerd face/3D/nerd_face_3d.png",
   "credit": "fluent"
@@ -740,7 +1015,7 @@
   "name": "คาวบอย",
   "emoji": "🤠",
   "cost": 60,
-  "sort": 67,
+  "sort": 92,
   "img": "avatars/av-cowboy.webp",
   "source": "fluent:assets/Cowboy hat face/3D/cowboy_hat_face_3d.png",
   "credit": "fluent"
@@ -751,7 +1026,7 @@
   "name": "หุ่นยนต์",
   "emoji": "🤖",
   "cost": 80,
-  "sort": 68,
+  "sort": 93,
   "img": "avatars/av-robot.webp",
   "source": "fluent:assets/Robot/3D/robot_3d.png",
   "credit": "fluent"
@@ -762,7 +1037,7 @@
   "name": "ขำทั้งน้ำตา",
   "emoji": "🙂",
   "cost": 30,
-  "sort": 69,
+  "sort": 94,
   "img": "avatars/av-fun-1.svg",
   "source": "dicebear:fun-emoji:Grumpy",
   "credit": "dicebear-fun-emoji"
@@ -773,7 +1048,7 @@
   "name": "แว่นหนา",
   "emoji": "🙂",
   "cost": 30,
-  "sort": 70,
+  "sort": 95,
   "img": "avatars/av-fun-2.svg",
   "source": "dicebear:fun-emoji:Sunny",
   "credit": "dicebear-fun-emoji"
@@ -784,7 +1059,7 @@
   "name": "แลบลิ้น",
   "emoji": "🙂",
   "cost": 40,
-  "sort": 71,
+  "sort": 96,
   "img": "avatars/av-fun-3.svg",
   "source": "dicebear:fun-emoji:Wink",
   "credit": "dicebear-fun-emoji"
@@ -795,7 +1070,7 @@
   "name": "เศร้า",
   "emoji": "🙂",
   "cost": 40,
-  "sort": 72,
+  "sort": 97,
   "img": "avatars/av-fun-4.svg",
   "source": "dicebear:fun-emoji:Shock",
   "credit": "dicebear-fun-emoji"
@@ -806,7 +1081,7 @@
   "name": "อึ้ง",
   "emoji": "🙂",
   "cost": 50,
-  "sort": 73,
+  "sort": 98,
   "img": "avatars/av-fun-5.svg",
   "source": "dicebear:fun-emoji:Cool",
   "credit": "dicebear-fun-emoji"
@@ -817,9 +1092,152 @@
   "name": "ยิ้มเฉย",
   "emoji": "🙂",
   "cost": 50,
-  "sort": 74,
+  "sort": 99,
   "img": "avatars/av-fun-6.svg",
   "source": "dicebear:fun-emoji:Silly",
   "credit": "dicebear-fun-emoji"
+ },
+ {
+  "id": "av-pix-1",
+  "type": "avatar",
+  "name": "เกมเมอร์",
+  "emoji": "👾",
+  "cost": 30,
+  "sort": 100,
+  "img": "avatars/av-pix-1.svg",
+  "source": "dicebear:pixel-art:Gamer&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-pixel-art"
+ },
+ {
+  "id": "av-pix-2",
+  "type": "avatar",
+  "name": "8 บิต",
+  "emoji": "👾",
+  "cost": 30,
+  "sort": 101,
+  "img": "avatars/av-pix-2.svg",
+  "source": "dicebear:pixel-art:Bit8&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-pixel-art"
+ },
+ {
+  "id": "av-pix-3",
+  "type": "avatar",
+  "name": "ตัวเอก",
+  "emoji": "👾",
+  "cost": 40,
+  "sort": 102,
+  "img": "avatars/av-pix-3.svg",
+  "source": "dicebear:pixel-art:Hero&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-pixel-art"
+ },
+ {
+  "id": "av-pix-4",
+  "type": "avatar",
+  "name": "บอสด่านสุดท้าย",
+  "emoji": "👾",
+  "cost": 50,
+  "sort": 103,
+  "img": "avatars/av-pix-4.svg",
+  "source": "dicebear:pixel-art:FinalBoss&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&backgroundType=solid",
+  "credit": "dicebear-pixel-art"
+ },
+ {
+  "id": "av-rabbit",
+  "type": "avatar",
+  "name": "กระต่าย",
+  "emoji": "🐰",
+  "cost": 40,
+  "sort": 104,
+  "img": "avatars/av-rabbit.webp",
+  "source": "fluent:assets/Rabbit face/3D/rabbit_face_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-bear",
+  "type": "avatar",
+  "name": "หมี",
+  "emoji": "🐻",
+  "cost": 40,
+  "sort": 105,
+  "img": "avatars/av-bear.webp",
+  "source": "fluent:assets/Bear/3D/bear_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-panda",
+  "type": "avatar",
+  "name": "แพนด้า",
+  "emoji": "🐼",
+  "cost": 60,
+  "sort": 106,
+  "img": "avatars/av-panda.webp",
+  "source": "fluent:assets/Panda/3D/panda_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-fox",
+  "type": "avatar",
+  "name": "จิ้งจอก",
+  "emoji": "🦊",
+  "cost": 60,
+  "sort": 107,
+  "img": "avatars/av-fox.webp",
+  "source": "fluent:assets/Fox/3D/fox_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-koala",
+  "type": "avatar",
+  "name": "โคอาล่า",
+  "emoji": "🐨",
+  "cost": 60,
+  "sort": 108,
+  "img": "avatars/av-koala.webp",
+  "source": "fluent:assets/Koala/3D/koala_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-penguin",
+  "type": "avatar",
+  "name": "เพนกวิน",
+  "emoji": "🐧",
+  "cost": 60,
+  "sort": 109,
+  "img": "avatars/av-penguin.webp",
+  "source": "fluent:assets/Penguin/3D/penguin_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-owl",
+  "type": "avatar",
+  "name": "นกฮูก",
+  "emoji": "🦉",
+  "cost": 80,
+  "sort": 110,
+  "img": "avatars/av-owl.webp",
+  "source": "fluent:assets/Owl/3D/owl_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-tiger",
+  "type": "avatar",
+  "name": "เสือ",
+  "emoji": "🐯",
+  "cost": 80,
+  "sort": 111,
+  "img": "avatars/av-tiger.webp",
+  "source": "fluent:assets/Tiger face/3D/tiger_face_3d.png",
+  "credit": "fluent"
+ },
+ {
+  "id": "av-busfront",
+  "type": "avatar",
+  "name": "รถเมล์มาแล้ว",
+  "emoji": "🚍",
+  "cost": 100,
+  "sort": 112,
+  "img": "avatars/av-busfront.webp",
+  "source": "fluent:assets/Oncoming bus/3D/oncoming_bus_3d.png",
+  "credit": "fluent"
  }
 ]

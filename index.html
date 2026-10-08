@@ -204,6 +204,7 @@
 </dialog>
 
 <div class="toastx" id="toast" role="status" aria-live="polite"></div>
+<div class="rxtip" id="rxTip" role="tooltip"></div>
 
 <script src="data.js"></script>
 <script>
@@ -527,7 +528,7 @@
     </article>`;
   }
   // สติกเกอร์ที่คนกดให้รีวิวนี้ + ปุ่มใส่สติกเกอร์
-  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}">${pic(x, 20)}<b class="num">${x.n}</b></button>`).join("")
+  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}" data-name="${esc(x.name || "")}" title="${esc(x.name || "")} · ${x.n} คน" aria-label="${esc(x.name || "")} ${x.n} คน">${pic(x, 20)}<b class="num">${x.n}</b></button>`).join("")
     + `<button class="hb !px-2.5 text-mute" type="button" data-react-pick="${r.id}" data-mine-rx="${esc(r.my_reaction || "")}" aria-label="ใส่สติกเกอร์"><i class="fa-regular fa-face-smile"></i><i class="fa-solid fa-plus text-[9px]"></i></button>`;
 
   function loadBus(fleet, n) {
@@ -713,7 +714,7 @@
   document.addEventListener("click", async e => {
     const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
     const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
-    const rx = e.target.closest("[data-react]"); if (rx) return react(rx.dataset.react, rx.dataset.sticker);
+    const rx = e.target.closest("[data-react]"); if (rx) return react(rx.dataset.react, rx.dataset.sticker, rx.dataset.name);
     const pk = e.target.closest("[data-react-pick]"); if (pk) return pickSticker(pk.dataset.reactPick, pk.dataset.mineRx);
     const rp = e.target.closest("[data-report]"); if (rp) return openReport(rp.dataset.report);
     const h = e.target.closest("[data-helpful]"); if (!h) return;
@@ -727,14 +728,37 @@
   });
 
   // ---------- สติกเกอร์ในรีวิว (ต้องแลกที่ร้านก่อน · ไม่ให้แต้ม) ----------
-  async function react(id, sticker) {
+  async function react(id, sticker, name) {
     if (!token) return openAuth("เข้าสู่ระบบก่อนใส่สติกเกอร์");
     try {
       const r = await api(`/reviews/${id}/react`, { method: "POST", body: { sticker_id: sticker } });
       $$(`[data-rx="${id}"]`).forEach(el => { el.innerHTML = rxRow({ id, reactions: r.reactions, my_reaction: r.my_reaction }); });
       sheet("#stickerSheet").hide();
+      if (name) toast(r.my_reaction ? `ใส่ "${name}" แล้ว` : `เอา "${name}" ออกแล้ว`);
     } catch (err) { toast(err.status === 403 ? "ยังไม่มีสติกเกอร์นี้ — แลกได้ที่แท็บแลกของ" : err.message); }
   }
+  // กดค้างที่สติกเกอร์ใต้รีวิว = ดูชื่อ ไม่ใส่สติกเกอร์ (มือถือไม่มี hover · บนคอมใช้ title)
+  let lpT = null, lpShown = false, tipT = null;
+  function showTip(b) {
+    const tip = $("#rxTip"), r = b.getBoundingClientRect();
+    tip.textContent = b.title;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
+    tip.style.top = (r.top > h + 14 ? r.top - h - 6 : r.bottom + 6) + "px";
+    tip.classList.add("show");
+    clearTimeout(tipT); tipT = setTimeout(hideTip, 2000);
+  }
+  const hideTip = () => $("#rxTip").classList.remove("show");
+  document.addEventListener("pointerdown", e => {
+    clearTimeout(lpT); hideTip(); lpShown = false;
+    const b = e.target.closest("[data-react][title]"); if (!b || e.pointerType === "mouse") return;
+    lpT = setTimeout(() => { lpShown = true; showTip(b); navigator.vibrate?.(10); }, 400);
+  });
+  ["pointerup", "pointercancel"].forEach(t => document.addEventListener(t, () => clearTimeout(lpT)));
+  addEventListener("scroll", hideTip, { passive: true });
+  document.addEventListener("contextmenu", e => { if (e.target.closest("[data-react][title]")) e.preventDefault(); });
+  document.addEventListener("click", e => { if (lpShown) { lpShown = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+
   async function pickSticker(id, mine) {
     if (!token) return openAuth("เข้าสู่ระบบก่อนใส่สติกเกอร์");
     const el = $("#sList");
@@ -743,7 +767,7 @@
     try {
       const own = (await loadRewards()).filter(x => x.type === "sticker" && x.owned);
       el.innerHTML = own.length
-        ? `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}">
+        ? `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}" data-name="${esc(x.name)}">
             <div class="flex justify-center">${pic(x, 48)}</div><div class="mt-1 truncate text-[12.5px] font-semibold">${esc(x.name)}</div></button>`).join("")}</div>
            <p class="mt-3 text-[12.5px] text-mute">${mine ? "กดอันที่ใส่อยู่อีกครั้งเพื่อเอาออก · " : ""}คนละ 1 สติกเกอร์ต่อรีวิว</p>`
         : `<p class="text-[14px]">ยังไม่มีสติกเกอร์ — แลกด้วยแต้มจากการรีวิวได้ที่ร้าน</p><button class="btn-primary mt-3 w-full" type="button" data-tab-go="shop" data-shop-kind="sticker" data-close><i class="fa-solid fa-gift"></i>ไปร้านแลกของ</button>`;
@@ -835,7 +859,7 @@
         : group("ฟรี", "โชว์ข้างชื่อในทุกรีวิว", of("avatar", true))
           + group("แลกแต้ม", "", of("avatar", false)))
       + earn
-      + `<p class="mt-3 px-1 text-[11.5px] leading-snug text-mute">รูปสติกเกอร์: Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์: DiceBear — Notionists, Lorelei, Thumbs (CC0), Fun Emoji โดย Davis Uche (CC BY 4.0) · <a class="underline" href="privacy.html#credits">เครดิต</a></p>`;
+      + `<p class="mt-3 px-1 text-[11.5px] leading-snug text-mute">รูปสติกเกอร์: Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์: DiceBear — Notionists, Lorelei, Thumbs, Open Peeps, Pixel Art (CC0), Fun Emoji โดย Davis Uche (CC BY 4.0) · <a class="underline" href="privacy.html#credits">เครดิต</a></p>`;
     $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth());
   }
   $("#v-shop").addEventListener("click", async e => {

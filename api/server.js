@@ -114,9 +114,9 @@ const reviewCols = me => `r.id, r.fleet_no, r.type, r.stars_driving, r.stars_sto
   EXISTS (SELECT 1 FROM review_votes v WHERE v.review_id = r.id AND v.user_id = ${me}) AS voted,
   EXISTS (SELECT 1 FROM reports p WHERE p.review_id = r.id AND p.reporter_id = ${me}) AS reported,
   (SELECT sticker_id FROM review_reactions x WHERE x.review_id = r.id AND x.user_id = ${me}) AS my_reaction,
-  (SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]')
-     FROM (SELECT x.sticker_id, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
-           WHERE x.review_id = r.id GROUP BY 1, 2, 3) a) AS reactions`;
+  (SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'name', a.name, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]')
+     FROM (SELECT x.sticker_id, w.name, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
+           WHERE x.review_id = r.id GROUP BY 1, 2, 3, 4) a) AS reactions`;
 function shapeReview(r, me) {
   const { user_id, ...rest } = r;
   return { ...rest, mine: !!me && user_id === me.sub, voted: !!r.voted, reported: !!r.reported };
@@ -383,9 +383,9 @@ app.post("/api/reviews/:id/react", requireAuth, wrap(async (req, res) => {
     const del = await c.query("DELETE FROM review_reactions WHERE review_id = $1 AND user_id = $2 AND sticker_id = $3", [id, uid, sticker]);
     if (!del.rowCount) await c.query(`INSERT INTO review_reactions (review_id, user_id, sticker_id) VALUES ($1, $2, $3)
       ON CONFLICT (review_id, user_id) DO UPDATE SET sticker_id = EXCLUDED.sticker_id, created_at = now()`, [id, uid, sticker]);
-    const r = await c.query(`SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]') AS reactions
-      FROM (SELECT x.sticker_id, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
-            WHERE x.review_id = $1 GROUP BY 1, 2, 3) a`, [id]);
+    const r = await c.query(`SELECT COALESCE(json_agg(json_build_object('id', a.sticker_id, 'name', a.name, 'emoji', a.emoji, 'img', a.img, 'n', a.n) ORDER BY a.n DESC, a.sticker_id), '[]') AS reactions
+      FROM (SELECT x.sticker_id, w.name, w.emoji, w.img, count(*)::int AS n FROM review_reactions x JOIN rewards w ON w.id = x.sticker_id
+            WHERE x.review_id = $1 GROUP BY 1, 2, 3, 4) a`, [id]);
     return { id, reactions: r.rows[0].reactions, my_reaction: del.rowCount ? null : sticker };
   });
   res.json(out);

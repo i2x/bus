@@ -3,7 +3,7 @@
 
 ที่มา (ใช้ได้ตามสัญญาอนุญาต — ดูเครดิตใน privacy.html):
   fluent:<path>             Microsoft Fluent Emoji 3D (MIT) — github.com/microsoft/fluentui-emoji
-  dicebear:<style>:<seed>   DiceBear 9.x (notionists/lorelei/thumbs = CC0, fun-emoji = CC BY 4.0)
+  dicebear:<style>:<seed>   DiceBear 9.x (notionists/lorelei/thumbs/open-peeps/pixel-art = CC0, fun-emoji = CC BY 4.0)
 ต้องมี cwebp (brew install webp) · รันซ้ำได้ ไฟล์ที่มีแล้วข้าม (ใส่ --force เพื่อโหลดใหม่)
 """
 import json, os, subprocess, sys, tempfile, urllib.parse, urllib.request
@@ -11,7 +11,7 @@ import json, os, subprocess, sys, tempfile, urllib.parse, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FLUENT = "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/"
 DICEBEAR = "https://api.dicebear.com/9.x/{style}/svg?seed={rest}"
-LICENSES = {"notionists": "publicdomain/zero", "lorelei": "publicdomain/zero", "thumbs": "publicdomain/zero", "fun-emoji": "licenses/by/4.0"}
+LICENSES = {"notionists": "publicdomain/zero", "open-peeps": "publicdomain/zero", "pixel-art": "publicdomain/zero", "lorelei": "publicdomain/zero", "thumbs": "publicdomain/zero", "fun-emoji": "licenses/by/4.0"}
 force = "--force" in sys.argv
 
 def get(url):

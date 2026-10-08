@@ -156,11 +156,11 @@ test("สติกเกอร์: ต้องแลกก่อน · กด�
   assert.equal((await call("POST", `/reviews/${bReview}/react`, { token: C.token, body: { sticker_id: "st-yee" } })).status, 403);
   let r = await call("POST", `/reviews/${bReview}/react`, { token: A.token, body: { sticker_id: "st-yee" } });
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.reactions, [{ id: "st-yee", emoji: "🦖", img: "stickers/st-yee.webp", n: 1 }]);
+  assert.deepEqual(r.body.reactions, [{ id: "st-yee", name: "Yee", emoji: "🦖", img: "stickers/st-yee.webp", n: 1 }]);
   assert.equal(r.body.my_reaction, "st-yee");
   const list = (await call("GET", "/buses/2-70235/reviews", { token: A.token })).body.items;
   assert.equal(list[0].my_reaction, "st-yee");
-  assert.equal(list[0].reactions[0].n, 1);
+  assert.equal(list[0].reactions[0].n, 1); assert.equal(list[0].reactions[0].name, "Yee");
   r = await call("POST", `/reviews/${bReview}/react`, { token: A.token, body: { sticker_id: "st-yee" } });
   assert.deepEqual(r.body.reactions, []); assert.equal(r.body.my_reaction, null);
   assert.equal(await points(B), 30, "สติกเกอร์ไม่ให้แต้ม");

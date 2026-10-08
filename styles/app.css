@@ -175,6 +175,10 @@
 
   .toastx { @apply pointer-events-none fixed left-1/2 z-50 max-w-[90vw] -translate-x-1/2 translate-y-4 rounded-full bg-ink/90 px-4 py-2 text-[14px] text-paper opacity-0 shadow-lg backdrop-blur transition; bottom: calc(108px + var(--safe-b)); }
   .toastx.show { @apply translate-y-0 opacity-100; }
+  /* ชื่อสติกเกอร์ตอนกดค้าง (มือถือไม่มี hover) */
+  .rxtip { @apply pointer-events-none fixed z-50 max-w-[80vw] rounded-xl bg-ink/90 px-3 py-1.5 text-[13px] font-semibold whitespace-nowrap text-paper opacity-0 shadow-lg backdrop-blur transition-opacity; }
+  .rxtip.show { @apply opacity-100; }
+  [data-react][title] { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 
   .rise { animation: rise .35s var(--ease-out-back) both; }
 }
