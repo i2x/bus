@@ -90,8 +90,10 @@
     <div id="wStars" class="mt-2 divide-y divide-line"></div>
     <label class="sr-only" for="wText">ข้อความ</label>
     <textarea id="wText" class="field mt-3 min-h-24 resize-none" rows="3" maxlength="500"></textarea>
+    <label class="mt-3 block text-[12.5px] text-mute">สายที่ขึ้น <span class="opacity-70">(ไม่บังคับ)</span><input id="wRoute" class="field mt-1" list="routeOpts" placeholder="พิมพ์เลขสาย เช่น 8 หรือ 1-12E" autocomplete="off"></label>
+    <datalist id="routeOpts"></datalist><datalist id="stopOpts"></datalist>
     <div class="mt-3 grid grid-cols-[1fr_118px] gap-2">
-      <label class="text-[12.5px] text-mute">ป้ายที่ขึ้น<input id="wStop" class="field mt-1" maxlength="80" placeholder="เช่น ฟิวเจอร์พาร์ค"></label>
+      <label class="text-[12.5px] text-mute">ป้ายที่ขึ้น<input id="wStop" class="field mt-1" maxlength="80" list="stopOpts" placeholder="เช่น ฟิวเจอร์พาร์ค" autocomplete="off"></label>
       <label class="text-[12.5px] text-mute">เวลา<input id="wTime" class="field mt-1 num" type="time"></label>
     </div>
     <p class="mt-3 text-[12.5px] leading-relaxed text-mute" id="wHint"></p>
@@ -168,6 +170,20 @@
       <div class="overflow-hidden rounded-2xl border border-line" id="gList"></div>
     </div>
     <p class="mt-2 text-[13px] font-medium text-alarm" id="aErr" role="alert"></p>
+  </div>
+</dialog>
+
+<!-- สายรถเมล์ + ป้าย (GTFS ของ สนข.) -->
+<dialog class="sheet" id="routeSheet" aria-labelledby="rtTitle">
+  <div class="grab"></div>
+  <div class="px-5 pb-6">
+    <div class="flex items-center gap-2 py-2">
+      <button class="icon-btn -ml-2" type="button" id="rtBack" aria-label="กลับไปค้นหาสาย" hidden><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="rtTitle">สายรถเมล์</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="rtBody"></div>
+    <p class="mt-4 border-t border-line pt-3 text-[11.5px] leading-snug text-mute">ข้อมูลสายและป้าย: <a class="underline" href="https://namtang-api.otp.go.th/download/namtang-gtfs.zip">GTFS ของ สนข. (นำทาง)</a> — CC BY 4.0 · ขสมก. ไทย สมายล์ บัส และ กทม. · อาจไม่ตรงกับเส้นทางจริงทุกสาย</p>
   </div>
 </dialog>
 
@@ -320,6 +336,7 @@
       <div class="mt-4 grid grid-cols-2 gap-2">
         <button type="button" class="btn-quiet text-[14px]" data-open="#help"><i class="fa-regular fa-circle-question"></i>อ่านเลขยังไง</button>
         <button type="button" class="btn-quiet text-[14px]" data-open="#models"><i class="fa-solid fa-list"></i>ดูรถทั้ง 13 รุ่น</button>
+        <button type="button" class="btn-quiet col-span-2 text-[14px]" data-route=""><i class="fa-solid fa-route"></i>ค้นหาสายรถเมล์ · ดูป้ายตามลำดับ</button>
       </div>
     </div>`;
   }
@@ -444,7 +461,7 @@
   form.addEventListener("submit", e => { e.preventDefault(); clearTimeout(t); lookup(num.value); num.blur(); });
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-q]"); if (!b) return;
-    $("#models").open && $("#models").close();
+    ["#models", "#routeSheet"].forEach(d => $(d).open && $(d).close());
     showTab("search");
     setAndLookup(b.dataset.q);
     scrollTo(0, 0);
@@ -507,7 +524,9 @@
   function reviewItem(r, showBus, first) {
     const inc = r.type === "incident";
     const avg = inc ? 0 : (r.stars_driving + r.stars_stops + r.stars_condition) / 3;
-    const meta = [ago(r.created_at), r.ride_time ? r.ride_time + " น." : "", r.stop_name ? esc(r.stop_name) : ""].filter(Boolean).join(" · ");
+    const meta = [ago(r.created_at), r.ride_time ? r.ride_time + " น." : "",
+      r.route_label ? `<button type="button" class="font-semibold text-route" data-route="${esc(r.route_id)}">สาย ${esc(r.route_label)}</button>` : "",
+      r.stop_name ? esc(r.stop_name) : ""].filter(Boolean).join(" · ");
     const m = showBus ? modelFor(r.fleet_no) : null;
     return `<article class="${first ? "" : "border-t border-line"} px-4 py-3.5">
       ${showBus ? `<button class="mb-2.5 flex items-center gap-2 text-left" type="button" data-q="${esc(r.fleet_no)}">${miniPlate(r.fleet_no)}<span class="text-[12.5px] text-mute">${m ? esc(m.brand + " " + m.model) : ""}</span></button>` : ""}
@@ -570,6 +589,8 @@
             ${bar("การขับ", s.driving)}${bar("จอดป้าย", s.stops)}${bar("สภาพรถ", s.condition)}
           </div>
         </div>
+        ${(b.routes || []).length ? `<div class="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i>เจอบนสาย
+          ${b.routes.map(x => `<button class="hb" type="button" data-route="${esc(x.id)}">${esc(x.label)} <span class="num font-normal text-mute">${x.n}</span></button>`).join("")}</div>` : ""}
       </div>
       <div class="flex gap-2 px-4 pb-4">
         <button class="btn-primary flex-1" type="button" data-write="review"><i class="fa-solid fa-pen"></i>รีวิวคันนี้ <span class="tag bg-white/20 !py-0">+10</span></button>
@@ -613,8 +634,10 @@
     $$(".starrow", $("#wStars")).forEach(r => { r.dataset.v = 0; $$("button", r).forEach(b => b.classList.remove("on")); });
     const now = new Date(); $("#wTime").value = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
     $("#wErr").textContent = "";
+    $("#stopOpts").innerHTML = "";
     setWriteType(type);
     sheet("#writeSheet").show();
+    fillRouteOpts();
   }
   $("#wForm").addEventListener("submit", async e => {
     e.preventDefault();
@@ -622,6 +645,9 @@
     $$(".starrow", $("#wStars")).forEach(r => { body[r.dataset.k] = +r.dataset.v || null; });
     if (wType === "review" && ASPECTS.some(([k]) => !body[k])) return $("#wErr").textContent = "ให้ดาวให้ครบทั้ง 3 ด้านก่อนส่ง";
     if (!body.text.trim()) return $("#wErr").textContent = "เขียนเล่าสั้น ๆ ก่อนส่ง";
+    const rt = pickedRoute();
+    if (rt && rt.error) return $("#wErr").textContent = rt.error;
+    if (rt) body.route_id = rt.id;
     const btn = $("#wSubmit"); btn.disabled = true;
     try {
       const r = await api("/reviews", { method: "POST", body });
@@ -630,6 +656,90 @@
       rvSort = "new"; loadBus(curBus); refreshMe();
     } catch (err) { $("#wErr").textContent = err.message; }
     finally { btn.disabled = false; }
+  });
+
+  // ---------- สายรถเมล์ + ป้าย (GTFS ของ สนข.) ----------
+  let routes = null, rtCur = null, rtDir = 0;
+  const routeCache = new Map();
+  const loadRoutes = async () => routes ||= (await api("/routes")).items;
+  const loadRoute = async id => { if (!routeCache.has(id)) routeCache.set(id, await api(`/routes/${encodeURIComponent(id)}`)); return routeCache.get(id); };
+  const routeLabel = r => r.old || r.no;
+  const routeOpt = r => `${routeLabel(r)} · ${r.name} (${r.kind})`;
+  const routeBadge = r => `<span class="num grid h-9 min-w-12 shrink-0 place-items-center rounded-xl bg-route-soft px-2 text-[15px] font-bold text-route">${esc(routeLabel(r))}</span>`;
+
+  // ฟอร์มรีวิว: เลือกสายจาก datalist → ป้ายของสายนั้นขึ้นเป็นตัวเลือกในช่อง "ป้ายที่ขึ้น"
+  let optsFilled = false;
+  async function fillRouteOpts() {
+    if (optsFilled) return;
+    try { $("#routeOpts").innerHTML = (await loadRoutes()).map(r => `<option value="${esc(routeOpt(r))}"></option>`).join(""); optsFilled = true; } catch {}
+  }
+  function pickedRoute() {
+    const v = $("#wRoute").value.trim(); if (!v || !routes) return v ? { error: "โหลดรายชื่อสายไม่ได้ ลบช่องสายออกแล้วส่งใหม่" } : null;
+    const exact = routes.find(r => routeOpt(r) === v); if (exact) return exact;
+    const q = thaiDigits(v).toLowerCase(), same = routes.filter(r => routeLabel(r).toLowerCase() === q || r.no.toLowerCase() === q);
+    if (same.length === 1) return same[0];
+    return { error: same.length ? `สาย ${v} มีหลายเส้นทาง — เลือกจากรายการ` : `ไม่พบสาย "${v}" — เลือกจากรายการ หรือเว้นว่างไว้` };
+  }
+  $("#wRoute").addEventListener("change", async () => {
+    const r = pickedRoute(); $("#stopOpts").innerHTML = "";
+    if (!r || r.error) return;
+    try {
+      const d = await loadRoute(r.id);
+      $("#stopOpts").innerHTML = [...new Set(d.dirs.flatMap(x => x.stops.map(s => s.name)))].map(n => `<option value="${esc(n)}"></option>`).join("");
+    } catch {}
+  });
+
+  // ชีตสาย: ค้นหา → รายละเอียด (ป้ายตามลำดับ + คันที่มีคนรีวิวบนสายนี้)
+  function openRoutes(id) {
+    sheet("#routeSheet").show();
+    return id ? showRoute(id) : showRouteSearch();
+  }
+  async function showRouteSearch() {
+    $("#rtTitle").textContent = "สายรถเมล์"; $("#rtBack").hidden = true;
+    $("#rtBody").innerHTML = `<input id="rtQ" class="field" type="search" placeholder="เลขสาย หรือชื่อปลายทาง เช่น 8, 1-12E, หมอชิต" autocomplete="off" enterkeyhint="search">
+      <div id="rtList" class="mt-2 max-h-[55vh] overflow-y-auto">${loading("กำลังโหลดสาย…")}</div>`;
+    const q = $("#rtQ");
+    q.oninput = () => { $("#rtList").innerHTML = routeList(q.value); };
+    try { await loadRoutes(); $("#rtList").innerHTML = routeList(q.value); }
+    catch (err) { $("#rtList").innerHTML = problem(err.message); }
+  }
+  function routeList(raw) {
+    const s = thaiDigits(raw.trim()).toLowerCase();
+    const score = r => { const l = routeLabel(r).toLowerCase(), n = r.no.toLowerCase();
+      return !s ? 1 : l === s || n === s ? 0 : l.startsWith(s) || n.startsWith(s) ? 1 : r.name.toLowerCase().includes(s) ? 2 : 9; };
+    const hit = routes.map(r => [score(r), r]).filter(([k]) => k < 9).sort((a, b) => a[0] - b[0]).slice(0, 60).map(([, r]) => r);
+    if (!hit.length) return `<p class="p-4 text-center text-[13.5px] text-mute">ไม่พบสาย "${esc(raw)}"</p>`;
+    return hit.map((r, i) => `<button type="button" class="flex w-full items-center gap-3 ${i ? "border-t border-line" : ""} py-2.5 text-left transition active:bg-sunk" data-route="${esc(r.id)}">${routeBadge(r)}
+      <span class="min-w-0 flex-1 leading-snug"><span class="block truncate text-[14px] font-semibold">${esc(r.name)}</span><span class="block truncate text-[12px] text-mute">${r.old ? esc(r.no) + " · " : ""}${esc(r.kind)}</span></span>
+      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`).join("");
+  }
+  async function showRoute(id) {
+    $("#rtBack").hidden = false;
+    $("#rtBody").innerHTML = loading("กำลังโหลดป้าย…");
+    try { rtCur = await loadRoute(id); rtDir = 0; renderRoute(); }
+    catch (err) { $("#rtBody").innerHTML = problem(err.message); }
+  }
+  function renderRoute() {
+    const r = rtCur, d = r.dirs[rtDir] || r.dirs[0], last = d.stops.length - 1;
+    $("#rtTitle").textContent = "สาย " + routeLabel(r);
+    $("#rtBody").innerHTML = `
+      <div class="text-[15px] font-semibold leading-snug">${esc(r.name)}</div>
+      <div class="text-[12.5px] text-mute">${esc(r.agency)} · ${esc(r.kind)}${r.old ? ` · เลขใหม่ ${esc(r.no)}` : ""}</div>
+      ${r.buses.length ? `<div class="eyebrow mt-4">คันที่มีคนรีวิวบนสายนี้</div>
+        <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">${r.buses.map(b => `<button type="button" class="inline-flex items-center gap-1.5" data-q="${esc(b.fleet_no)}">${miniPlate(b.fleet_no)}<span class="num text-[12px] text-mute">${b.avg ? b.avg.toFixed(1) + "★ · " : ""}${b.n} รีวิว</span></button>`).join("")}</div>`
+        : `<p class="mt-3 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute">ยังไม่มีใครรีวิวรถบนสายนี้ — ตอนรีวิวให้เลือก "สายที่ขึ้น" คันนั้นจะขึ้นที่นี่</p>`}
+      ${r.dirs.length > 1 ? `<div class="seg mt-4" role="tablist">${r.dirs.map((x, i) => `<button class="${i === rtDir ? "on" : ""} truncate" type="button" role="tab" aria-selected="${i === rtDir}" data-rtdir="${i}">ไป ${esc(x.head)}</button>`).join("")}</div>` : ""}
+      <div class="mt-3 mb-1 text-[12px] text-mute">${d.stops.length} ป้าย · แตะชื่อป้ายเพื่อเปิดแผนที่</div>
+      <ol>${d.stops.map((st, i) => `<li class="flex items-stretch gap-3">
+        <span class="relative flex w-3 shrink-0 justify-center"><span class="absolute w-0.5 bg-route/30 ${i ? "top-0" : "top-1/2"} ${i === last ? "bottom-1/2" : "bottom-0"}"></span><span class="relative my-auto h-3 w-3 rounded-full border-2 border-route ${i === 0 || i === last ? "bg-route" : "bg-solid"}"></span></span>
+        <a class="min-w-0 flex-1 py-1.5 text-[14px] ${i === 0 || i === last ? "font-semibold" : ""}" href="https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}" target="_blank" rel="noopener">${esc(st.name)}</a></li>`).join("")}</ol>`;
+  }
+  $("#rtBack").onclick = () => showRouteSearch();
+  $("#rtBody").addEventListener("click", e => { const b = e.target.closest("[data-rtdir]"); if (b) { rtDir = +b.dataset.rtdir; renderRoute(); } });
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-route]"); if (!b) return;
+    e.preventDefault();
+    if (!$("#routeSheet").open) openRoutes(b.dataset.route); else b.dataset.route ? showRoute(b.dataset.route) : showRouteSearch();
   });
 
   // ---------- เข้าสู่ระบบด้วย Google (จำลอง) ----------

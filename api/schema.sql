@@ -130,3 +130,26 @@ ALTER TABLE points_ledger ADD COLUMN IF NOT EXISTS note text;
 
 -- รูปโปรไฟล์แบบรูปภาพ (avatar = emoji สำรอง)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_img text;
+
+-- ---------- สายรถเมล์ + ป้าย (GTFS ของ สนข.) ----------
+-- ข้อมูลอยู่ใน api/routes.json (tools/import-gtfs.py สร้าง) · db-init.js โหลดใหม่ทั้งชุดทุกครั้ง
+CREATE TABLE IF NOT EXISTS gtfs_stops (
+  id   text PRIMARY KEY,
+  name text NOT NULL,
+  lat  float8 NOT NULL,
+  lon  float8 NOT NULL
+);
+CREATE TABLE IF NOT EXISTS gtfs_routes (
+  id     text PRIMARY KEY,           -- route_id ใน GTFS
+  no     text NOT NULL,              -- เลขสายแบบใหม่ เช่น 1-12E
+  old_no text NOT NULL DEFAULT '',   -- เลขสายเดิมที่คนคุ้น เช่น 107
+  name   text NOT NULL,              -- ต้นทาง - ปลายทาง
+  agency text NOT NULL,
+  kind   text NOT NULL DEFAULT '',   -- ประเภทรถ เช่น ขสมก รถธรรมดา
+  dirs   jsonb NOT NULL              -- [{ head, stops: [stop id ตามลำดับ] }] ทิศละ 1 รายการ
+);
+
+-- สายที่ขึ้นตอนรีวิว (ไม่บังคับ) · เก็บเลขสายไว้ด้วย ถ้าข้อมูลสายเปลี่ยนรีวิวเดิมยังแสดงได้
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_id text;
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_label text;
+CREATE INDEX IF NOT EXISTS reviews_route ON reviews (route_id) WHERE route_id IS NOT NULL;

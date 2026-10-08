@@ -13,6 +13,8 @@
 - `data.js` — ข้อมูลรุ่นรถ เขตการเดินรถ ค่าโดยสาร (คัดจาก
   [องค์การขนส่งมวลชนกรุงเทพ — วิกิพีเดีย](https://th.wikipedia.org/wiki/องค์การขนส่งมวลชนกรุงเทพ), CC BY-SA) — API ใช้ไฟล์เดียวกัน
 - `api/` — REST API (Node.js 22 / Express / PostgreSQL) · `schema.sql` คือโครงสร้างตาราง · `test.js` คือ test
+- `api/routes.json` — สายรถเมล์ + ป้ายในกรุงเทพ 380 สาย จาก [GTFS ของ สนข.](https://namtang-api.otp.go.th/download/namtang-gtfs.zip) (CC BY 4.0) · อัปเดตด้วย `python3 tools/import-gtfs.py` · `db-init.js` โหลดใหม่ทุกครั้งที่ deploy
+- `api/rewards.json` — ของในร้าน · รูปโหลดด้วย `python3 tools/fetch-rewards.py`
 - `deploy/` — Nginx, systemd (API + backup timer), สคริปต์ติดตั้งและ deploy ไป ruk-com
 - `pitch/` — สไลด์ แต่ละ sprint, one-pager, รายงาน, ภาพหน้าจอ
 

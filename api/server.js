@@ -109,7 +109,7 @@ const addPoints = (c, userId, delta, reason, refId = null) =>
   c.query("INSERT INTO points_ledger (user_id, delta, reason, ref_id) VALUES ($1, $2, $3, $4)", [userId, delta, reason, refId]);
 
 // คอลัมน์รีวิว + สิ่งที่ "ฉัน" ทำกับรีวิวนั้น ($me = เลข parameter ของ user id, null = ไม่ได้เข้าสู่ระบบ)
-const reviewCols = me => `r.id, r.fleet_no, r.type, r.stars_driving, r.stars_stops, r.stars_condition, r.text, r.stop_name,
+const reviewCols = me => `r.id, r.fleet_no, r.type, r.stars_driving, r.stars_stops, r.stars_condition, r.text, r.stop_name, r.route_id, r.route_label,
   to_char(r.ride_time, 'HH24:MI') AS ride_time, r.helpful_count, r.created_at, u.display_name, u.avatar, u.avatar_img, r.user_id,
   EXISTS (SELECT 1 FROM review_votes v WHERE v.review_id = r.id AND v.user_id = ${me}) AS voted,
   EXISTS (SELECT 1 FROM reports p WHERE p.review_id = r.id AND p.reporter_id = ${me}) AS reported,
@@ -288,7 +288,30 @@ app.get("/api/buses/:fleetNo", wrap(async (req, res) => {
            round(avg(stars_condition), 1)::float AS condition,
            round(avg((stars_driving + stars_stops + stars_condition) / 3.0), 1)::float AS avg
     FROM reviews WHERE fleet_no = $1 AND status = 'visible'`, [f.fleet_no]);
-  res.json({ fleet_no: f.fleet_no, zone: f.zone, model_id: f.model_id, stats: r.rows[0] });
+  // สายที่คนรีวิวว่าเจอคันนี้
+  const routes = await pool.query(`SELECT route_id AS id, route_label AS label, count(*)::int AS n FROM reviews
+    WHERE fleet_no = $1 AND status = 'visible' AND route_id IS NOT NULL GROUP BY 1, 2 ORDER BY n DESC, label LIMIT 6`, [f.fleet_no]);
+  res.json({ fleet_no: f.fleet_no, zone: f.zone, model_id: f.model_id, stats: r.rows[0], routes: routes.rows });
+}));
+
+// ---------- สายรถเมล์ (GTFS ของ สนข.) ----------
+app.get("/api/routes", wrap(async (_req, res) => {
+  const r = await pool.query("SELECT id, no, old_no AS old, name, agency, kind FROM gtfs_routes ORDER BY NULLIF(old_no, '') IS NULL, old_no, no, id");
+  res.set("Cache-Control", "public, max-age=3600").json({ items: r.rows });
+}));
+app.get("/api/routes/:id", wrap(async (req, res) => {
+  const r = await pool.query("SELECT id, no, old_no AS old, name, agency, kind, dirs FROM gtfs_routes WHERE id = $1", [String(req.params.id).slice(0, 20)]);
+  if (!r.rows.length) throw new HttpError(404, "ไม่พบสายนี้");
+  const route = r.rows[0];
+  const ids = [...new Set(route.dirs.flatMap(d => d.stops))];
+  const st = await pool.query("SELECT id, name, lat, lon FROM gtfs_stops WHERE id = ANY($1)", [ids]);
+  const byId = new Map(st.rows.map(x => [x.id, x]));
+  route.dirs = route.dirs.map(d => ({ head: d.head, stops: d.stops.map(id => byId.get(id)).filter(Boolean) }));
+  // คันที่มีคนรีวิวว่าวิ่งสายนี้
+  const buses = await pool.query(`SELECT fleet_no, count(*)::int AS n,
+      round(avg((stars_driving + stars_stops + stars_condition) / 3.0), 1)::float AS avg
+    FROM reviews WHERE route_id = $1 AND status = 'visible' GROUP BY 1 ORDER BY n DESC, fleet_no LIMIT 30`, [route.id]);
+  res.json({ ...route, buses: buses.rows });
 }));
 
 app.get("/api/buses/:fleetNo/reviews", optionalAuth, wrap(async (req, res) => {
@@ -321,15 +344,21 @@ app.post("/api/reviews", requireAuth, wrap(async (req, res) => {
   const stop = str(b.stop_name, 80) || null;
   if (stop && (hasBlocked(stop) || hasPhone(stop))) throw bad("ชื่อป้ายไม่ถูกต้อง");
   const time = typeof b.ride_time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(b.ride_time) ? b.ride_time : null;
+  let route = null;
+  if (b.route_id != null && b.route_id !== "") {
+    const rr = await pool.query("SELECT id, COALESCE(NULLIF(old_no, ''), no) AS label FROM gtfs_routes WHERE id = $1", [String(b.route_id).slice(0, 20)]);
+    if (!rr.rows.length) throw bad("ไม่พบสายนี้ — เลือกจากรายการ");
+    route = rr.rows[0];
+  }
   const uid = req.user.sub;
 
   const out = await tx(async c => {
     await c.query("INSERT INTO buses (fleet_no, zone, model_id) VALUES ($1, $2, $3) ON CONFLICT (fleet_no) DO NOTHING", [f.fleet_no, f.zone, f.model_id]);
     let r;
     try {
-      r = await c.query(`INSERT INTO reviews (user_id, fleet_no, type, stars_driving, stars_stops, stars_condition, text, stop_name, ride_time)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-        [uid, f.fleet_no, type, ...(type === "review" ? s : [null, null, null]), text, stop, time]);
+      r = await c.query(`INSERT INTO reviews (user_id, fleet_no, type, stars_driving, stars_stops, stars_condition, text, stop_name, ride_time, route_id, route_label)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+        [uid, f.fleet_no, type, ...(type === "review" ? s : [null, null, null]), text, stop, time, route && route.id, route && route.label]);
     } catch (e) {
       if (e.code === "23505") throw new HttpError(409, "วันนี้รีวิวคันนี้ไปแล้ว — พรุ่งนี้มาใหม่นะ");
       throw e;

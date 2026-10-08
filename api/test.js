@@ -166,6 +166,24 @@ test("สติกเกอร์: ต้องแลกก่อน · กด�
   assert.equal(await points(B), 30, "สติกเกอร์ไม่ให้แต้ม");
 });
 
+test("สาย (GTFS): รายการสาย · ป้ายตามลำดับ · รีวิวผูกสาย · สายที่ไม่มีถูกปฏิเสธ", async () => {
+  const list = (await call("GET", "/routes")).body.items;
+  assert.ok(list.length > 300, "โหลดสายจาก routes.json แล้ว");
+  const r8 = list.find(x => x.old === "8");
+  assert.ok(r8 && r8.name.includes("สะพานพุทธ"));
+  const d = (await call("GET", `/routes/${r8.id}`)).body;
+  assert.ok(d.dirs.length >= 1 && d.dirs[0].stops.length > 10);
+  assert.ok(d.dirs[0].stops.every(x => x.name && typeof x.lat === "number"));
+  assert.equal((await call("GET", "/routes/nope")).status, 404);
+  const R = await login("rider@example.com", "Rider");
+  assert.equal((await review(R, "8-80040", { route_id: "nope" })).status, 400);
+  assert.equal((await review(R, "8-80040", { route_id: r8.id, stop_name: d.dirs[0].stops[0].name })).status, 201);
+  const bus = (await call("GET", "/buses/8-80040")).body;
+  assert.deepEqual(bus.routes, [{ id: r8.id, label: "8", n: 1 }]);
+  assert.equal((await call("GET", "/buses/8-80040/reviews")).body.items[0].route_label, "8");
+  assert.deepEqual((await call("GET", `/routes/${r8.id}`)).body.buses.map(b => b.fleet_no), ["8-80040"]);
+});
+
 test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ่อนอัตโนมัติ", async () => {
   assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: A.token, body: { reason: "spam" } })).status, 400);
   assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "whatever" } })).status, 400);
