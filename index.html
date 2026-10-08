@@ -8,8 +8,9 @@
 <meta name="theme-color" content="#dfe6f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="คันนี้ดีไหม">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232346d6'/><text x='50' y='72' text-anchor='middle' font-size='60'>🚌</text></svg>">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -99,7 +100,34 @@
   </form>
 </dialog>
 
-<!-- เข้าสู่ระบบด้วย Google (ตอนนี้จำลอง) -->
+<!-- รายงานรีวิว -->
+<dialog class="sheet" id="reportSheet" aria-labelledby="rTitle">
+  <div class="grab"></div>
+  <form id="rForm" class="px-5 pb-5" novalidate>
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="rTitle">รายงานรีวิวนี้</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="grid gap-1.5" id="rReasons"></div>
+    <p class="mt-3 text-[12.5px] leading-relaxed text-mute">ผู้ดูแลจะตรวจทุกรายงาน · มีคนรายงานครบ 3 คน รีวิวจะถูกซ่อนไว้ก่อน · ถ้าผิดกติกาจริง ผู้เขียนโดนหัก 20 แต้ม</p>
+    <p class="text-[13px] font-medium text-alarm" id="rErr" role="alert"></p>
+    <button class="btn-alarm mt-2 w-full" id="rSubmit" type="submit"><i class="fa-solid fa-flag"></i>ส่งรายงาน</button>
+  </form>
+</dialog>
+
+<!-- เลือกสติกเกอร์ -->
+<dialog class="sheet" id="stickerSheet" aria-labelledby="sTitle">
+  <div class="grab"></div>
+  <div class="px-5 pb-6">
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="sTitle">ใส่สติกเกอร์</h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="sList"></div>
+  </div>
+</dialog>
+
+<!-- เข้าสู่ระบบด้วย Google -->
 <dialog class="sheet" id="authSheet" aria-labelledby="aTitle">
   <div class="grab"></div>
   <div class="px-5 pb-6">
@@ -110,6 +138,7 @@
     </div>
     <div id="aStep1">
       <p class="mb-4 text-[14px] text-mute" id="aWhy" hidden></p>
+      <div id="gReal" class="flex min-h-12 justify-center" hidden></div>
       <button class="btn-google w-full" type="button" id="gBtn"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
       <ul class="mt-4 grid gap-1.5 text-[13px] text-mute">
         <li><i class="fa-solid fa-ticket-simple mr-2 w-4 text-center text-ticket"></i>เข้าครั้งแรกได้ 20 แต้ม</li>
@@ -415,7 +444,17 @@
   let token = store.get("token"), me = null, curBus = null, rvSort = "new", rvCtrl = null, feedSort = "new", pendingAfterAuth = null;
   const OFFLINE_MSG = "รีวิวและแต้มใช้ได้บนเว็บหลักของโปรเจกต์ — หน้านี้ค้นหาได้อย่างเดียว";
 
-  async function api(path, { method = "GET", body, signal } = {}) {
+  // access token อายุ 15 นาที → ใกล้หมดก็ขอใหม่ด้วย refresh token (cookie HttpOnly ที่ JS อ่านไม่ได้)
+  const tokenExp = t => { try { return JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000; } catch { return 0; } };
+  let renewing = null;
+  function renew() {
+    renewing ||= fetch("/api/auth/refresh", { method: "POST" }).then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(j => { renewing = null; if (j && j.token) { token = j.token; store.set("token", token); return true; } setToken(null); return false; });
+    return renewing;
+  }
+  async function api(path, opts = {}, retry = true) {
+    const { method = "GET", body, signal } = opts;
+    if (token && !path.startsWith("/auth") && tokenExp(token) - Date.now() < 30e3) await renew();
     const headers = {};
     if (body) headers["Content-Type"] = "application/json";
     if (token) headers.Authorization = "Bearer " + token;
@@ -424,7 +463,7 @@
     catch (e) { if (e.name === "AbortError") throw e; throw Object.assign(new Error("ต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"), { offline: true }); }
     const j = await r.json().catch(() => null);
     if (!j) throw Object.assign(new Error(r.status === 429 ? "กดถี่เกินไป รอสักครู่แล้วลองใหม่" : OFFLINE_MSG), { offline: true });
-    if (r.status === 401 && token && !path.startsWith("/auth")) setToken(null);
+    if (r.status === 401 && token && !path.startsWith("/auth")) { if (retry && await renew()) return api(path, opts, false); setToken(null); }
     if (!r.ok) throw Object.assign(new Error(j.error || "เกิดข้อผิดพลาด"), { status: r.status });
     return j;
   }
@@ -462,8 +501,15 @@
         <button class="hb ${r.voted ? "on" : ""}" type="button" data-helpful="${r.id}" ${r.voted || r.mine ? "disabled" : ""}>${inc ? `<i class="fa-solid fa-check"></i>ยืนยันว่าจริง` : `<i class="fa-solid fa-thumbs-up"></i>มีประโยชน์`} <b class="num">${r.helpful_count}</b></button>
         ${inc ? "" : `<span class="num text-[12px] text-mute">ขับ ${r.stars_driving} · จอดป้าย ${r.stars_stops} · สภาพ ${r.stars_condition}</span>`}
       </div>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+        <span class="contents" data-rx="${r.id}">${rxRow(r)}</span>
+        ${r.mine ? "" : `<button class="icon-btn ml-auto !h-8 !w-8 !text-[13px]" type="button" data-report="${r.id}" ${r.reported ? "disabled" : ""} aria-label="${r.reported ? "รายงานแล้ว" : "รายงานรีวิวนี้"}" title="${r.reported ? "รายงานแล้ว" : "รายงาน"}"><i class="fa-${r.reported ? "solid" : "regular"} fa-flag"></i></button>`}
+      </div>
     </article>`;
   }
+  // สติกเกอร์ที่คนกดให้รีวิวนี้ + ปุ่มใส่สติกเกอร์
+  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}"><span class="text-[15px] leading-none">${esc(x.emoji)}</span><b class="num">${x.n}</b></button>`).join("")
+    + `<button class="hb !px-2.5 text-mute" type="button" data-react-pick="${r.id}" data-mine-rx="${esc(r.my_reaction || "")}" aria-label="ใส่สติกเกอร์"><i class="fa-regular fa-face-smile"></i><i class="fa-solid fa-plus text-[9px]"></i></button>`;
 
   function loadBus(fleet, n) {
     const box = $("#rvbox"); curBus = fleet;
@@ -582,11 +628,39 @@
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sunk text-mute"><i class="fa-solid fa-user-plus"></i></span>
         <span class="text-[14.5px] font-semibold">ใช้บัญชีอื่น <span class="font-normal text-mute">(สร้างบัญชีทดสอบใหม่)</span></span></button>`;
   }
+  // Google Sign-In จริงเปิดเมื่อ server มี client ID (/api/config) · ไม่มี = โหมดจำลอง
+  let cfg = { google_client_id: null, mock_login: true }, gisReady = null;
+  api("/config").then(c => { cfg = c; }).catch(() => {});
+  function loadGis() {
+    gisReady ||= new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = ok; sc.onerror = no; document.head.append(sc); })
+      .then(() => google.accounts.id.initialize({ client_id: cfg.google_client_id, callback: r => doLogin({ credential: r.credential }) }));
+    return gisReady;
+  }
   function openAuth(why, then) {
     pendingAfterAuth = then || null;
     $("#aWhy").textContent = why || ""; $("#aWhy").hidden = !why;
     authStep(1);
+    const real = !!cfg.google_client_id;
+    $("#gReal").hidden = !real;
+    $("#gBtn").hidden = real && !cfg.mock_login;
+    if (real) {
+      $("#gBtn").innerHTML = `<i class="fa-solid fa-flask"></i>ใช้บัญชีทดสอบ`;
+      loadGis().then(() => google.accounts.id.renderButton($("#gReal"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", locale: "th", width: Math.min(360, $("#aStep1").clientWidth || 320) }))
+        .catch(() => { $("#aErr").textContent = "โหลดปุ่ม Google ไม่ได้ ลองใหม่อีกครั้ง"; });
+    }
     sheet("#authSheet").show();
+  }
+  async function doLogin(body) {
+    $("#aErr").textContent = "";
+    $$("#gList button").forEach(x => x.disabled = true);
+    try {
+      const r = await api("/auth/google", { method: "POST", body });
+      setToken(r.token);
+      toast(r.created ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
+      if (curBus) loadBus(curBus);
+      sheet("#authSheet").hide();
+    } catch (err) { $("#aErr").textContent = err.message; }
+    finally { $$("#gList button").forEach(x => x.disabled = false); }
   }
   $("#gBtn").onclick = () => authStep(2);
   $("#aBack").onclick = () => authStep(1);
@@ -598,17 +672,10 @@
       acc = { name: NICKS[Math.floor(Math.random() * NICKS.length)], email: "mock-" + Math.random().toString(36).slice(2, 8) + "@example.com" };
       store.set("gAccounts", [acc, ...(store.get("gAccounts") || [])].slice(0, 5));
     }
-    $$("#gList button").forEach(x => x.disabled = true);
-    try {
-      const r = await api("/auth/google", { method: "POST", body: acc });
-      setToken(r.token);
-      toast(r.created ? `ยินดีต้อนรับ ${r.user.display_name} · +20 แต้ม` : `สวัสดี ${r.user.display_name}`);
-      if (curBus) loadBus(curBus);
-      sheet("#authSheet").hide();
-    } catch (err) { $("#aErr").textContent = err.message; }
-    finally { $$("#gList button").forEach(x => x.disabled = false); }
+    doLogin(acc);
   });
-  function setToken(t) { token = t; t ? store.set("token", t) : store.del("token"); if (!t) { me = null; updatePts(); } else refreshMe(); }
+  function setToken(t) { token = t; t ? store.set("token", t) : store.del("token"); rewards = null; if (!t) { me = null; updatePts(); } else refreshMe(); }
+  async function logout() { await fetch("/api/auth/logout", { method: "POST" }).catch(() => {}); setToken(null); }
   async function refreshMe() {
     if (!token) { me = null; updatePts(); return; }
     try { me = await api("/me"); } catch { me = null; }
@@ -626,6 +693,9 @@
   document.addEventListener("click", async e => {
     const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
     const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
+    const rx = e.target.closest("[data-react]"); if (rx) return react(rx.dataset.react, rx.dataset.sticker);
+    const pk = e.target.closest("[data-react-pick]"); if (pk) return pickSticker(pk.dataset.reactPick, pk.dataset.mineRx);
+    const rp = e.target.closest("[data-report]"); if (rp) return openReport(rp.dataset.report);
     const h = e.target.closest("[data-helpful]"); if (!h) return;
     if (!token) return openAuth("เข้าสู่ระบบก่อนกดมีประโยชน์");
     h.disabled = true;
@@ -634,6 +704,52 @@
       h.classList.add("on"); h.querySelector("b").textContent = r.helpful_count;
       toast("ผู้เขียนได้ +2 แต้มจากคุณ");
     } catch (err) { toast(err.message); if (err.status !== 409) h.disabled = false; }
+  });
+
+  // ---------- สติกเกอร์ในรีวิว (ต้องแลกที่ร้านก่อน · ไม่ให้แต้ม) ----------
+  async function react(id, sticker) {
+    if (!token) return openAuth("เข้าสู่ระบบก่อนใส่สติกเกอร์");
+    try {
+      const r = await api(`/reviews/${id}/react`, { method: "POST", body: { sticker_id: sticker } });
+      $$(`[data-rx="${id}"]`).forEach(el => { el.innerHTML = rxRow({ id, reactions: r.reactions, my_reaction: r.my_reaction }); });
+      sheet("#stickerSheet").hide();
+    } catch (err) { toast(err.status === 403 ? "ยังไม่มีสติกเกอร์นี้ — แลกได้ที่แท็บแลกของ" : err.message); }
+  }
+  async function pickSticker(id, mine) {
+    if (!token) return openAuth("เข้าสู่ระบบก่อนใส่สติกเกอร์");
+    const el = $("#sList");
+    el.innerHTML = loading("กำลังโหลด…");
+    sheet("#stickerSheet").show();
+    try {
+      const own = (await loadRewards()).filter(x => x.type === "sticker" && x.owned);
+      el.innerHTML = own.length
+        ? `<div class="grid grid-cols-3 gap-2">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}">
+            <div class="text-[34px] leading-tight">${esc(x.emoji)}</div><div class="mt-1 truncate text-[12.5px] font-semibold">${esc(x.name)}</div></button>`).join("")}</div>
+           <p class="mt-3 text-[12.5px] text-mute">${mine ? "กดอันที่ใส่อยู่อีกครั้งเพื่อเอาออก · " : ""}คนละ 1 สติกเกอร์ต่อรีวิว</p>`
+        : `<p class="text-[14px]">ยังไม่มีสติกเกอร์ — แลกด้วยแต้มจากการรีวิวได้ที่ร้าน</p><button class="btn-primary mt-3 w-full" type="button" data-tab-go="shop" data-close><i class="fa-solid fa-gift"></i>ไปร้านแลกของ</button>`;
+    } catch (err) { el.innerHTML = problem(err.message); }
+  }
+
+  // ---------- รายงานรีวิว ----------
+  const REPORT_REASONS = [["rude", "หยาบคาย / ด่าทอ"], ["personal", "ระบุตัวคนขับ / มีข้อมูลส่วนตัว"], ["fake", "ไม่จริง / มั่ว"], ["spam", "สแปม / โฆษณา"]];
+  let reportId = null;
+  $("#rReasons").innerHTML = REPORT_REASONS.map(([k, l], i) => `<label class="flex cursor-pointer items-center gap-3 rounded-xl bg-sunk px-4 py-3 text-[14.5px] has-[:checked]:bg-alarm-soft has-[:checked]:text-alarm"><input type="radio" name="reason" value="${k}" class="accent-current" ${i ? "" : "checked"}>${l}</label>`).join("");
+  function openReport(id) {
+    if (!token) return openAuth("เข้าสู่ระบบก่อนรายงาน");
+    reportId = id; $("#rErr").textContent = ""; $("#rForm").reset();
+    sheet("#reportSheet").show();
+  }
+  $("#rForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("#rSubmit"); btn.disabled = true;
+    try {
+      const r = await api(`/reviews/${reportId}/report`, { method: "POST", body: { reason: new FormData(e.target).get("reason") } });
+      sheet("#reportSheet").hide();
+      toast(r.hidden ? "ส่งแล้ว — รีวิวนี้ถูกซ่อนไว้รอผู้ดูแลตรวจ" : "ส่งรายงานแล้ว ผู้ดูแลจะตรวจให้");
+      $$(`[data-report="${reportId}"]`).forEach(b => { b.disabled = true; b.innerHTML = `<i class="fa-solid fa-flag"></i>`; });
+      if (r.hidden) { if (curBus) loadBus(curBus); if (!$("#v-feed").hidden) loadFeed(); }
+    } catch (err) { $("#rErr").textContent = err.message; }
+    finally { btn.disabled = false; }
   });
 
   // ---------- Feed ----------
@@ -655,38 +771,60 @@
   });
   $("#feedReload").onclick = loadFeed;
 
-  // ---------- แลกของ (ร้านยังไม่เปิดแลก) ----------
-  const REWARDS = [
-    ["สติกเกอร์ไว้กดในรีวิว", [["🦖", "Yee", 20], ["🫡", "ลุงขับดี", 20], ["🫳🫴", "67", 30], ["🐂", "Niu Lai", 50], ["😱", "หวาดเสียว", 20], ["🗿", "จอดกลางถนน", 40]]],
-    ["รูปโปรไฟล์", [["🧔", "ลุงคนขับ", 80], ["🚌", "สาย 8", 100], ["🐸", "กบ", 60]]],
-  ];
-  const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"]];
-  function renderShop() {
-    const pts = me ? me.points : 0;
-    $("#v-shop").innerHTML = `
-      <div class="ticket rise mt-1 flex">
+  // ---------- แลกของ ----------
+  let rewards = null;
+  async function loadRewards() { rewards ||= (await api("/rewards")).items; return rewards; }
+  const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"], ["รีวิวถูกรายงานและผู้ดูแลยืนยันว่าผิด", "−20"]];
+  async function renderShop() {
+    const el = $("#v-shop"), pts = me ? me.points : 0;
+    const head = `<div class="ticket rise mt-1 flex">
         <div class="flex-1 px-6 py-4">
           <div class="font-display text-[12.5px] font-semibold uppercase tracking-[.08em] opacity-70">แต้มสะสม</div>
           <div class="num text-[48px] leading-none font-bold">${pts}</div>
           <div class="mt-1 text-[13px] font-medium">${me ? esc(me.user.display_name) : `<button type="button" class="underline" id="shopLogin">เข้าสู่ระบบเพื่อสะสมแต้ม</button>`}</div>
         </div>
         <div class="perf grid w-24 place-items-center text-[40px]">${me ? esc(me.user.avatar) : "🚌"}</div>
-      </div>
-      <p class="mt-3 flex gap-2 px-1 text-[13px] text-mute"><i class="fa-solid fa-store-slash mt-1"></i>ร้านยังไม่เปิดให้แลก — แต้มที่สะสมไว้ไม่หาย ใช้แลกได้ทันทีที่ร้านเปิด</p>
-      ${REWARDS.map(([h, items]) => `<div class="eyebrow mt-5 mb-2">${h}</div>
-        <div class="grid grid-cols-3 gap-2">${items.map(([f, n, c]) => `<div class="card relative p-3 text-center">
-          ${pts >= c ? `<span class="tag absolute top-2 right-2 bg-ok-soft !px-1.5 !py-0 text-[10.5px] text-ok">พอแลก</span>` : ""}
-          <div class="text-[38px] leading-tight">${f}</div><div class="mt-1 truncate text-[13px] font-semibold">${n}</div>
-          <div class="num mt-1 text-[13px] font-bold text-mute">${c} แต้ม</div></div>`).join("")}</div>`).join("")}
-      <div class="card mt-5 overflow-hidden">
-        <div class="eyebrow px-4 pt-3 pb-1">ได้แต้มจาก</div>
-        ${EARN.map(([k, v]) => `<div class="flex items-center border-t border-line px-4 py-2.5 text-[14px]"><span class="flex-1">${k}</span><b class="num text-ok">${v}</b></div>`).join("")}
       </div>`;
+    const earn = `<div class="card mt-5 overflow-hidden">
+        <div class="eyebrow px-4 pt-3 pb-1">ได้แต้มจาก</div>
+        ${EARN.map(([k, v]) => `<div class="flex items-center border-t border-line px-4 py-2.5 text-[14px]"><span class="flex-1">${k}</span><b class="num ${v.startsWith("+") ? "text-ok" : "text-alarm"}">${v}</b></div>`).join("")}
+      </div>`;
+    if (!rewards) el.innerHTML = head + `<div class="card mt-3">${loading("กำลังโหลดร้าน…")}</div>`;
+    let items;
+    try { items = await loadRewards(); }
+    catch (err) { el.innerHTML = head + `<div class="card mt-3">${problem(err.message)}</div>` + earn; return; }
+    const card = x => {
+      const using = x.type === "avatar" && me && me.user.avatar === x.emoji;
+      const act = x.owned
+        ? (x.type === "avatar" ? (using ? `<span class="tag bg-route-soft text-route">ใช้อยู่</span>` : `<button class="hb" type="button" data-use-avatar="${esc(x.id)}">ใช้รูปนี้</button>`) : `<span class="tag bg-ok-soft text-ok"><i class="fa-solid fa-check"></i>มีแล้ว</span>`)
+        : `<button class="hb ${pts >= x.cost ? "!bg-ticket !text-ticket-ink" : ""}" type="button" data-redeem="${esc(x.id)}" ${me && pts < x.cost ? "disabled" : ""}><b class="num">${x.cost}</b> แต้ม</button>`;
+      return `<div class="card flex flex-col items-center p-3 text-center ${me && !x.owned && pts < x.cost ? "opacity-60" : ""}">
+        <div class="text-[38px] leading-tight">${esc(x.emoji)}</div><div class="mt-1 w-full truncate text-[13px] font-semibold">${esc(x.name)}</div>
+        <div class="mt-2">${act}</div></div>`;
+    };
+    const group = (h, type, sub) => `<div class="mt-5 mb-2 flex items-baseline gap-2"><div class="eyebrow">${h}</div><div class="text-[12px] text-mute">${sub}</div></div>
+      <div class="grid grid-cols-3 gap-2">${items.filter(x => x.type === type).map(card).join("")}</div>`;
+    el.innerHTML = head + group("สติกเกอร์", "sticker", "ไว้กดในรีวิวของคนอื่น") + group("รูปโปรไฟล์", "avatar", "โชว์ข้างชื่อในทุกรีวิว") + earn;
     $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth());
   }
+  $("#v-shop").addEventListener("click", async e => {
+    const rd = e.target.closest("[data-redeem]"), av = e.target.closest("[data-use-avatar]");
+    if (!rd && !av) return;
+    if (!token) return openAuth("เข้าสู่ระบบก่อนแลกของ");
+    const x = (rewards || []).find(w => w.id === (rd || av).dataset[rd ? "redeem" : "useAvatar"]);
+    if (!x) return;
+    if (rd && !confirm(`แลก ${x.emoji} ${x.name} ด้วย ${x.cost} แต้ม?`)) return;
+    (rd || av).disabled = true;
+    try {
+      if (rd) { await api(`/rewards/${x.id}/redeem`, { method: "POST" }); toast(`ได้ ${x.emoji} ${x.name} แล้ว`); }
+      else { await api("/me/avatar", { method: "POST", body: { reward_id: x.id } }); toast(`เปลี่ยนรูปโปรไฟล์เป็น ${x.emoji} แล้ว`); }
+      rewards = null; await refreshMe();
+    } catch (err) { toast(err.message); (rd || av).disabled = false; }
+  });
 
   // ---------- ฉัน ----------
-  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ" };
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
+  const REPORT_LABEL = Object.fromEntries(REPORT_REASONS);
   function renderMe() {
     const el = $("#v-me");
     if (!token || !me) {
@@ -709,11 +847,43 @@
       </div>
       <div class="card mt-3 overflow-hidden">
         <div class="eyebrow px-4 pt-3 pb-1">ประวัติแต้ม</div>
-        ${me.ledger.map(l => `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5 text-[14px]"><b class="num w-11 text-right ${l.delta > 0 ? "text-ok" : "text-alarm"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><span class="flex-1">${REASON[l.reason] || esc(l.reason)}</span><span class="text-[12px] text-mute">${ago(l.created_at)}</span></div>`).join("")}
+        ${me.ledger.map(l => `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5 text-[14px]"><b class="num w-11 text-right ${l.delta > 0 ? "text-ok" : "text-alarm"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><span class="flex-1">${REASON[l.reason] || esc(l.reason)}${l.note ? " " + esc(l.note) : ""}</span><span class="text-[12px] text-mute">${ago(l.created_at)}</span></div>`).join("")}
       </div>
-      <button class="btn-quiet mt-3 w-full text-[14px]" type="button" id="logout"><i class="fa-solid fa-right-from-bracket"></i>ออกจากระบบ</button>`;
-    $("#logout").onclick = () => { setToken(null); toast("ออกจากระบบแล้ว"); if (curBus) loadBus(curBus); };
+      ${me.user.role === "moderator" ? `<section class="card mt-3 overflow-hidden"><div class="flex items-center px-4 pt-3 pb-1"><div class="eyebrow flex-1"><i class="fa-solid fa-shield-halved mr-1"></i>คิวรายงาน (ผู้ดูแล)</div><button class="icon-btn !h-8 !w-8" type="button" id="modReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button></div><div id="modList">${loading("กำลังโหลด…")}</div></section>` : ""}
+      <button class="btn-quiet mt-3 w-full text-[14px]" type="button" id="logout"><i class="fa-solid fa-right-from-bracket"></i>ออกจากระบบ</button>
+      <button class="mt-2 w-full py-2 text-[12.5px] text-mute underline" type="button" id="delAcc">ลบบัญชีและข้อมูลทั้งหมด</button>`;
+    $("#logout").onclick = async () => { await logout(); toast("ออกจากระบบแล้ว"); if (curBus) loadBus(curBus); };
+    $("#delAcc").onclick = async () => {
+      if (!confirm("ลบบัญชีถาวร? รีวิว แต้ม และของที่แลกไว้จะหายทั้งหมด กู้คืนไม่ได้")) return;
+      try { await api("/me", { method: "DELETE" }); setToken(null); toast("ลบบัญชีแล้ว"); if (curBus) loadBus(curBus); }
+      catch (err) { toast(err.message); }
+    };
+    if (me.user.role === "moderator") { loadMod(); $("#modReload").onclick = loadMod; }
   }
+
+  // ---------- ผู้ดูแล: ตัดสินรีวิวที่ถูกรายงาน ----------
+  async function loadMod() {
+    const el = $("#modList"); if (!el) return;
+    try {
+      const { items } = await api("/mod/reports");
+      el.innerHTML = items.length ? items.map(r => `<article class="border-t border-line px-4 py-3.5">
+          <div class="flex items-center gap-2">${miniPlate(r.fleet_no)}<span class="truncate text-[13px] text-mute">${esc(r.avatar)} ${esc(r.display_name)} · ${ago(r.created_at)}</span>
+            ${r.status === "hidden" ? `<span class="tag ml-auto bg-sunk text-mute">ซ่อนไว้ก่อน</span>` : ""}</div>
+          <p class="mt-2 text-[14px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">${esc(r.text)}</p>
+          <div class="mt-2 flex flex-wrap gap-1"><span class="tag bg-alarm-soft text-alarm"><i class="fa-solid fa-flag"></i>${r.reports}</span>${[...new Set(r.reasons)].map(k => `<span class="tag bg-sunk text-mute">${REPORT_LABEL[k] || esc(k)}</span>`).join("")}</div>
+          <div class="mt-2.5 flex gap-2"><button class="btn-alarm !min-h-10 flex-1 text-[13.5px]" type="button" data-resolve="${r.id}" data-action="hide">ผิดกติกา · ซ่อน −20</button><button class="btn-quiet !min-h-10 flex-1 text-[13.5px]" type="button" data-resolve="${r.id}" data-action="keep">ไม่ผิด · แสดงต่อ</button></div>
+        </article>`).join("") : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ไม่มีรายงานค้าง</p>`;
+    } catch (err) { el.innerHTML = problem(err.message); }
+  }
+  $("#v-me").addEventListener("click", async e => {
+    const b = e.target.closest("[data-resolve]"); if (!b) return;
+    $$(`[data-resolve="${b.dataset.resolve}"]`).forEach(x => x.disabled = true);
+    try {
+      const r = await api(`/mod/reviews/${b.dataset.resolve}/resolve`, { method: "POST", body: { action: b.dataset.action } });
+      toast(r.status === "hidden" ? `ซ่อนแล้ว${r.penalty ? " · หักผู้เขียน " + -r.penalty + " แต้ม" : ""}` : "แสดงรีวิวต่อแล้ว");
+      loadMod();
+    } catch (err) { toast(err.message); loadMod(); }
+  });
 
   // ---------- แท็บ ----------
   function showTab(name) {
@@ -724,7 +894,7 @@
     if (name === "me") { renderMe(); refreshMe(); }
   }
   $$("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
-  document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { showTab(b.dataset.tabGo); scrollTo(0, 0); } });
+  document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { $$("dialog[open]").forEach(d => d.close()); showTab(b.dataset.tabGo); scrollTo(0, 0); } });
   refreshMe();
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
   if (["feed", "shop", "me"].includes(tab0)) showTab(tab0);
@@ -732,6 +902,9 @@
   const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
   addEventListener("hashchange", fromHash);
   if (location.hash.length > 1) fromHash(); else { out.innerHTML = emptyState(); if (!tab0) num.focus(); }
+
+  // PWA: ติดตั้งลงมือถือได้ · เปิดหน้าค้นหาได้แม้เน็ตหลุด (รีวิว/แต้มต้องออนไลน์)
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
 </script>
 </body>
