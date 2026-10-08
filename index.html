@@ -61,6 +61,16 @@
   <div id="feedList"></div>
  </section>
 
+ <section class="view" id="v-routes" hidden>
+  <div class="glass-bar sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 px-4 pb-3">
+    <div class="relative">
+      <i class="fa-solid fa-route pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[16px] text-mute"></i>
+      <input id="rtTabQ" class="glass h-12 w-full rounded-2xl !border-2 pr-4 pl-11 text-[16px] text-ink outline-none transition placeholder:text-mute/70 focus:border-route" type="search" placeholder="เลขสาย หรือปลายทาง เช่น 8, 1-12E, หมอชิต" aria-label="ค้นหาสายรถเมล์" autocomplete="off" enterkeyhint="search">
+    </div>
+  </div>
+  <div class="card rise overflow-hidden px-4" id="rtTabList"></div>
+  <p class="mt-3 px-1 text-[11.5px] leading-snug text-mute">แตะสายเพื่อดูป้ายตามลำดับและคันที่มีคนรีวิว · ข้อมูลสายและป้าย: GTFS ของ สนข. (นำทาง) — CC BY 4.0 · ขสมก. ไทย สมายล์ บัส และ กทม.</p>
+ </section>
  <section class="view" id="v-shop" hidden></section>
  <section class="view pt-1" id="v-me" hidden></section>
 
@@ -69,6 +79,7 @@
 <nav class="fixed inset-x-3 bottom-[calc(10px+var(--safe-b))] z-30" aria-label="เมนูหลัก">
   <div class="glass mx-auto flex max-w-[616px] rounded-[26px] !bg-solid px-1">
     <button type="button" class="tab on" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นหา</button>
+    <button type="button" class="tab" data-tab="routes"><i class="fa-solid fa-route"></i>สาย</button>
     <button type="button" class="tab" data-tab="feed"><i class="fa-solid fa-comments"></i>Feed</button>
     <button type="button" class="tab" data-tab="shop"><i class="fa-solid fa-gift"></i>แลกของ</button>
     <button type="button" class="tab" data-tab="me"><i class="fa-solid fa-user"></i>ฉัน</button>
@@ -590,7 +601,8 @@
           </div>
         </div>
         ${(b.routes || []).length ? `<div class="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i>เจอบนสาย
-          ${b.routes.map(x => `<button class="hb" type="button" data-route="${esc(x.id)}">${esc(x.label)} <span class="num font-normal text-mute">${x.n}</span></button>`).join("")}</div>` : ""}
+          ${b.routes.map(x => `<button class="hb" type="button" data-route="${esc(x.id)}">${esc(x.label)} <span class="num font-normal text-mute">${x.n}</span></button>`).join("")}</div>`
+          : `<div class="mt-3 flex items-center gap-2 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i><span class="flex-1">ยังไม่รู้ว่าคันนี้วิ่งสายไหน — รีวิวแล้วเลือก "สายที่ขึ้น" ได้</span><button class="shrink-0 font-semibold text-route" type="button" data-route="">ดูสาย</button></div>`}
       </div>
       <div class="flex gap-2 px-4 pb-4">
         <button class="btn-primary flex-1" type="button" data-write="review"><i class="fa-solid fa-pen"></i>รีวิวคันนี้ <span class="tag bg-white/20 !py-0">+10</span></button>
@@ -707,11 +719,12 @@
     const s = thaiDigits(raw.trim()).toLowerCase();
     const score = r => { const l = routeLabel(r).toLowerCase(), n = r.no.toLowerCase();
       return !s ? 1 : l === s || n === s ? 0 : l.startsWith(s) || n.startsWith(s) ? 1 : r.name.toLowerCase().includes(s) ? 2 : 9; };
-    const hit = routes.map(r => [score(r), r]).filter(([k]) => k < 9).sort((a, b) => a[0] - b[0]).slice(0, 60).map(([, r]) => r);
+    const all = routes.map(r => [score(r), r]).filter(([k]) => k < 9).sort((a, b) => a[0] - b[0]), hit = all.slice(0, 60).map(([, r]) => r);
     if (!hit.length) return `<p class="p-4 text-center text-[13.5px] text-mute">ไม่พบสาย "${esc(raw)}"</p>`;
+    const more = all.length > hit.length ? `<p class="border-t border-line py-3 text-center text-[12.5px] text-mute">แสดง ${hit.length} จาก ${all.length} สาย — พิมพ์เลขสายหรือปลายทางเพื่อหาเพิ่ม</p>` : "";
     return hit.map((r, i) => `<button type="button" class="flex w-full items-center gap-3 ${i ? "border-t border-line" : ""} py-2.5 text-left transition active:bg-sunk" data-route="${esc(r.id)}">${routeBadge(r)}
       <span class="min-w-0 flex-1 leading-snug"><span class="block truncate text-[14px] font-semibold">${esc(r.name)}</span><span class="block truncate text-[12px] text-mute">${r.old ? esc(r.no) + " · " : ""}${esc(r.kind)}</span></span>
-      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`).join("");
+      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`).join("") + more;
   }
   async function showRoute(id) {
     $("#rtBack").hidden = false;
@@ -736,6 +749,14 @@
         <a class="min-w-0 flex-1 py-1.5 text-[14px] ${i === 0 || i === last ? "font-semibold" : ""}" href="https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}" target="_blank" rel="noopener">${esc(st.name)}</a></li>`).join("")}</ol>`;
   }
   $("#rtBack").onclick = () => showRouteSearch();
+  // แท็บ "สาย": รายการสายทั้งหมด + ค้นหา · แตะแล้วเปิดชีตรายละเอียด
+  async function renderRoutesTab() {
+    const el = $("#rtTabList");
+    if (!routes) el.innerHTML = loading("กำลังโหลดสาย…");
+    try { await loadRoutes(); el.innerHTML = routeList($("#rtTabQ").value); }
+    catch (err) { el.innerHTML = problem(err.message); }
+  }
+  $("#rtTabQ").addEventListener("input", () => { if (routes) $("#rtTabList").innerHTML = routeList($("#rtTabQ").value); });
   $("#rtBody").addEventListener("click", e => { const b = e.target.closest("[data-rtdir]"); if (b) { rtDir = +b.dataset.rtdir; renderRoute(); } });
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-route]"); if (!b) return;
@@ -1157,12 +1178,13 @@
     if (name === "feed") loadFeed();
     if (name === "shop") renderShop();
     if (name === "me") { renderMe(); refreshMe(); }
+    if (name === "routes") renderRoutesTab();
   }
   $$("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { if (b.dataset.shopKind) shopKind = b.dataset.shopKind; $$("dialog[open]").forEach(d => d.close()); showTab(b.dataset.tabGo); scrollTo(0, 0); } });
   refreshMe();
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
-  if (["feed", "shop", "me"].includes(tab0)) showTab(tab0);
+  if (["routes", "feed", "shop", "me"].includes(tab0)) showTab(tab0);
 
   const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
   addEventListener("hashchange", fromHash);
