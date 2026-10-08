@@ -20,6 +20,13 @@ const MOCK_LOGIN = process.env.MOCK_LOGIN !== "0";
 const MODERATOR_EMAILS = (process.env.MODERATOR_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 const COOKIE_SECURE = process.env.COOKIE_SECURE !== "0";
 const ACCESS_TTL = "15m", REFRESH_DAYS = 30;
+// แจ้งเตือนทาง LINE Messaging API — เปิดเมื่อตั้งครบ 3 ค่า (ไม่ครบ = ปิดฟีเจอร์ ปุ่มติดตามไม่ขึ้น)
+const LINE_SECRET = process.env.LINE_CHANNEL_SECRET || "";
+const LINE_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || "";
+const LINE_BOT_ID = process.env.LINE_BOT_ID || "";             // @xxxx ของ Official Account
+const LINE_API = process.env.LINE_API_BASE || "https://api.line.me";
+const LINE_ON = !!(LINE_SECRET && LINE_TOKEN && LINE_BOT_ID);
+const MAX_FOLLOWS = 30;
 const REFRESH_REUSE_GRACE_MS = process.env.REFRESH_GRACE_MS != null ? +process.env.REFRESH_GRACE_MS : 20000;
 
 // ใช้ data.js ชุดเดียวกับหน้าเว็บ → จับคู่รุ่นรถจากเลขข้างรถ
@@ -43,6 +50,8 @@ if (ALLOW_FROM.length) app.use((req, res, next) => {
   if (ip === "127.0.0.1" || ALLOW_FROM.includes(ip)) return next();
   res.status(403).end();
 });
+// webhook ของ LINE ต้องใช้ body ดิบตรวจลายเซ็น → ลงทะเบียนก่อน express.json
+app.post("/api/line/webhook", express.raw({ type: "*/*", limit: "256kb" }), (req, res, next) => lineWebhook(req, res).catch(next));
 app.use(express.json({ limit: "10kb" }));
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -128,7 +137,7 @@ app.get("/api/health", wrap(async (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 }));
 
-app.get("/api/config", (_req, res) => res.json({ google_client_id: GOOGLE_CLIENT_ID || null, mock_login: MOCK_LOGIN }));
+app.get("/api/config", (_req, res) => res.json({ google_client_id: GOOGLE_CLIENT_ID || null, mock_login: MOCK_LOGIN, line: LINE_ON ? { bot_id: LINE_BOT_ID } : null }));
 
 // ตรวจ ID token กับ Google (aud ต้องเป็น client ของเรา · อีเมลยืนยันแล้ว · ยังไม่หมดอายุ)
 async function verifyGoogle(credential) {
@@ -220,15 +229,17 @@ app.post("/api/auth/logout", wrap(async (req, res) => {
 
 app.get("/api/me", requireAuth, wrap(async (req, res) => {
   const id = req.user.sub;
-  const [u, pts, ledger, cnt, owned] = await Promise.all([
-    pool.query("SELECT id, email, display_name, avatar, avatar_img, role, created_at FROM users WHERE id = $1", [id]),
+  const [u, pts, ledger, cnt, owned, follows] = await Promise.all([
+    pool.query("SELECT id, email, display_name, avatar, avatar_img, role, created_at, line_user_id IS NOT NULL AS line_linked FROM users WHERE id = $1", [id]),
     pool.query("SELECT COALESCE(SUM(delta), 0)::int AS points FROM points_ledger WHERE user_id = $1", [id]),
     pool.query("SELECT delta, reason, ref_id, note, created_at FROM points_ledger WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT 20", [id]),
     pool.query("SELECT count(*)::int AS reviews, COALESCE(SUM(helpful_count), 0)::int AS helpful FROM reviews WHERE user_id = $1 AND status = 'visible'", [id]),
     pool.query("SELECT reward_id FROM user_rewards WHERE user_id = $1 ORDER BY created_at", [id]),
+    pool.query(`SELECT f.kind, f.target, COALESCE(NULLIF(g.old_no, ''), g.no, f.target) AS label, g.name FROM follows f
+      LEFT JOIN gtfs_routes g ON f.kind = 'route' AND g.id = f.target WHERE f.user_id = $1 ORDER BY f.created_at DESC`, [id]),
   ]);
   if (!u.rowCount) throw new HttpError(401, "กรุณาเข้าสู่ระบบใหม่");
-  res.json({ user: u.rows[0], points: pts.rows[0].points, ledger: ledger.rows, owned: owned.rows.map(x => x.reward_id), ...cnt.rows[0] });
+  res.json({ user: u.rows[0], points: pts.rows[0].points, ledger: ledger.rows, owned: owned.rows.map(x => x.reward_id), follows: follows.rows, ...cnt.rows[0] });
 }));
 
 // ลบบัญชี (PDPA) — รีวิว โหวต แต้ม ของที่แลก ลบตามทั้งหมด
@@ -241,6 +252,93 @@ app.delete("/api/me", requireAuth, wrap(async (req, res) => {
   res.clearCookie(COOKIE, cookieOpts);
   res.json({ ok: true });
 }));
+
+// ---------- LINE: เชื่อมบัญชี + ติดตามรถ/สาย ----------
+const requireLine = (_req, _res, next) => next(LINE_ON ? undefined : new HttpError(404, "ยังไม่เปิดแจ้งเตือนทาง LINE"));
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";   // ไม่มี 0/O 1/I/L ที่อ่านสับสน
+app.post("/api/me/line", requireLine, requireAuth, wrap(async (req, res) => {
+  const code = Array.from(crypto.randomBytes(6), b => CODE_CHARS[b % CODE_CHARS.length]).join("");
+  await tx(async c => {
+    await c.query("DELETE FROM line_link_codes WHERE user_id = $1 OR expires_at < now()", [req.user.sub]);
+    await c.query("INSERT INTO line_link_codes (code, user_id, expires_at) VALUES ($1, $2, now() + interval '15 minutes')", [code, req.user.sub]);
+  });
+  res.status(201).json({ code, bot_id: LINE_BOT_ID,
+    url: `https://line.me/R/oaMessage/${encodeURIComponent(LINE_BOT_ID)}/?${encodeURIComponent("เชื่อมบัญชี " + code)}`,
+    add_friend: `https://line.me/R/ti/p/${encodeURIComponent(LINE_BOT_ID)}` });
+}));
+app.delete("/api/me/line", requireAuth, wrap(async (req, res) => {
+  await pool.query("UPDATE users SET line_user_id = NULL WHERE id = $1", [req.user.sub]);
+  res.json({ ok: true });
+}));
+async function followTarget(kind, raw) {
+  if (kind === "bus") { const f = parseFleet(raw); if (!f) throw bad("เลขข้างรถไม่ถูกต้อง"); return f.fleet_no; }
+  if (kind === "route") {
+    const r = await pool.query("SELECT id FROM gtfs_routes WHERE id = $1", [String(raw).slice(0, 20)]);
+    if (!r.rowCount) throw new HttpError(404, "ไม่พบสายนี้"); return r.rows[0].id;
+  }
+  throw bad("ติดตามได้เฉพาะรถหรือสาย");
+}
+app.post("/api/follows/:kind/:target", requireAuth, wrap(async (req, res) => {
+  const target = await followTarget(req.params.kind, req.params.target);
+  const n = await pool.query("SELECT count(*)::int AS n FROM follows WHERE user_id = $1", [req.user.sub]);
+  if (n.rows[0].n >= MAX_FOLLOWS) throw bad(`ติดตามได้สูงสุด ${MAX_FOLLOWS} รายการ — เลิกติดตามอันเก่าที่แท็บ "ฉัน" ก่อน`);
+  await pool.query("INSERT INTO follows (user_id, kind, target) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [req.user.sub, req.params.kind, target]);
+  res.status(201).json({ following: true });
+}));
+app.delete("/api/follows/:kind/:target", requireAuth, wrap(async (req, res) => {
+  await pool.query("DELETE FROM follows WHERE user_id = $1 AND kind = $2 AND target = $3", [req.user.sub, req.params.kind, req.params.target]);
+  res.json({ following: false });
+}));
+
+async function linePost(p, body) {
+  const r = await fetch(LINE_API + p, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + LINE_TOKEN },
+    body: JSON.stringify(body), signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error(`LINE ${p} → ${r.status} ${(await r.text()).slice(0, 200)}`);
+}
+const lineReply = (replyToken, text) => replyToken ? linePost("/v2/bot/message/reply", { replyToken, messages: [{ type: "text", text }] }) : null;
+
+// LINE ส่ง event มาที่นี่ (ตั้ง URL ใน LINE Developers: https://<โดเมน>/api/line/webhook)
+async function lineWebhook(req, res) {
+  if (!LINE_ON) throw new HttpError(404, "ไม่พบ endpoint");
+  const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+  const sig = Buffer.from(String(req.get("x-line-signature") || ""), "base64");
+  const want = crypto.createHmac("sha256", LINE_SECRET).update(raw).digest();
+  if (sig.length !== want.length || !crypto.timingSafeEqual(sig, want)) throw new HttpError(401, "ลายเซ็นไม่ถูกต้อง");
+  let events = [];
+  try { events = JSON.parse(raw.toString("utf8")).events || []; } catch { throw bad("JSON ไม่ถูกต้อง"); }
+  for (const ev of events) await lineEvent(ev).catch(e => console.error("line event:", e.message));
+  res.json({ ok: true });
+}
+async function lineEvent(ev) {
+  const uid = ev.source && ev.source.type === "user" ? ev.source.userId : null;
+  if (!uid) return;
+  if (ev.type === "unfollow") return pool.query("UPDATE users SET line_user_id = NULL WHERE line_user_id = $1", [uid]);
+  if (ev.type === "follow") return lineReply(ev.replyToken, "สวัสดีจาก คันนี้ดีไหม? 🚌\nเชื่อมบัญชี: ในเว็บไปที่แท็บ \"ฉัน\" กด \"เชื่อม LINE\" แล้วส่งรหัส 6 ตัวมาที่นี่\nจากนั้นกด \"ติดตาม\" รถหรือสายที่นั่งประจำ — มีคนแจ้งเหตุเมื่อไหร่จะบอกทันที");
+  if (ev.type !== "message" || !ev.message || ev.message.type !== "text") return;
+  const m = String(ev.message.text).toUpperCase().match(new RegExp(`(?:^|[^A-Z0-9])([${CODE_CHARS}]{6})(?![A-Z0-9])`));
+  if (!m) return lineReply(ev.replyToken, "ส่งรหัส 6 ตัวจากแท็บ \"ฉัน\" ในเว็บเพื่อเชื่อมบัญชี · บอทนี้ใช้ส่งแจ้งเตือนอย่างเดียว ตอบแชตไม่ได้");
+  const name = await tx(async c => {
+    const code = await c.query("DELETE FROM line_link_codes WHERE code = $1 AND expires_at > now() RETURNING user_id", [m[1]]);
+    if (!code.rowCount) return null;
+    await c.query("UPDATE users SET line_user_id = NULL WHERE line_user_id = $1", [uid]);   // LINE 1 บัญชี ↔ เว็บ 1 บัญชี
+    const u = await c.query("UPDATE users SET line_user_id = $1 WHERE id = $2 RETURNING display_name", [uid, code.rows[0].user_id]);
+    return u.rows[0].display_name;
+  });
+  return lineReply(ev.replyToken, name
+    ? `เชื่อมกับบัญชี "${name}" แล้ว ✅\nกด "ติดตาม" ที่หน้ารถหรือหน้าสายในเว็บ — มีคนแจ้งเหตุเมื่อไหร่จะส่งมาที่นี่`
+    : "รหัสไม่ถูกต้องหรือหมดอายุแล้ว (ใช้ได้ 15 นาที) — ขอรหัสใหม่ที่แท็บ \"ฉัน\"");
+}
+// มีคนแจ้งเหตุ → ส่ง LINE ให้คนที่ติดตามรถคันนั้นหรือสายนั้น (ยกเว้นคนแจ้งเอง)
+async function notifyIncident(x) {
+  if (!LINE_ON) return;
+  const r = await pool.query(`SELECT DISTINCT u.line_user_id FROM follows f JOIN users u ON u.id = f.user_id
+    WHERE u.line_user_id IS NOT NULL AND u.id <> $1 AND ((f.kind = 'bus' AND f.target = $2) OR (f.kind = 'route' AND f.target = $3))`,
+    [x.author, x.fleet_no, x.route ? x.route.id : null]);
+  const to = r.rows.map(y => y.line_user_id);
+  if (!to.length) return;
+  const text = `🚨 มีคนแจ้งเหตุ รถ ${x.fleet_no}${x.route ? ` · สาย ${x.route.label}` : ""}\n"${x.text.length > 140 ? x.text.slice(0, 140) + "…" : x.text}"\n\nดูรายละเอียด: ${x.origin}/#${x.fleet_no}`;
+  for (let i = 0; i < to.length; i += 500) await linePost("/v2/bot/message/multicast", { to: to.slice(i, i + 500), messages: [{ type: "text", text }] });
+}
 
 // ใช้รูปโปรไฟล์ที่แลกมาแล้ว
 app.post("/api/me/avatar", requireAuth, wrap(async (req, res) => {
@@ -371,6 +469,8 @@ app.post("/api/reviews", requireAuth, wrap(async (req, res) => {
     }
     return { id, earned };
   });
+  if (type === "incident") notifyIncident({ fleet_no: f.fleet_no, route, text, author: uid, origin: process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}` })
+    .catch(e => console.error("line notify:", e.message));
   res.status(201).json(out);
 }));
 

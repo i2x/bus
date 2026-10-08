@@ -66,6 +66,19 @@ API_HOST=<node2>@gate.manage.ruk-com.cloud API_ADDR=<private IP node2> WEB_ADDR=
 
 API ฟัง private IP ของตัวเอง · iptables + `ALLOW_FROM` รับพอร์ต 3000 จาก web node เท่านั้น · Nginx proxy ไป `API_ADDR:3000`
 
+### แจ้งเตือนทาง LINE (ไม่บังคับ)
+
+ผู้ใช้กด "ติดตาม" รถหรือสาย → มีคนแจ้งเหตุ = บอทส่งข้อความ LINE ให้ · ไม่ตั้ง 3 ค่านี้ = ฟีเจอร์ปิด ปุ่มติดตามไม่ขึ้น
+
+1. [LINE Developers](https://developers.line.biz/console/) → สร้าง Provider → **Messaging API channel** (ได้ Official Account มาด้วย)
+2. แท็บ Messaging API: Webhook URL = `https://<โดเมน>/api/line/webhook` → เปิด **Use webhook** → กด Verify ·
+   ใน LINE Official Account Manager ปิด Auto-reply และ Greeting message (บอทตอบเอง)
+3. ใส่ใน `/etc/bus-api.env` บน server แล้ว `systemctl restart bus-api`:
+   `LINE_CHANNEL_SECRET=` (แท็บ Basic settings) · `LINE_CHANNEL_ACCESS_TOKEN=` (long-lived, แท็บ Messaging API) · `LINE_BOT_ID=@xxxx` (Basic ID ของบอท)
+
+เชื่อมบัญชี: แท็บ "ฉัน" → เชื่อม LINE → ได้รหัส 6 ตัว (15 นาที) → ส่งให้บอท · บล็อกบอท = ยกเลิกการเชื่อมอัตโนมัติ ·
+แผนฟรีของ Official Account ส่งได้จำกัดต่อเดือน — ส่งเฉพาะแจ้งเหตุ ไม่ส่งรีวิวปกติ
+
 ### Backup
 
 `pg_dump` ทุกวัน 03:00 (เวลาไทย) ไปที่ `/var/backups/bus` เก็บ 7 วัน · ทดสอบกู้คืน: `bus-restore-test.sh` บน server ·

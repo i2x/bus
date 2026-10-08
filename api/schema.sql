@@ -153,3 +153,21 @@ CREATE TABLE IF NOT EXISTS gtfs_routes (
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_id text;
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_label text;
 CREATE INDEX IF NOT EXISTS reviews_route ON reviews (route_id) WHERE route_id IS NOT NULL;
+
+-- ---------- แจ้งเตือนทาง LINE (Messaging API) ----------
+-- เชื่อมบัญชี: ขอรหัสในเว็บ → ส่งรหัสให้บอท LINE → webhook จับคู่ userId ของ LINE กับบัญชีเรา
+ALTER TABLE users ADD COLUMN IF NOT EXISTS line_user_id text UNIQUE;
+CREATE TABLE IF NOT EXISTS line_link_codes (
+  code       text PRIMARY KEY,
+  user_id    int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at timestamptz NOT NULL
+);
+-- ติดตามรถ (fleet_no) หรือสาย (route id ของ GTFS) → มีคนแจ้งเหตุ = ส่ง LINE
+CREATE TABLE IF NOT EXISTS follows (
+  user_id    int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind       text NOT NULL CHECK (kind IN ('bus', 'route')),
+  target     text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, kind, target)
+);
+CREATE INDEX IF NOT EXISTS follows_target ON follows (kind, target);

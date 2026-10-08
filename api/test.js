@@ -4,20 +4,29 @@ const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const { spawn } = require("child_process");
 const path = require("path");
+const http = require("http");
+const crypto = require("crypto");
 const { Pool } = require("pg");
 const { hasBlocked, hasPhone } = require("./wordfilter");
 
 const PORT = 3999;
 const BASE = `http://127.0.0.1:${PORT}/api`;
 const DATABASE_URL = process.env.TEST_DATABASE_URL || "postgres:///bus_test";
-let srv, pool;
+let srv, pool, lineStub;
+// LINE API ปลอม: เก็บทุก request ที่ server ส่งไปหา LINE
+const LINE_SECRET = "s".repeat(32), lineCalls = [];
 
 before(async () => {
   pool = new Pool({ connectionString: DATABASE_URL });
+  lineStub = http.createServer((req, res) => {
+    let b = ""; req.on("data", c => b += c);
+    req.on("end", () => { lineCalls.push({ path: req.url, auth: req.headers.authorization, body: JSON.parse(b || "{}") }); res.setHeader("content-type", "application/json"); res.end("{}"); });
+  }).listen(3998, "127.0.0.1");
   await pool.query("TRUNCATE users, buses, reviews, review_votes, points_ledger, user_rewards, review_reactions, reports, refresh_tokens RESTART IDENTITY CASCADE");
   srv = spawn(process.execPath, [path.join(__dirname, "server.js")], {
     env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), MODERATOR_EMAILS: "mod@example.com",
-      COOKIE_SECURE: "0", REFRESH_GRACE_MS: "1500", GOOGLE_CLIENT_ID: "" },
+      COOKIE_SECURE: "0", REFRESH_GRACE_MS: "1500", GOOGLE_CLIENT_ID: "",
+      LINE_CHANNEL_SECRET: LINE_SECRET, LINE_CHANNEL_ACCESS_TOKEN: "test-token", LINE_BOT_ID: "@testbot", LINE_API_BASE: "http://127.0.0.1:3998" },
     stdio: ["ignore", "ignore", "inherit"],
   });
   for (let i = 0; i < 50; i++) {
@@ -26,7 +35,7 @@ before(async () => {
   }
   throw new Error("server did not start");
 });
-after(async () => { srv?.kill(); await pool?.end(); });
+after(async () => { srv?.kill(); lineStub?.close(); await pool?.end(); });
 
 // ---------- helpers ----------
 async function call(method, p, { token, body, cookie } = {}) {
@@ -53,7 +62,7 @@ let A, B, C, D, M, aReview, bReview;
 
 test("config: ยังไม่มี Google client ID → ใช้โหมดจำลอง", async () => {
   const r = await call("GET", "/config");
-  assert.deepEqual(r.body, { google_client_id: null, mock_login: true });
+  assert.deepEqual(r.body, { google_client_id: null, mock_login: true, line: { bot_id: "@testbot" } });
 });
 
 test("เข้าสู่ระบบ: ครั้งแรก +20 · ได้ refresh cookie แบบ HttpOnly · อีเมลจริงถูกปฏิเสธในโหมดจำลอง", async () => {
@@ -247,4 +256,56 @@ test("ลบบัญชี: ข้อมูลหาย · token ใช้ไ�
   assert.equal(n, 0);
   const hc = (await pool.query("SELECT helpful_count FROM reviews WHERE id = $1", [bReview])).rows[0].helpful_count;
   assert.equal(hc, 0);
+});
+
+test("LINE: ลายเซ็นผิด 401 · ส่งรหัสให้บอท = เชื่อมบัญชี · ติดตามรถ/สาย · แจ้งเหตุแล้วส่งหาคนติดตาม ไม่ส่งหาคนแจ้ง", async () => {
+  const hook = async (events, sig) => {
+    const body = JSON.stringify({ destination: "Ubot", events });
+    const r = await fetch(BASE + "/line/webhook", { method: "POST", body,
+      headers: { "content-type": "application/json", "x-line-signature": sig ?? crypto.createHmac("sha256", LINE_SECRET).update(body).digest("base64") } });
+    return r.status;
+  };
+  const waitCalls = async () => { for (let i = 0; i < 40 && !lineCalls.length; i++) await new Promise(r => setTimeout(r, 25)); };
+  const msg = (text, userId = "Uf") => ({ type: "message", replyToken: "rt", source: { type: "user", userId }, message: { type: "text", text } });
+  assert.equal(await hook([], "bad"), 401);
+  assert.equal(await hook([]), 200, "ปุ่ม Verify ใน LINE Developers");
+
+  const F = await login("follower@example.com", "Follower");
+  const link = (await call("POST", "/me/line", { token: F.token })).body;
+  assert.match(link.code, /^[A-Z2-9]{6}$/); assert.match(link.url, /^https:\/\/line\.me\/R\/oaMessage\/%40testbot\//);
+  lineCalls.length = 0;
+  assert.equal(await hook([msg("เชื่อมบัญชี " + link.code.toLowerCase())]), 200);
+  assert.equal((await call("GET", "/me", { token: F.token })).body.user.line_linked, true);
+  assert.equal(lineCalls[0].path, "/v2/bot/message/reply"); assert.match(lineCalls[0].body.messages[0].text, /Follower/);
+  lineCalls.length = 0;
+  await hook([msg(link.code, "Uother")]);
+  assert.match(lineCalls[0].body.messages[0].text, /หมดอายุ/, "รหัสใช้ได้ครั้งเดียว");
+
+  const r8 = (await call("GET", "/routes")).body.items.find(x => x.old === "8");
+  assert.equal((await call("POST", "/follows/bus/7-3077", { token: F.token })).status, 201);
+  assert.equal((await call("POST", `/follows/route/${r8.id}`, { token: F.token })).status, 201);
+  assert.equal((await call("POST", "/follows/bus/xx", { token: F.token })).status, 400);
+  assert.equal((await call("POST", "/follows/route/nope", { token: F.token })).status, 404);
+  assert.equal((await call("POST", "/follows/bus/7-3077")).status, 401);
+  assert.deepEqual((await call("GET", "/me", { token: F.token })).body.follows.map(f => f.label).sort(), ["7-3077", "8"]);
+
+  const W = await login("witness@example.com", "Witness");
+  lineCalls.length = 0;
+  assert.equal((await call("POST", "/reviews", { token: W.token, body: { fleet_no: "1-46001", type: "incident", text: "รถเสียกลางทาง", route_id: r8.id } })).status, 201);
+  await waitCalls();
+  assert.equal(lineCalls.length, 1);
+  assert.equal(lineCalls[0].path, "/v2/bot/message/multicast"); assert.equal(lineCalls[0].auth, "Bearer test-token");
+  assert.deepEqual(lineCalls[0].body.to, ["Uf"]);
+  assert.match(lineCalls[0].body.messages[0].text, /1-46001 · สาย 8[\s\S]*รถเสียกลางทาง[\s\S]*\/#1-46001/);
+
+  lineCalls.length = 0;
+  assert.equal((await call("POST", "/reviews", { token: F.token, body: { fleet_no: "7-3077", type: "incident", text: "แอร์รั่ว" } })).status, 201);
+  await new Promise(r => setTimeout(r, 300));
+  assert.equal(lineCalls.length, 0, "ไม่ส่งหาคนแจ้งเอง");
+
+  assert.equal((await call("DELETE", "/follows/bus/7-3077", { token: F.token })).status, 200);
+  await hook([{ type: "unfollow", source: { type: "user", userId: "Uf" } }]);
+  const me = (await call("GET", "/me", { token: F.token })).body;
+  assert.equal(me.user.line_linked, false, "บล็อกบอท = ยกเลิกการเชื่อม");
+  assert.deepEqual(me.follows.map(f => f.label), ["8"]);
 });

@@ -577,7 +577,7 @@
     const bar = (l, v) => `<div class="mt-1.5 flex items-center gap-2 text-[12.5px]"><span class="w-14 shrink-0 text-mute">${l}</span><div class="bar-t"><i style="width:${(v || 0) * 20}%"></i></div><b class="num w-7 text-right">${v ? v.toFixed(1) : "–"}</b></div>`;
     return `
       <div class="p-4 pb-3">
-        <div class="eyebrow">คันนี้ดีไหม?</div>
+        <div class="flex items-center gap-2"><div class="eyebrow flex-1">คันนี้ดีไหม?</div>${followBtn("bus", b.fleet_no)}</div>
         <div class="mt-2 flex items-center gap-4">
           <div class="w-[78px] shrink-0 text-center">
             <div class="num text-[46px] leading-none font-bold">${s.avg ? s.avg.toFixed(1) : "–"}</div>
@@ -725,6 +725,7 @@
     $("#rtBody").innerHTML = `
       <div class="text-[15px] font-semibold leading-snug">${esc(r.name)}</div>
       <div class="text-[12.5px] text-mute">${esc(r.agency)} · ${esc(r.kind)}${r.old ? ` · เลขใหม่ ${esc(r.no)}` : ""}</div>
+      ${cfg.line ? `<div class="mt-2">${followBtn("route", r.id)}</div>` : ""}
       ${r.buses.length ? `<div class="eyebrow mt-4">คันที่มีคนรีวิวบนสายนี้</div>
         <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">${r.buses.map(b => `<button type="button" class="inline-flex items-center gap-1.5" data-q="${esc(b.fleet_no)}">${miniPlate(b.fleet_no)}<span class="num text-[12px] text-mute">${b.avg ? b.avg.toFixed(1) + "★ · " : ""}${b.n} รีวิว</span></button>`).join("")}</div>`
         : `<p class="mt-3 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute">ยังไม่มีใครรีวิวรถบนสายนี้ — ตอนรีวิวให้เลือก "สายที่ขึ้น" คันนั้นจะขึ้นที่นี่</p>`}
@@ -760,7 +761,7 @@
   }
   // Google Sign-In จริงเปิดเมื่อ server มี client ID (/api/config) · ไม่มี = โหมดจำลอง
   let cfg = { google_client_id: null, mock_login: true }, gisReady = null;
-  api("/config").then(c => { cfg = c; }).catch(() => {});
+  api("/config").then(c => { cfg = c; if (!$("#v-me").hidden) renderMe(); }).catch(() => {});
   function loadGis() {
     gisReady ||= new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = ok; sc.onerror = no; document.head.append(sc); })
       .then(() => google.accounts.id.initialize({ client_id: cfg.google_client_id, callback: r => doLogin({ credential: r.credential }) }));
@@ -1020,6 +1021,63 @@
     } catch (err) { toast(err.message); $$("#avList [data-pick-avatar]").forEach(x => x.disabled = false); }
   });
 
+  // ---------- ติดตามรถ/สาย + แจ้งเตือนทาง LINE (เปิดเมื่อ server ตั้ง LINE ไว้ · /api/config) ----------
+  const following = (kind, target) => !!me && (me.follows || []).some(f => f.kind === kind && f.target === target);
+  const followBtn = (kind, target) => {
+    if (!cfg.line) return "";
+    const on = following(kind, target);
+    return `<button class="hb ${on ? "on" : ""}" type="button" data-follow="${kind}" data-target="${esc(target)}" aria-pressed="${on}"><i class="fa-${on ? "solid" : "regular"} fa-bell"></i>${on ? "ติดตามอยู่" : "ติดตาม"}</button>`;
+  };
+  document.addEventListener("click", async e => {
+    const b = e.target.closest("[data-follow]"); if (!b) return;
+    const { follow: kind, target } = b.dataset;
+    if (!token) return openAuth("เข้าสู่ระบบก่อนติดตาม — มีคนแจ้งเหตุเมื่อไหร่จะส่ง LINE บอก");
+    const on = following(kind, target);
+    b.disabled = true;
+    try {
+      await api(`/follows/${kind}/${encodeURIComponent(target)}`, { method: on ? "DELETE" : "POST" });
+      await refreshMe();
+      $$(`[data-follow="${kind}"][data-target="${CSS.escape(target)}"]`).forEach(x => { x.outerHTML = followBtn(kind, target); });
+      toast(on ? "เลิกติดตามแล้ว" : me && me.user.line_linked ? "ติดตามแล้ว — มีคนแจ้งเหตุจะส่ง LINE บอก" : "ติดตามแล้ว — เชื่อม LINE ที่แท็บ \"ฉัน\" เพื่อรับแจ้งเตือน");
+    } catch (err) { toast(err.message); b.disabled = false; }
+  });
+
+  let lineLink = null;   // รหัสที่ขอไว้ล่าสุด (รอส่งให้บอท)
+  function lineCard() {
+    if (!cfg.line) return "";
+    const f = me.follows || [];
+    const head = `<div class="flex items-center gap-2 px-4 pt-3 pb-1"><div class="eyebrow flex-1"><i class="fa-brands fa-line mr-1 text-[#06c755]"></i>แจ้งเตือนทาง LINE</div>${me.user.line_linked ? `<span class="tag bg-ok-soft text-ok"><i class="fa-solid fa-check"></i>เชื่อมแล้ว</span>` : ""}</div>`;
+    const body = me.user.line_linked
+      ? `<p class="px-4 pb-2 text-[13px] text-mute">มีคนแจ้งเหตุบนรถหรือสายที่ติดตาม จะส่งข้อความหาคุณทาง LINE</p>`
+      : lineLink
+        ? `<div class="px-4 pb-3"><p class="text-[13px] text-mute">ส่งรหัสนี้ให้บอท <b class="text-ink">${esc(cfg.line.bot_id)}</b> ใน LINE (ใช้ได้ 15 นาที)</p>
+            <div class="num my-2 rounded-xl bg-sunk py-2 text-center text-[30px] font-bold tracking-[.3em]">${esc(lineLink.code)}</div>
+            <div class="grid grid-cols-2 gap-2"><a class="btn-quiet text-[13.5px]" href="${esc(lineLink.add_friend)}" target="_blank" rel="noopener"><i class="fa-solid fa-user-plus"></i>เพิ่มเพื่อนบอท</a>
+              <a class="btn-primary !bg-[#06c755] text-[13.5px] !text-white" href="${esc(lineLink.url)}" target="_blank" rel="noopener"><i class="fa-brands fa-line"></i>ส่งรหัสใน LINE</a></div>
+            <p class="mt-2 text-[12px] text-mute">ส่งแล้วกลับมาหน้านี้ จะขึ้นว่า "เชื่อมแล้ว" เอง</p></div>`
+        : `<div class="px-4 pb-3"><p class="text-[13px] text-mute">กด "ติดตาม" ที่หน้ารถหรือหน้าสาย แล้วเชื่อม LINE — มีคนแจ้งเหตุเมื่อไหร่จะบอกทันที</p>
+            <button class="btn-primary mt-2 w-full !bg-[#06c755] !text-white" type="button" id="lineLink"><i class="fa-brands fa-line"></i>เชื่อม LINE</button></div>`;
+    const list = f.length ? `<div class="border-t border-line px-4 py-3"><div class="mb-1.5 text-[12px] text-mute">ติดตามอยู่ ${f.length} รายการ</div><div class="flex flex-wrap gap-1.5">${f.map(x => `<span class="inline-flex items-center gap-1">${x.kind === "bus"
+        ? `<button type="button" data-q="${esc(x.target)}">${miniPlate(x.target)}</button>`
+        : `<button class="hb" type="button" data-route="${esc(x.target)}"><i class="fa-solid fa-route"></i>สาย ${esc(x.label)}</button>`}<button class="icon-btn !h-7 !w-7 !text-[12px]" type="button" data-follow="${x.kind}" data-target="${esc(x.target)}" aria-label="เลิกติดตาม"><i class="fa-solid fa-xmark"></i></button></span>`).join("")}</div></div>` : "";
+    const foot = me.user.line_linked ? `<button class="w-full border-t border-line py-2.5 text-[12.5px] text-mute underline" type="button" id="lineUnlink">ยกเลิกการเชื่อม LINE</button>` : "";
+    return `<section class="card mt-3 overflow-hidden">${head}${body}${list}${foot}</section>`;
+  }
+  document.addEventListener("click", async e => {
+    if (e.target.closest("#lineLink")) {
+      try { lineLink = await api("/me/line", { method: "POST" }); renderMe(); } catch (err) { toast(err.message); }
+    } else if (e.target.closest("#lineUnlink")) {
+      if (!confirm("ยกเลิกการเชื่อม LINE? จะไม่ได้รับแจ้งเตือนอีก")) return;
+      try { await api("/me/line", { method: "DELETE" }); lineLink = null; await refreshMe(); toast("ยกเลิกการเชื่อมแล้ว"); } catch (err) { toast(err.message); }
+    }
+  });
+  // กลับมาจากแอป LINE → เช็กว่าเชื่อมสำเร็จหรือยัง
+  document.addEventListener("visibilitychange", async () => {
+    if (document.visibilityState !== "visible" || !lineLink || !token) return;
+    await refreshMe();
+    if (me && me.user.line_linked) { lineLink = null; renderMe(); toast("เชื่อม LINE แล้ว ✅"); }
+  });
+
   // ---------- ฉัน ----------
   const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
   const REPORT_LABEL = Object.fromEntries(REPORT_REASONS);
@@ -1043,6 +1101,7 @@
           ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
         </dl>
       </div>
+      ${lineCard()}
       <div class="card mt-3 overflow-hidden">
         <div class="eyebrow px-4 pt-3 pb-1">ประวัติแต้ม</div>
         ${me.ledger.map(l => `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5 text-[14px]"><b class="num w-11 text-right ${l.delta > 0 ? "text-ok" : "text-alarm"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><span class="flex-1">${REASON[l.reason] || esc(l.reason)}${l.note ? " " + esc(l.note) : ""}</span><span class="text-[12px] text-mute">${ago(l.created_at)}</span></div>`).join("")}
