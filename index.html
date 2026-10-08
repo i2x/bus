@@ -102,7 +102,6 @@
     <label class="sr-only" for="wText">ข้อความ</label>
     <textarea id="wText" class="field mt-3 min-h-24 resize-none" rows="3" maxlength="500"></textarea>
     <label class="mt-3 block text-[12.5px] text-mute">สายที่ขึ้น <span class="opacity-70">(ไม่บังคับ)</span><input id="wRoute" class="field mt-1" list="routeOpts" placeholder="พิมพ์เลขสาย เช่น 8 หรือ 1-12E" autocomplete="off"></label>
-    <datalist id="routeOpts"></datalist><datalist id="stopOpts"></datalist>
     <div class="mt-3 grid grid-cols-[1fr_118px] gap-2">
       <label class="text-[12.5px] text-mute">ป้ายที่ขึ้น<input id="wStop" class="field mt-1" maxlength="80" list="stopOpts" placeholder="เช่น ฟิวเจอร์พาร์ค" autocomplete="off"></label>
       <label class="text-[12.5px] text-mute">เวลา<input id="wTime" class="field mt-1 num" type="time"></label>
@@ -184,6 +183,21 @@
   </div>
 </dialog>
 
+<!-- บอกว่ารถคันนี้วิ่งสายอะไร -->
+<dialog class="sheet" id="tagSheet" aria-labelledby="tgTitle">
+  <div class="grab"></div>
+  <form id="tgForm" class="px-5 pb-6" novalidate>
+    <div class="flex items-center gap-2 py-2">
+      <h2 class="flex-1 font-display text-[21px] font-bold" id="tgTitle">คันนี้วิ่งสายอะไร? <span class="mini-plate ml-1 align-middle" id="tgBus"></span></h2>
+      <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input id="tgRoute" class="field" list="routeOpts" placeholder="พิมพ์เลขสาย เช่น 8 หรือ 1-12E" autocomplete="off" enterkeyhint="done" aria-label="เลขสาย">
+    <p class="mt-2 text-[12.5px] leading-relaxed text-mute">บอกสายที่เห็นคันนี้วิ่งวันนี้ ได้ <b class="text-ink">+2 แต้ม</b> (วันละ 5 คัน) · บอกผิดแก้ได้ในวันเดียวกัน</p>
+    <p class="text-[13px] font-medium text-alarm" id="tgErr" role="alert"></p>
+    <button class="btn-primary mt-2 w-full" type="submit" id="tgSubmit">บันทึก</button>
+  </form>
+</dialog>
+
 <!-- สายรถเมล์ + ป้าย (GTFS ของ สนข.) -->
 <dialog class="sheet" id="routeSheet" aria-labelledby="rtTitle">
   <div class="grab"></div>
@@ -232,6 +246,7 @@
 
 <div class="toastx" id="toast" role="status" aria-live="polite"></div>
 <div class="rxtip" id="rxTip" role="tooltip"></div>
+<datalist id="routeOpts"></datalist><datalist id="stopOpts"></datalist>
 
 <script src="data.js"></script>
 <script>
@@ -583,6 +598,17 @@
     if (s.avg >= 3) return `<span class="tag bg-ticket-soft text-ticket-ink dark:text-ticket">พอใช้ได้</span>${few}`;
     return `<span class="tag bg-alarm-soft text-alarm">หลายคนบ่น</span>${few}`;
   }
+  // สายที่ผู้โดยสารเห็นคันนี้วิ่ง (กดบอกสาย + รีวิวที่เลือกสาย ใน 60 วัน)
+  function routeRow(seen) {
+    const last = seen.map(x => x.last).sort().pop();
+    return `<div class="mt-3 rounded-xl bg-sunk px-3 py-2.5">
+      <div class="flex flex-wrap items-center gap-1.5 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i>
+        ${seen.length ? `<span>วิ่งสาย</span>${seen.map(x => `<button class="hb !bg-solid" type="button" data-route="${esc(x.id)}">${esc(x.label)} <span class="num font-normal text-mute">${x.n} คน</span></button>`).join("")}`
+          : `<span class="flex-1">ยังไม่รู้ว่าคันนี้วิ่งสายไหน</span>`}
+        <button class="hb !bg-route-soft !text-route ${seen.length ? "ml-auto" : ""}" type="button" data-tag-route><i class="fa-solid fa-plus"></i>${seen.length ? "บอกสาย" : "บอกสาย +2"}</button></div>
+      <div class="mt-1 text-[11.5px] text-mute">${seen.length ? `จากผู้โดยสาร 60 วันล่าสุด · ล่าสุด ${ago(last)} · รถอาจย้ายสายได้` : "เห็นคันนี้วิ่งสายไหน บอกได้เลย ไม่ต้องเขียนรีวิว"}</div>
+    </div>`;
+  }
   function rvBox(b, items) {
     const s = b.stats;
     const bar = (l, v) => `<div class="mt-1.5 flex items-center gap-2 text-[12.5px]"><span class="w-14 shrink-0 text-mute">${l}</span><div class="bar-t"><i style="width:${(v || 0) * 20}%"></i></div><b class="num w-7 text-right">${v ? v.toFixed(1) : "–"}</b></div>`;
@@ -600,9 +626,7 @@
             ${bar("การขับ", s.driving)}${bar("จอดป้าย", s.stops)}${bar("สภาพรถ", s.condition)}
           </div>
         </div>
-        ${(b.routes || []).length ? `<div class="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i>เจอบนสาย
-          ${b.routes.map(x => `<button class="hb" type="button" data-route="${esc(x.id)}">${esc(x.label)} <span class="num font-normal text-mute">${x.n}</span></button>`).join("")}</div>`
-          : `<div class="mt-3 flex items-center gap-2 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute"><i class="fa-solid fa-route"></i><span class="flex-1">ยังไม่รู้ว่าคันนี้วิ่งสายไหน — รีวิวแล้วเลือก "สายที่ขึ้น" ได้</span><button class="shrink-0 font-semibold text-route" type="button" data-route="">ดูสาย</button></div>`}
+        ${routeRow(b.routes || [])}
       </div>
       <div class="flex gap-2 px-4 pb-4">
         <button class="btn-primary flex-1" type="button" data-write="review"><i class="fa-solid fa-pen"></i>รีวิวคันนี้ <span class="tag bg-white/20 !py-0">+10</span></button>
@@ -685,8 +709,8 @@
     if (optsFilled) return;
     try { $("#routeOpts").innerHTML = (await loadRoutes()).map(r => `<option value="${esc(routeOpt(r))}"></option>`).join(""); optsFilled = true; } catch {}
   }
-  function pickedRoute() {
-    const v = $("#wRoute").value.trim(); if (!v || !routes) return v ? { error: "โหลดรายชื่อสายไม่ได้ ลบช่องสายออกแล้วส่งใหม่" } : null;
+  function pickedRoute(input = $("#wRoute")) {
+    const v = input.value.trim(); if (!v || !routes) return v ? { error: "โหลดรายชื่อสายไม่ได้ ลบช่องสายออกแล้วส่งใหม่" } : null;
     const exact = routes.find(r => routeOpt(r) === v); if (exact) return exact;
     const q = thaiDigits(v).toLowerCase(), same = routes.filter(r => routeLabel(r).toLowerCase() === q || r.no.toLowerCase() === q);
     if (same.length === 1) return same[0];
@@ -699,6 +723,32 @@
       const d = await loadRoute(r.id);
       $("#stopOpts").innerHTML = [...new Set(d.dirs.flatMap(x => x.stops.map(s => s.name)))].map(n => `<option value="${esc(n)}"></option>`).join("");
     } catch {}
+  });
+
+  // บอกว่ารถคันนี้วิ่งสายอะไร
+  function openTag() {
+    if (!curBus) return;
+    if (!token) return openAuth("เข้าสู่ระบบก่อน — บอกสายได้ +2 แต้ม", openTag);
+    $("#tgBus").textContent = curBus;
+    $("#tgBus").setAttribute("style", (m => m ? liveryVars(m) : "")(modelFor(curBus)));
+    $("#tgForm").reset(); $("#tgErr").textContent = "";
+    sheet("#tagSheet").show();
+    fillRouteOpts();
+  }
+  document.addEventListener("click", e => { if (e.target.closest("[data-tag-route]")) openTag(); });
+  $("#tgForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const rt = pickedRoute($("#tgRoute"));
+    if (!rt) return $("#tgErr").textContent = "พิมพ์เลขสายแล้วเลือกจากรายการ";
+    if (rt.error) return $("#tgErr").textContent = rt.error;
+    const btn = $("#tgSubmit"); btn.disabled = true;
+    try {
+      const r = await api(`/buses/${curBus}/route`, { method: "POST", body: { route_id: rt.id } });
+      sheet("#tagSheet").hide();
+      toast(r.earned ? `ขอบคุณ! บันทึกสาย ${routeLabel(rt)} แล้ว +${r.earned} แต้ม` : `บันทึกสาย ${routeLabel(rt)} แล้ว`);
+      loadBus(curBus); refreshMe();
+    } catch (err) { $("#tgErr").textContent = err.message; }
+    finally { btn.disabled = false; }
   });
 
   // ชีตสาย: ค้นหา → รายละเอียด (ป้ายตามลำดับ + คันที่มีคนรีวิวบนสายนี้)
@@ -739,9 +789,9 @@
       <div class="text-[15px] font-semibold leading-snug">${esc(r.name)}</div>
       <div class="text-[12.5px] text-mute">${esc(r.agency)} · ${esc(r.kind)}${r.old ? ` · เลขใหม่ ${esc(r.no)}` : ""}</div>
       ${cfg.line ? `<div class="mt-2">${followBtn("route", r.id)}</div>` : ""}
-      ${r.buses.length ? `<div class="eyebrow mt-4">คันที่มีคนรีวิวบนสายนี้</div>
-        <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">${r.buses.map(b => `<button type="button" class="inline-flex items-center gap-1.5" data-q="${esc(b.fleet_no)}">${miniPlate(b.fleet_no)}<span class="num text-[12px] text-mute">${b.avg ? b.avg.toFixed(1) + "★ · " : ""}${b.n} รีวิว</span></button>`).join("")}</div>`
-        : `<p class="mt-3 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute">ยังไม่มีใครรีวิวรถบนสายนี้ — ตอนรีวิวให้เลือก "สายที่ขึ้น" คันนั้นจะขึ้นที่นี่</p>`}
+      ${r.buses.length ? `<div class="eyebrow mt-4">คันที่คนเห็นวิ่งสายนี้ (60 วัน)</div>
+        <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">${r.buses.map(b => `<button type="button" class="inline-flex items-center gap-1.5" data-q="${esc(b.fleet_no)}">${miniPlate(b.fleet_no)}<span class="num text-[12px] text-mute">${b.avg ? b.avg.toFixed(1) + "★ · " : ""}${b.n} คนเห็น</span></button>`).join("")}</div>`
+        : `<p class="mt-3 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute">ยังไม่มีใครบอกว่าคันไหนวิ่งสายนี้ — ค้นเลขข้างรถแล้วกด "บอกสาย" คันนั้นจะขึ้นที่นี่</p>`}
       ${r.dirs.length > 1 ? `<div class="seg mt-4" role="tablist">${r.dirs.map((x, i) => `<button class="${i === rtDir ? "on" : ""} truncate" type="button" role="tab" aria-selected="${i === rtDir}" data-rtdir="${i}">ไป ${esc(x.head)}</button>`).join("")}</div>` : ""}
       <div class="mt-3 mb-1 text-[12px] text-mute">${d.stops.length} ป้าย · แตะชื่อป้ายเพื่อเปิดแผนที่</div>
       <ol>${d.stops.map((st, i) => `<li class="flex items-stretch gap-3">
@@ -957,7 +1007,7 @@
   // ---------- แลกของ ----------
   let rewards = null, shopKind = store.get("shopKind") === "avatar" ? "avatar" : "sticker";
   async function loadRewards() { rewards ||= (await api("/rewards")).items; return rewards; }
-  const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"], ["รีวิวถูกรายงานและผู้ดูแลยืนยันว่าผิด", "−20"]];
+  const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["บอกว่ารถคันนี้วิ่งสายอะไร (วันละ 5 คัน)", "+2"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"], ["รีวิวถูกรายงานและผู้ดูแลยืนยันว่าผิด", "−20"]];
   async function renderShop() {
     const el = $("#v-shop"), pts = me ? me.points : 0;
     const head = `<div class="ticket rise mt-1 flex">
@@ -1107,7 +1157,7 @@
   });
 
   // ---------- ฉัน ----------
-  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", route_tag: "บอกสายของรถ", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
   const REPORT_LABEL = Object.fromEntries(REPORT_REASONS);
   function renderMe() {
     const el = $("#v-me");

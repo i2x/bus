@@ -171,3 +171,18 @@ CREATE TABLE IF NOT EXISTS follows (
   PRIMARY KEY (user_id, kind, target)
 );
 CREATE INDEX IF NOT EXISTS follows_target ON follows (kind, target);
+
+-- ---------- รถคันนี้วิ่งสายอะไร (ผู้โดยสารช่วยกันบอก) ----------
+-- ไม่มีข้อมูลทางการว่ารถคันไหนวิ่งสายไหน (GTFS ไม่มีเลขข้างรถ · ขสมก. สลับรถในอู่ได้) → นับจากคนที่เห็น
+-- คนละ 1 ครั้ง / คัน / วัน (บอกใหม่วันเดียวกัน = แก้สาย)
+CREATE TABLE IF NOT EXISTS bus_route_sightings (
+  user_id     int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fleet_no    text NOT NULL REFERENCES buses(fleet_no),
+  route_id    text NOT NULL,
+  route_label text NOT NULL,
+  seen_day    date NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Bangkok')::date,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, fleet_no, seen_day)
+);
+CREATE INDEX IF NOT EXISTS sightings_bus ON bus_route_sightings (fleet_no, created_at DESC);
+CREATE INDEX IF NOT EXISTS sightings_route ON bus_route_sightings (route_id, created_at DESC);

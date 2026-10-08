@@ -188,9 +188,29 @@ test("สาย (GTFS): รายการสาย · ป้ายตามล�
   assert.equal((await review(R, "8-80040", { route_id: "nope" })).status, 400);
   assert.equal((await review(R, "8-80040", { route_id: r8.id, stop_name: d.dirs[0].stops[0].name })).status, 201);
   const bus = (await call("GET", "/buses/8-80040")).body;
-  assert.deepEqual(bus.routes, [{ id: r8.id, label: "8", n: 1 }]);
+  assert.deepEqual(bus.routes.map(({ id, label, n }) => ({ id, label, n })), [{ id: r8.id, label: "8", n: 1 }]);
   assert.equal((await call("GET", "/buses/8-80040/reviews")).body.items[0].route_label, "8");
   assert.deepEqual((await call("GET", `/routes/${r8.id}`)).body.buses.map(b => b.fleet_no), ["8-80040"]);
+});
+
+test("บอกสายของรถ: +2 แต้ม · วันเดียวกันบอกซ้ำ = แก้สาย ไม่ได้แต้มเพิ่ม · วันละ 5 คัน · นับรวมกับรีวิว", async () => {
+  const items = (await call("GET", "/routes")).body.items;
+  const r8 = items.find(x => x.old === "8"), r29 = items.find(x => x.old === "29");
+  const T = await login("tagger@example.com", "Tagger");
+  assert.equal((await call("POST", "/buses/8-80040/route", { body: { route_id: r8.id } })).status, 401);
+  assert.equal((await call("POST", "/buses/8-80040/route", { token: T.token, body: { route_id: "nope" } })).status, 400);
+  assert.equal((await call("POST", "/buses/xx/route", { token: T.token, body: { route_id: r8.id } })).status, 400);
+  let r = await call("POST", "/buses/8-80040/route", { token: T.token, body: { route_id: r8.id } });
+  assert.equal(r.status, 201); assert.equal(r.body.earned, 2);
+  assert.deepEqual(r.body.routes.map(x => [x.label, x.n]), [["8", 2]], "รวมกับรีวิวของ rider ที่เลือกสาย 8 ไว้");
+  r = await call("POST", "/buses/8-80040/route", { token: T.token, body: { route_id: r29.id } });
+  assert.equal(r.body.earned, 0, "แก้สายวันเดียวกัน ไม่ได้แต้มเพิ่ม");
+  assert.deepEqual(r.body.routes.map(x => [x.label, x.n]).sort(), [["29", 1], ["8", 1]]);
+  for (const fl of ["7-3001", "7-3002", "7-3003", "7-3004", "7-3005"]) r = await call("POST", `/buses/${fl}/route`, { token: T.token, body: { route_id: r8.id } });
+  assert.equal(r.body.earned, 0, "คันที่ 6 ของวัน ไม่ได้แต้ม");
+  assert.equal(await points(T), 20 + 2 * 5);
+  const d = (await call("GET", `/routes/${r8.id}`)).body;
+  assert.ok(["7-3001", "7-3005", "8-80040"].every(f => d.buses.some(b => b.fleet_no === f)));
 });
 
 test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ่อนอัตโนมัติ", async () => {

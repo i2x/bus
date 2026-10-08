@@ -35,7 +35,8 @@ const DATA = {};
 vm.runInNewContext(fs.readFileSync(dataPath, "utf8") + "\nthis.MODELS = MODELS; this.ZONES = ZONES;", DATA);
 
 // แต้ม (ค่าเริ่มต้น — ปรับได้หลังทดลองกับผู้ใช้)
-const PTS = { signup: 20, review: 10, review_detail: 5, helpful_received: 2, helpful_daily_cap: 30, incident_confirmed: 20, incident_confirm_votes: 3, report_upheld: -20 };
+const PTS = { signup: 20, review: 10, review_detail: 5, helpful_received: 2, helpful_daily_cap: 30, incident_confirmed: 20, incident_confirm_votes: 3, report_upheld: -20, route_tag: 2, route_tag_daily: 5 };
+const SEEN_DAYS = 60;   // สายที่เห็นรถคันนี้: นับเฉพาะช่วงนี้ (รถย้ายสายได้)
 const REPORT_AUTO_HIDE = 3;   // report ที่ยังไม่ตัดสินครบเท่านี้ → ซ่อนไว้ก่อนรอ moderator
 const REPORT_REASONS = ["spam", "rude", "personal", "fake"];
 const AVATARS = ["🐸", "🦖", "🧢", "🐱", "🐼", "🦊", "🐧", "🐙", "🦉", "🐻"];
@@ -386,10 +387,37 @@ app.get("/api/buses/:fleetNo", wrap(async (req, res) => {
            round(avg(stars_condition), 1)::float AS condition,
            round(avg((stars_driving + stars_stops + stars_condition) / 3.0), 1)::float AS avg
     FROM reviews WHERE fleet_no = $1 AND status = 'visible'`, [f.fleet_no]);
-  // สายที่คนรีวิวว่าเจอคันนี้
-  const routes = await pool.query(`SELECT route_id AS id, route_label AS label, count(*)::int AS n FROM reviews
-    WHERE fleet_no = $1 AND status = 'visible' AND route_id IS NOT NULL GROUP BY 1, 2 ORDER BY n DESC, label LIMIT 6`, [f.fleet_no]);
-  res.json({ fleet_no: f.fleet_no, zone: f.zone, model_id: f.model_id, stats: r.rows[0], routes: routes.rows });
+  res.json({ fleet_no: f.fleet_no, zone: f.zone, model_id: f.model_id, stats: r.rows[0], routes: await busRoutes(pool, f.fleet_no) });
+}));
+
+// สายที่คนเห็นรถคันนี้ใน SEEN_DAYS วันล่าสุด (กดบอกสาย + รีวิวที่เลือกสาย) · n = จำนวนคน
+const SEEN = `(SELECT fleet_no, route_id, route_label, user_id, created_at FROM bus_route_sightings WHERE created_at > now() - interval '${SEEN_DAYS} days'
+  UNION ALL SELECT fleet_no, route_id, route_label, user_id, created_at FROM reviews
+    WHERE route_id IS NOT NULL AND status = 'visible' AND created_at > now() - interval '${SEEN_DAYS} days')`;
+const busRoutes = async (c, fleet) => (await c.query(`SELECT route_id AS id, route_label AS label, count(DISTINCT user_id)::int AS n, max(created_at) AS last
+  FROM ${SEEN} s WHERE fleet_no = $1 GROUP BY 1, 2 ORDER BY n DESC, last DESC LIMIT 6`, [fleet])).rows;
+
+// บอกว่ารถคันนี้วิ่งสายอะไร (ไม่ต้องเขียนรีวิว) · +2 แต้ม วันละไม่เกิน 5 คัน · วันเดียวกันบอกซ้ำ = แก้สาย ไม่ได้แต้มเพิ่ม
+app.post("/api/buses/:fleetNo/route", requireAuth, wrap(async (req, res) => {
+  const f = parseFleet(req.params.fleetNo);
+  if (!f) throw bad("เลขข้างรถไม่ถูกต้อง");
+  const rr = await pool.query("SELECT id, COALESCE(NULLIF(old_no, ''), no) AS label FROM gtfs_routes WHERE id = $1", [String((req.body || {}).route_id || "").slice(0, 20)]);
+  if (!rr.rowCount) throw bad("ไม่พบสายนี้ — เลือกจากรายการ");
+  const route = rr.rows[0], uid = req.user.sub;
+  const out = await tx(async c => {
+    await c.query("INSERT INTO buses (fleet_no, zone, model_id) VALUES ($1, $2, $3) ON CONFLICT (fleet_no) DO NOTHING", [f.fleet_no, f.zone, f.model_id]);
+    const ins = await c.query(`INSERT INTO bus_route_sightings (user_id, fleet_no, route_id, route_label) VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id, fleet_no, seen_day) DO UPDATE SET route_id = EXCLUDED.route_id, route_label = EXCLUDED.route_label, created_at = now()
+      RETURNING (xmax = 0) AS fresh`, [uid, f.fleet_no, route.id, route.label]);
+    let earned = 0;
+    if (ins.rows[0].fresh) {
+      const today = await c.query(`SELECT count(*)::int AS n FROM points_ledger WHERE user_id = $1 AND reason = 'route_tag'
+        AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'`, [uid]);
+      if (today.rows[0].n < PTS.route_tag_daily) { await addPoints(c, uid, PTS.route_tag, "route_tag"); earned = PTS.route_tag; }
+    }
+    return { earned, routes: await busRoutes(c, f.fleet_no) };
+  });
+  res.status(201).json(out);
 }));
 
 // ---------- สายรถเมล์ (GTFS ของ สนข.) ----------
@@ -405,10 +433,11 @@ app.get("/api/routes/:id", wrap(async (req, res) => {
   const st = await pool.query("SELECT id, name, lat, lon FROM gtfs_stops WHERE id = ANY($1)", [ids]);
   const byId = new Map(st.rows.map(x => [x.id, x]));
   route.dirs = route.dirs.map(d => ({ head: d.head, stops: d.stops.map(id => byId.get(id)).filter(Boolean) }));
-  // คันที่มีคนรีวิวว่าวิ่งสายนี้
-  const buses = await pool.query(`SELECT fleet_no, count(*)::int AS n,
-      round(avg((stars_driving + stars_stops + stars_condition) / 3.0), 1)::float AS avg
-    FROM reviews WHERE route_id = $1 AND status = 'visible' GROUP BY 1 ORDER BY n DESC, fleet_no LIMIT 30`, [route.id]);
+  // คันที่คนเห็นวิ่งสายนี้ + คะแนนเฉลี่ยของคันนั้น
+  const buses = await pool.query(`SELECT s.fleet_no, count(DISTINCT s.user_id)::int AS n, max(s.created_at) AS last,
+      (SELECT round(avg((stars_driving + stars_stops + stars_condition) / 3.0), 1)::float FROM reviews v
+        WHERE v.fleet_no = s.fleet_no AND v.status = 'visible' AND v.type = 'review') AS avg
+    FROM ${SEEN} s WHERE s.route_id = $1 GROUP BY 1 ORDER BY n DESC, last DESC LIMIT 30`, [route.id]);
   res.json({ ...route, buses: buses.rows });
 }));
 
