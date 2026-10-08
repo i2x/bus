@@ -138,7 +138,8 @@ async function verifyGoogle(credential) {
   } catch { throw new HttpError(502, "ติดต่อ Google ไม่ได้ ลองใหม่อีกครั้ง"); }
   if (!t || t.aud !== GOOGLE_CLIENT_ID || !["accounts.google.com", "https://accounts.google.com"].includes(t.iss)
       || String(t.email_verified) !== "true" || +t.exp * 1000 < Date.now() || !t.sub || !t.email) throw new HttpError(401, "ยืนยันบัญชี Google ไม่ผ่าน");
-  return { sub: t.sub, email: String(t.email).toLowerCase(), name: str(t.name, 30) };
+  // ชื่อที่แสดงในรีวิวเป็นสาธารณะ → ใช้แค่ชื่อต้น ไม่ใช้ชื่อเต็ม
+  return { sub: t.sub, email: String(t.email).toLowerCase(), name: str(t.given_name || String(t.name || "").split(" ")[0], 30) };
 }
 
 // เข้าสู่ระบบด้วย Google — ครั้งแรก = สร้างบัญชี + 20 แต้ม · ไม่มีรหัสผ่านในระบบ

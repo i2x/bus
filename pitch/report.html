@@ -55,7 +55,7 @@
 </header>
 
 <div class="card">
-  <p><b>สรุป</b> — ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ผิดกติกาถูก report และผู้ดูแลซ่อนพร้อมหักแต้มได้ ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 13 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
+  <p><b>สรุป</b> — ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ผิดกติกาถูก report และผู้ดูแลซ่อนพร้อมหักแต้มได้ เข้าสู่ระบบด้วยบัญชี Google จริง ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 13 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
 </div>
 
 <h2><span class="n">1</span>ปัญหาและลูกค้า</h2>
@@ -195,7 +195,7 @@
   <div class="card small"><h3 style="margin-top:0">ต่างจากแบบใน Sprint 0</h3><ul>
     <li>แบบ: AWS VPC 2 subnet · จริง: ruk-com ไม่มี VPC → แยก tier ด้วย bind 127.0.0.1 และเตรียมสคริปต์ย้าย API + DB ไป node ที่ 2 (private IP + iptables + ALLOW_FROM) — <b>ยังไม่ได้เพิ่ม node</b></li>
     <li>Docker Compose → systemd · Let's Encrypt → TLS ที่ LB</li>
-    <li>รหัสผ่าน + bcrypt → เข้าด้วย Google เท่านั้น (ไม่มีรหัสผ่านในระบบ) · ตอนนี้เป็นโหมดจำลองที่รับเฉพาะ <code>@example.com</code></li></ul></div>
+    <li>รหัสผ่าน + bcrypt → เข้าด้วย Google เท่านั้น (ไม่มีรหัสผ่านในระบบ) · มีบัญชีทดสอบ <code>@example.com</code> เปิดคู่ไว้สำหรับเดโม</li></ul></div>
 </div>
 
 <h2><span class="n">5</span>REST API และข้อมูล</h2>
@@ -250,7 +250,7 @@
     <tr><td>Least privilege</td><td>API รันเป็น <code>busapi</code> + systemd <code>ProtectSystem=strict</code> · secret ใน <code>/etc/bus-api.env</code> (640) · DB peer auth</td></tr>
     <tr><td>Patch</td><td>Node 18 (หมดซัพพอร์ต) → 22 LTS จาก nodejs.org ตรวจ SHA256</td></tr>
     <tr><td>Backup</td><td><code>pg_dump</code> ทุกวัน 03:00 เก็บ 7 วัน · ทดสอบ restore แล้วจำนวนแถวตรงกับของจริง · <code>pull-backup.sh</code> ดึงออกนอกเครื่อง</td></tr>
-    <tr><td>ข้อมูลส่วนบุคคล</td><td>เก็บแค่อีเมล + ชื่อที่แสดง · ไม่เก็บตำแหน่ง · ไม่มีรูป · ลบบัญชีเองได้</td></tr>
+    <tr><td>ข้อมูลส่วนบุคคล</td><td>เก็บแค่อีเมล + ชื่อต้นจาก Google · ไม่เก็บตำแหน่ง · ไม่มีรูป · ลบบัญชีเองได้ · มีหน้า <code>/privacy.html</code></td></tr>
   </tbody>
 </table>
 <div class="row" style="margin-top:8px">
@@ -287,7 +287,7 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span>
   <tbody>
     <tr><td class="nowrap">0 · ก.ย.</td><td>ปัญหา / ลูกค้า / โซลูชัน · ออกแบบ architecture · ต้นแบบค้นหา</td><td>One-pager + pitch · หน้าค้นหาใช้ได้บน GitHub Pages</td></tr>
     <tr><td class="nowrap">1 · ต.ค.</td><td>API + DB + Nginx/HTTPS + หน้ารีวิว + deploy</td><td>ครบ 5/5 + ดึงงาน Sprint 2 มาได้ 3 (ledger, feed, มีประโยชน์) · เปลี่ยนเป็น Google Sign-In (mock)</td></tr>
-    <tr><td class="nowrap">2 · ต.ค.</td><td>แลกของ · report/moderator · refresh token · PWA · security + backup · แยก node</td><td>เสร็จ 11 · รอของจากภายนอก 2 (Google client ID, node ที่ 2) · ทดลองกับผู้ใช้ ↓</td></tr>
+    <tr><td class="nowrap">2 · ต.ค.</td><td>แลกของ · report/moderator · refresh token · PWA · security + backup · แยก node</td><td>เสร็จ 12 (รวม Google Sign-In จริง) · รอ node ที่ 2 · ทดลองกับผู้ใช้ ↓</td></tr>
   </tbody>
 </table>
 
@@ -301,13 +301,13 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span>
 <h2><span class="n">10</span>ข้อจำกัดและงานต่อ</h2>
 <div class="row">
   <div class="card small"><h3 style="margin-top:0">ข้อจำกัด</h3><ul>
-    <li>Google Sign-In ยังเป็นโหมดจำลอง — โค้ดตรวจ ID token พร้อม รอ OAuth client ID</li>
+    <li>ยังเปิดบัญชีทดสอบคู่กับ Google จริง (ปิดได้ด้วย <code>MOCK_LOGIN=0</code>)</li>
     <li>ยังเครื่องเดียว · backup อยู่เครื่องเดียวกับ DB ถ้าไม่ได้ดึงออก</li>
     <li>word filter เป็นรายการคำ คำใหม่หลุดได้ — พึ่ง report</li>
     <li>ยังไม่แจ้งผู้เขียนเมื่อรีวิวถูกซ่อน · ไม่มีอุทธรณ์</li>
     <li>ค่าแต้มเป็นค่าที่ทีมตั้งเอง ยังไม่ได้ปรับจากข้อมูลจริง</li></ul></div>
   <div class="card small"><h3 style="margin-top:0">งานต่อ</h3><ul>
-    <li>ใส่ <code>GOOGLE_CLIENT_ID</code> แล้วปิด mock (<code>MOCK_LOGIN=0</code>)</li>
+    <li>ปิดบัญชีทดสอบหลังเดโม (<code>MOCK_LOGIN=0</code>)</li>
     <li>เพิ่ม node ที่ 2 → <code>API_HOST=… API_ADDR=… WEB_ADDR=… ./deploy/deploy.sh</code> → nmap ซ้ำ</li>
     <li>ติดตามสาย / feed ตามสาย · badge จากยอดรีวิว</li>
     <li>B2B: สรุปคะแนนรายอู่/รายเขตให้ผู้ประกอบการ</li></ul></div>

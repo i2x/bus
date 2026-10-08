@@ -107,7 +107,7 @@
 <!-- 2 scorecard -->
 <section class="slide">
   <div class="kicker">Sprint 2 Scorecard</div>
-  <h2>งานตามแผน Sprint 2: <em>เสร็จ 11</em> · โค้ดพร้อมแต่รอของจากภายนอก 2 · ทดลองกับผู้ใช้ 1</h2>
+  <h2>งานตามแผน Sprint 2: <em>เสร็จ 12</em> · รอ node ที่ 2 · ทดลองกับผู้ใช้ 1</h2>
   <div class="row fill">
     <div class="card" style="flex:1.6">
       <table class="tight">
@@ -120,7 +120,7 @@
           <tr><td>Word filter + กันเบอร์โทร</td><td class="ok nowrap">✓ เสร็จ</td><td>จับ "เ หี้ ย", "sh1t" · ไม่จับ "โหดเหี้ยม", "กูเกิล"</td></tr>
           <tr><td>PWA</td><td class="ok nowrap">✓ เสร็จ</td><td>manifest + service worker · ติดตั้งลงมือถือได้</td></tr>
           <tr><td>Node 18 → 22 · backup รายวัน · nmap · HSTS ซ้ำ</td><td class="ok nowrap">✓ เสร็จ</td><td>ดูสไลด์ Security</td></tr>
-          <tr><td>Google Sign-In จริง</td><td class="part nowrap">◐ รอ client ID</td><td>โค้ดตรวจ ID token พร้อม · ใส่ <code>GOOGLE_CLIENT_ID</code> แล้วเปิดเอง</td></tr>
+          <tr><td>Google Sign-In จริง</td><td class="ok nowrap">✓ เสร็จ</td><td>ตรวจ ID token กับ Google · แอป In production · เก็บบัญชีทดสอบไว้ใช้เดโม</td></tr>
           <tr><td>แยก API + DB ไป node ที่ 2</td><td class="part nowrap">◐ รอ node</td><td><code>deploy.sh</code> รองรับแล้ว · ยังไม่ได้เพิ่ม node บน ruk-com</td></tr>
           <tr><td>ให้เพื่อนลองใช้ · ปรับแต้ม</td><td class="part nowrap">◐ ทีมกรอก</td><td>ดูสไลด์ "ทดลองกับผู้ใช้"</td></tr>
         </tbody>
@@ -315,6 +315,7 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span></pre>
       <table class="small">
         <thead><tr><th>มาตรการใหม่</th><th>หลักฐาน</th></tr></thead>
         <tbody>
+          <tr><td>Google Sign-In</td><td>ตรวจ <code>aud</code>, <code>iss</code>, <code>email_verified</code>, <code>exp</code> · ขอแค่ email/profile · ชื่อที่แสดงใช้ชื่อต้นเท่านั้น · มี <a href="/privacy.html">นโยบายความเป็นส่วนตัว</a></td></tr>
           <tr><td>Refresh token</td><td>cookie <code>HttpOnly; Secure; SameSite=Strict; Path=/api/auth</code> · DB เก็บแค่ sha256 · access JWT 15 นาที</td></tr>
           <tr><td>token ถูกขโมย</td><td>ใช้ token เก่าซ้ำ → <span class="m">401</span> + เพิกถอนทั้งชุด · logout แล้ว refresh → <span class="m">401</span></td></tr>
           <tr><td>Node 22 LTS</td><td>โหลดจาก nodejs.org ตรวจ SHA256 ก่อนติดตั้ง · <code>v22.23.3</code></td></tr>
@@ -418,12 +419,12 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span></pre>
       <li>เขียน test ยิง API จริง เจอบั๊กที่ curl มือไม่เจอ (race, ช่วงผ่อนผัน)</li>
       <li>คำหยาบภาษาไทยไม่มีช่องว่าง → ต้องตัดคำ + รายการยกเว้น</li></ul></div>
     <div class="card" style="border-color:var(--amber)"><h3>ข้อจำกัดตอนนี้</h3><ul class="small">
-      <li>Google Sign-In ยังเป็นโหมดจำลอง (รอ client ID)</li>
+      <li>ยังเปิดบัญชีทดสอบ (@example.com) คู่กับ Google จริง เพื่อใช้เดโม</li>
       <li>ยัง 1 node · backup อยู่เครื่องเดียวกับ DB ถ้าไม่ได้รัน <code>pull-backup.sh</code></li>
       <li>word filter เป็นรายการคำ — คำใหม่ ๆ หลุดได้ ต้องพึ่ง report</li>
       <li>ไม่รับรูป · ไม่มีแจ้งเตือนเมื่อรีวิวถูกซ่อน</li></ul></div>
     <div class="card"><h3>ถ้าทำต่อ</h3><ul class="small">
-      <li>ใส่ client ID → เปิด Google จริง ปิด mock (<code>MOCK_LOGIN=0</code>)</li>
+      <li>ปิดบัญชีทดสอบหลังเดโม (<code>MOCK_LOGIN=0</code>)</li>
       <li>เพิ่ม node ที่ 2 แล้วรัน deploy แบบแยก · nmap ซ้ำ</li>
       <li>ติดตามสาย (feed ตามสาย) · badge จากยอดรีวิว</li>
       <li>B2B: สรุปคะแนนรายอู่/รายเขต ให้ผู้ประกอบการ</li></ul></div>
