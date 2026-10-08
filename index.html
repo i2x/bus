@@ -547,7 +547,7 @@
     </article>`;
   }
   // สติกเกอร์ที่คนกดให้รีวิวนี้ + ปุ่มใส่สติกเกอร์
-  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}" data-name="${esc(x.name || "")}" title="${esc(x.name || "")} · ${x.n} คน" aria-label="${esc(x.name || "")} ${x.n} คน">${pic(x, 20)}<b class="num">${x.n}</b></button>`).join("")
+  const rxRow = r => (r.reactions || []).map(x => `<button class="hb ${r.my_reaction === x.id ? "on" : ""} !px-2.5" type="button" data-react="${r.id}" data-sticker="${esc(x.id)}" data-name="${esc(x.name || "")}" data-tip="${esc(x.name || "")}" data-n="${x.n}" aria-label="${esc(x.name || "")} ${x.n} คน">${pic(x, 20)}<b class="num">${x.n}</b></button>`).join("")
     + `<button class="hb !px-2.5 text-mute" type="button" data-react-pick="${r.id}" data-mine-rx="${esc(r.my_reaction || "")}" aria-label="ใส่สติกเกอร์"><i class="fa-regular fa-face-smile"></i><i class="fa-solid fa-plus text-[9px]"></i></button>`;
 
   function loadBus(fleet, n) {
@@ -848,26 +848,33 @@
       if (name) toast(r.my_reaction ? `ใส่ "${name}" แล้ว` : `เอา "${name}" ออกแล้ว`);
     } catch (err) { toast(err.status === 403 ? "ยังไม่มีสติกเกอร์นี้ — แลกได้ที่แท็บแลกของ" : err.message); }
   }
-  // กดค้างที่สติกเกอร์ใต้รีวิว = ดูชื่อ ไม่ใส่สติกเกอร์ (มือถือไม่มี hover · บนคอมใช้ title)
+  // ชื่อสติกเกอร์ใต้รีวิว: คอม = เอาเมาส์วาง · มือถือ = กดค้าง (ไม่ใส่สติกเกอร์) → ป้ายรูปใหญ่ + ชื่อ + จำนวนคน
   let lpT = null, lpShown = false, tipT = null;
-  function showTip(b) {
+  function showTip(b, hold) {
     const tip = $("#rxTip"), r = b.getBoundingClientRect();
-    tip.textContent = b.title;
+    const big = b.firstElementChild.cloneNode(true);
+    big.removeAttribute("loading"); big.style.cssText = "width:40px;height:40px;font-size:32px;line-height:40px";
+    const txt = document.createElement("div"), name = document.createElement("div"), n = document.createElement("div");
+    name.className = "text-[15px] font-bold leading-tight"; name.textContent = b.dataset.tip;
+    n.className = "text-[12px] font-medium opacity-75"; n.textContent = `${b.dataset.n} คนกดอันนี้`;
+    txt.append(name, n); tip.replaceChildren(big, txt);
     const w = tip.offsetWidth, h = tip.offsetHeight;
     tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px";
-    tip.style.top = (r.top > h + 14 ? r.top - h - 6 : r.bottom + 6) + "px";
+    tip.style.top = (r.top > h + 14 ? r.top - h - 8 : r.bottom + 8) + "px";
     tip.classList.add("show");
-    clearTimeout(tipT); tipT = setTimeout(hideTip, 2000);
+    clearTimeout(tipT); if (!hold) tipT = setTimeout(hideTip, 2200);
   }
-  const hideTip = () => $("#rxTip").classList.remove("show");
+  const hideTip = () => { clearTimeout(tipT); $("#rxTip").classList.remove("show"); };
   document.addEventListener("pointerdown", e => {
     clearTimeout(lpT); hideTip(); lpShown = false;
-    const b = e.target.closest("[data-react][title]"); if (!b || e.pointerType === "mouse") return;
+    const b = e.target.closest("[data-tip]"); if (!b || e.pointerType === "mouse") return;
     lpT = setTimeout(() => { lpShown = true; showTip(b); navigator.vibrate?.(10); }, 400);
   });
   ["pointerup", "pointercancel"].forEach(t => document.addEventListener(t, () => clearTimeout(lpT)));
+  document.addEventListener("pointerover", e => { const b = e.pointerType === "mouse" && e.target.closest("[data-tip]"); if (b && !b.contains(e.relatedTarget)) showTip(b, true); });
+  document.addEventListener("pointerout", e => { const b = e.pointerType === "mouse" && e.target.closest("[data-tip]"); if (b && !b.contains(e.relatedTarget)) hideTip(); });
   addEventListener("scroll", hideTip, { passive: true });
-  document.addEventListener("contextmenu", e => { if (e.target.closest("[data-react][title]")) e.preventDefault(); });
+  document.addEventListener("contextmenu", e => { if (e.target.closest("[data-tip]")) e.preventDefault(); });
   document.addEventListener("click", e => { if (lpShown) { lpShown = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 
   async function pickSticker(id, mine) {
