@@ -121,7 +121,7 @@ test("แลกของ: แต้มไม่พอ 400 · แลกได้�
 
 test("แลกของ: กดพร้อมกัน 2 ชิ้นด้วยแต้มที่พอแค่ชิ้นเดียว → ได้ชิ้นเดียว แต้มไม่ติดลบ", async () => {
   const E = await login("eve@example.com", "Eve");   // 20 แต้ม
-  const rs = await Promise.all(["st-yee", "st-salute", "st-scary"].map(id => call("POST", `/rewards/${id}/redeem`, { token: E.token })));
+  const rs = await Promise.all(["st-yee", "st-ghost", "st-shh"].map(id => call("POST", `/rewards/${id}/redeem`, { token: E.token })));
   assert.deepEqual(rs.map(r => r.status).sort(), [201, 400, 400]);
   assert.equal(await points(E), 0);
 });

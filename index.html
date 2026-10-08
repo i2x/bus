@@ -827,7 +827,7 @@
       <div class="grid grid-cols-4 gap-1.5">${list.map(card).join("")}</div>` : "";
     const of = (type, free) => items.filter(x => x.type === type && !x.cost === free);
     el.innerHTML = head
-      + group("สติกเกอร์ฟรี", "ใช้ได้เลย กดในรีวิวคนอื่น", of("sticker", true))
+      + group("สติกเกอร์ฟรี", "ใช้ได้เลย · ขับดี จอดป้าย สภาพรถ", of("sticker", true))
       + group("สติกเกอร์แลกแต้ม", "แลกครั้งเดียว ใช้ได้ตลอด", of("sticker", false))
       + group("รูปโปรไฟล์ฟรี", "โชว์ข้างชื่อในทุกรีวิว", of("avatar", true))
       + group("รูปโปรไฟล์แลกแต้ม", "", of("avatar", false))
@@ -882,7 +882,7 @@
   });
 
   // ---------- ฉัน ----------
-  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
   const REPORT_LABEL = Object.fromEntries(REPORT_REASONS);
   function renderMe() {
     const el = $("#v-me");

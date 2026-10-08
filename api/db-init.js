@@ -12,6 +12,12 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
       ON CONFLICT (id) DO UPDATE SET type = $2, name = $3, emoji = $4, cost = $5, sort = $6, img = $7, credit = $8`,
       [x.id, x.type, x.name, x.emoji, x.cost, x.sort, x.img || null, x.credit || null]);
   }
+  // ของที่เคยต้องแลกแต่ตอนนี้ฟรีแล้ว → คืนแต้มให้คนที่แลกไป (ครั้งเดียวต่อรายการ)
+  const refund = await pool.query(`INSERT INTO points_ledger (user_id, delta, reason, note)
+    SELECT l.user_id, -l.delta, 'refund', l.note FROM points_ledger l
+    WHERE l.reason = 'redeem' AND l.note IN (SELECT name FROM rewards WHERE cost = 0)
+      AND NOT EXISTS (SELECT 1 FROM points_ledger r WHERE r.user_id = l.user_id AND r.reason = 'refund' AND r.note = l.note)`);
+  if (refund.rowCount) console.log(`refunded ${refund.rowCount} redeem(s) of items that are now free`);
   // คนที่ใช้รูปโปรไฟล์จากร้านอยู่ → อัปเดต path รูปตามรายการล่าสุด
   await pool.query(`UPDATE users u SET avatar_img = w.img FROM rewards w WHERE w.type = 'avatar' AND w.emoji = u.avatar AND w.img IS NOT NULL AND u.avatar_img IS NULL AND w.cost > 0
     AND EXISTS (SELECT 1 FROM user_rewards ur WHERE ur.user_id = u.id AND ur.reward_id = w.id)`);

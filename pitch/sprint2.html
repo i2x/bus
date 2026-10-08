@@ -79,7 +79,7 @@
   .flow .arrow { align-self:center; font-size:26px; color:var(--muted); }
   .flow .pt { font-family:"IBM Plex Mono",monospace; font-size:30px; font-weight:700; color:var(--green); display:block; margin:6px 0 2px; }
 
-  .ph { max-width:200px; }
+  .ph { max-width:200px; } .phones .ph { max-width:188px; }
   .ph img { aspect-ratio:390/760; }
   .todo { background:repeating-linear-gradient(-45deg,#fff8e6 0 10px,#fff 10px 20px); border:1.5px dashed var(--amber); }
   .blank { display:inline-block; min-width:56px; border-bottom:2px solid var(--amber); text-align:center; color:var(--amber); font-weight:700; }
@@ -128,8 +128,8 @@
     </div>
     <div style="flex:.7" class="grid">
       <div class="card"><h3>ใหม่ใน Sprint 2</h3><ul class="small">
-        <li>แลกสติกเกอร์ / รูปโปรไฟล์ด้วยแต้ม</li><li>กดสติกเกอร์ในรีวิวคนอื่น</li><li>ปุ่ม report ทุกรีวิว</li><li>คิวรายงานสำหรับผู้ดูแล</li><li>ลบบัญชีเองได้ (PDPA)</li><li>ติดตั้งเป็นแอปบนมือถือ</li></ul></div>
-      <div class="card"><h3>ทดสอบ</h3><p class="small"><code>npm test</code> — <b>13 ชุดทดสอบ</b> ยิง API จริงกับ PostgreSQL · ผ่านทั้งหมดก่อน deploy</p></div>
+        <li>ของฟรี 31 ชิ้นตั้งแต่สมัคร + แลกแต้มอีก 44</li><li>เลือกรูปโปรไฟล์ตอนสมัคร</li><li>กดสติกเกอร์ในรีวิวคนอื่น</li><li>ปุ่ม report ทุกรีวิว</li><li>คิวรายงานสำหรับผู้ดูแล</li><li>ลบบัญชีเองได้ (PDPA)</li><li>ติดตั้งเป็นแอปบนมือถือ</li></ul></div>
+      <div class="card"><h3>ทดสอบ</h3><p class="small"><code>npm test</code> — <b>14 ชุดทดสอบ</b> ยิง API จริงกับ PostgreSQL · ผ่านทั้งหมดก่อน deploy</p></div>
     </div>
   </div>
   <div class="foot"><span>คันนี้ดีไหม? · Sprint 2</span><span>Scorecard</span></div>
@@ -140,12 +140,13 @@
   <div class="kicker">Demo · ภาพจากเว็บจริงบน server</div>
   <h2>ได้แต้ม → <em>ใช้แต้ม</em> → ดูแลคุณภาพรีวิว</h2>
   <div class="phones fill">
-    <div class="ph done"><img src="img/s2-shop.png" alt="ร้านแลกของ"><div class="cap"><b>1 · ร้านแลกของ</b>แต้มพอ = ปุ่มสีเหลือง · กดแล้วหักแต้มทันที</div></div>
-    <div class="ph done"><img src="img/s2-reviews.png" alt="รีวิวพร้อมสติกเกอร์"><div class="cap"><b>2 · รีวิว + สติกเกอร์</b>☺+ ใส่สติกเกอร์ที่แลกมา · ธง = report</div></div>
-    <div class="ph done"><img src="img/s2-report.png" alt="รายงานรีวิว"><div class="cap"><b>3 · รายงานรีวิว</b>เลือกเหตุผล · ครบ 3 คนซ่อนก่อน</div></div>
-    <div class="ph done"><img src="img/s2-mod.png" alt="คิวรายงาน"><div class="cap"><b>4 · คิวผู้ดูแล</b>ผิดกติกา = ซ่อน −20 · ไม่ผิด = แสดงต่อ</div></div>
+    <div class="ph done"><img src="img/s2-avatar.png" alt="เลือกรูปโปรไฟล์"><div class="cap"><b>1 · เลือกหน้าตา</b>สมัครเสร็จเลือกรูปฟรีได้ทันที</div></div>
+    <div class="ph done"><img src="img/s2-shop.png" alt="ร้านแลกของ"><div class="cap"><b>2 · ร้าน 75 ชิ้น</b>ฟรี 31 · แลกแต้ม 10–100</div></div>
+    <div class="ph done"><img src="img/s2-reviews.png" alt="รีวิวพร้อมสติกเกอร์"><div class="cap"><b>3 · รีวิว + สติกเกอร์</b>☺+ ใส่สติกเกอร์ · ธง = report</div></div>
+    <div class="ph done"><img src="img/s2-report.png" alt="รายงานรีวิว"><div class="cap"><b>4 · รายงานรีวิว</b>เลือกเหตุผล · ครบ 3 คนซ่อนก่อน</div></div>
+    <div class="ph done"><img src="img/s2-mod.png" alt="คิวรายงาน"><div class="cap"><b>5 · คิวผู้ดูแล</b>ผิด = ซ่อน −20 · ไม่ผิด = แสดงต่อ</div></div>
   </div>
-  <p class="small muted" style="text-align:center;margin-top:10px">ลำดับเดโมสด: เข้าด้วยบัญชีทดสอบ → รีวิว 7-3077 (+15) → แลก 🦖 Yee (−20) → กดสติกเกอร์ในรีวิวคนอื่น → อีก 3 บัญชี report รีวิวหนึ่ง → บัญชีผู้ดูแลกด "ซ่อน" → ผู้เขียนเห็น −20 ในประวัติแต้ม · ข้อมูลในเดโมเป็นของทีม</p>
+  <p class="small muted" style="text-align:center;margin-top:10px">ลำดับเดโมสด: เข้าด้วย Google → เลือกรูปโปรไฟล์ → กดสติกเกอร์ฟรีในรีวิวคนอื่น → รีวิว 7-3077 (+15) → แลก 🦖 Yee (−20) → อีก 3 บัญชี report รีวิวหนึ่ง → บัญชีผู้ดูแลกด "ซ่อน" → ผู้เขียนเห็น −20 ในประวัติแต้ม · ข้อมูลในเดโมเป็นของทีม</p>
   <div class="foot"><span>คันนี้ดีไหม? · Sprint 2</span><span>Demo</span></div>
 </section>
 
@@ -155,7 +156,7 @@
   <h2>ได้ · ใช้ · โดนหัก — ทุกอย่างเป็นแถวใน <em>points_ledger</em></h2>
   <div class="flow">
     <div class="card">สมัคร / รีวิว / ป้าย+เวลา<span class="pt">+20 +10 +5</span><span class="small muted">มีประโยชน์ +2 · เหตุยืนยัน +20</span></div><div class="arrow">→</div>
-    <div class="card">แลกสติกเกอร์ / รูปโปรไฟล์<span class="pt" style="color:var(--amber)">−20…−100</span><span class="small muted">reason = redeem · note = ชื่อของ</span></div><div class="arrow">→</div>
+    <div class="card">แลกสติกเกอร์ / รูปโปรไฟล์<span class="pt" style="color:var(--amber)">−10…−100</span><span class="small muted">reason = redeem · note = ชื่อของ</span></div><div class="arrow">→</div>
     <div class="card">ใช้สติกเกอร์ในรีวิว<span class="pt" style="color:var(--muted)">±0</span><span class="small muted">ไม่ให้แต้ม → ไม่มีเหตุให้ปั่น</span></div><div class="arrow">→</div>
     <div class="card red">รีวิวผิดกติกา (ผู้ดูแลยืนยัน)<span class="pt" style="color:var(--red)">−20</span><span class="small muted">ครั้งเดียวต่อรีวิว</span></div>
   </div>
@@ -175,7 +176,7 @@
     </div>
     <div class="card" style="flex:.85">
       <h3>ราคาของ (ค่าเริ่มต้น)</h3>
-      <p class="small">สติกเกอร์ 20–50 · รูปโปรไฟล์ 60–100<br>รีวิว 2 ครั้งพร้อมป้าย/เวลา (+20 สมัคร) ≈ แลกสติกเกอร์ได้ 2 ชิ้น</p>
+      <p class="small"><b>ฟรี 31 ชิ้น</b> ใช้ได้ทันทีหลังสมัคร: สติกเกอร์เรื่องรถ 19 (ลุงขับดี หวาดเสียว จอดเลยป้าย จอดกลางถนน ฯลฯ) · รูปโปรไฟล์ 12<br>แลกแต้ม 44 ชิ้น: สติกเกอร์มีม/อารมณ์ 10–50 · รูปโปรไฟล์ 30–100<br>รีวิว 1 ครั้งพร้อมป้าย/เวลา (+20 สมัคร) = แลกสติกเกอร์ 10 แต้มได้ 3 ชิ้น</p><p class="small muted" style="margin-top:6px">รูป: Microsoft Fluent Emoji (MIT) · DiceBear (CC0 / CC BY 4.0) — ไม่ใช้รูปมีมที่มีลิขสิทธิ์</p>
       <p class="small muted" style="margin-top:8px">ค่าแต้มยังเป็นค่าที่ทีมตั้งเอง — ปรับได้ที่ <code>PTS</code> ใน API และตาราง <code>rewards</code> โดยไม่ต้องแก้หน้าเว็บ</p>
     </div>
   </div>
@@ -362,13 +363,14 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span></pre>
 <span class="g">✔</span> มีประโยชน์: +2 · ซ้ำ 409 · ของตัวเอง 400
 <span class="g">✔</span> แลกของ: ไม่พอ 400 · ได้ · ซ้ำ 409 · ledger
 <span class="g">✔</span> แลกของ: กดพร้อมกัน → ได้ชิ้นเดียว
+<span class="g">✔</span> ของฟรี: ใช้ได้ทันที · แลกซ้ำไม่ได้ · สมัครได้รูปฟรี
 <span class="g">✔</span> รูปโปรไฟล์: ต้องแลกก่อน
 <span class="g">✔</span> สติกเกอร์: ต้องแลกก่อน · กดซ้ำ = ถอน
 <span class="g">✔</span> report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 ซ่อน
 <span class="g">✔</span> moderator: 403 · hide −20 ครั้งเดียว · keep
 <span class="g">✔</span> refresh: หมุน · ใช้ซ้ำ = เพิกถอน · logout
 <span class="g">✔</span> ลบบัญชี: ข้อมูลหาย · token ใช้ไม่ได้
-<span class="c">ℹ tests 13 · pass 13 · fail 0</span></pre>
+<span class="c">ℹ tests 14 · pass 14 · fail 0</span></pre>
       <div class="card"><p class="small">บั๊กที่เจอระหว่างทดสอบ: test เจอ <b>"เหี้ยมาก"</b> หลุด filter (มีคำว่า "เหี้ยม" ซ้อนอยู่) · ลองบน server เจอ <b>logout แล้วยัง refresh ได้</b> ภายใน 20 วินาที (ช่วงผ่อนผันสำหรับหลายแท็บ) → แก้แล้วเพิ่ม test ทั้งคู่</p></div>
     </div>
   </div>
@@ -402,7 +404,7 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span></pre>
         <li><span class="blank" style="min-width:300px">&nbsp;</span></li>
       </ul>
       <h3 style="margin-top:14px">ค่าแต้มหลังปรับ</h3>
-      <p class="small">ค่าตอนนี้: รีวิว +10 · ป้าย/เวลา +5 · มีประโยชน์ +2 (เพดาน 30/วัน) · สติกเกอร์ 20–50</p>
+      <p class="small">ค่าตอนนี้: รีวิว +10 · ป้าย/เวลา +5 · มีประโยชน์ +2 (เพดาน 30/วัน) · ของฟรี 31 ชิ้น · ของแลก 10–100</p>
     </div>
   </div>
   <div class="foot"><span>คันนี้ดีไหม? · Sprint 2</span><span>User test</span></div>

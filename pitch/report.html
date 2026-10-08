@@ -55,7 +55,7 @@
 </header>
 
 <div class="card">
-  <p><b>สรุป</b> — ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ผิดกติกาถูก report และผู้ดูแลซ่อนพร้อมหักแต้มได้ เข้าสู่ระบบด้วยบัญชี Google จริง ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 13 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
+  <p><b>สรุป</b> — ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ผิดกติกาถูก report และผู้ดูแลซ่อนพร้อมหักแต้มได้ เข้าสู่ระบบด้วยบัญชี Google จริง ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 14 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
 </div>
 
 <h2><span class="n">1</span>ปัญหาและลูกค้า</h2>
@@ -75,11 +75,11 @@
   <figure><img src="img/s2-search.png" alt=""><figcaption><b>ค้นเลขข้างรถ</b><br>รุ่น เขต อู่ ค่าโดยสาร</figcaption></figure>
   <figure><img src="img/s2-reviews.png" alt=""><figcaption><b>คะแนน + รีวิว</b><br>3 ด้าน · สติกเกอร์ · report</figcaption></figure>
   <figure><img src="img/s2-feed.png" alt=""><figcaption><b>Feed</b><br>ล่าสุด · มีประโยชน์ · แจ้งเหตุ</figcaption></figure>
-  <figure><img src="img/s2-shop.png" alt=""><figcaption><b>ร้านแลกของ</b><br>สติกเกอร์ · รูปโปรไฟล์</figcaption></figure>
-  <figure><img src="img/s2-report.png" alt=""><figcaption><b>รายงานรีวิว</b><br>4 เหตุผล</figcaption></figure>
+  <figure><img src="img/s2-shop.png" alt=""><figcaption><b>ร้าน 75 ชิ้น</b><br>ฟรี 31 · แลกแต้ม 44</figcaption></figure>
+  <figure><img src="img/s2-avatar.png" alt=""><figcaption><b>เลือกรูปโปรไฟล์</b><br>ฟรี 12 แบบตอนสมัคร</figcaption></figure>
   <figure><img src="img/s2-mod.png" alt=""><figcaption><b>ฉัน + คิวผู้ดูแล</b><br>แต้ม · ประวัติ</figcaption></figure>
 </div>
-<p class="small muted" style="margin-top:6px">ข้อมูลรุ่นรถ 13 รุ่น 8 เขต จากวิกิพีเดีย "องค์การขนส่งมวลชนกรุงเทพ" (CC BY-SA) · รีวิวในภาพเป็นข้อมูลทดสอบของทีม · ติดตั้งเป็นแอปบนมือถือได้ (PWA)</p>
+<p class="small muted" style="margin-top:6px">ข้อมูลรุ่นรถ 13 รุ่น 8 เขต จากวิกิพีเดีย "องค์การขนส่งมวลชนกรุงเทพ" (CC BY-SA) · รูปสติกเกอร์ Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์ DiceBear (CC0 / CC BY 4.0) · รีวิวในภาพเป็นข้อมูลทดสอบของทีม · ติดตั้งเป็นแอปบนมือถือได้ (PWA)</p>
 
 <h2><span class="n">3</span>ระบบแต้มและกติกา</h2>
 <div class="row">
@@ -91,7 +91,7 @@
       <tr><td>ใส่ป้ายและเวลาที่ขึ้น</td><td class="ok">+5</td></tr>
       <tr><td>มีคนกด "มีประโยชน์" (เพดาน 30/วัน)</td><td class="ok">+2</td></tr>
       <tr><td>แจ้งเหตุ มีคนยืนยันครบ 3</td><td class="ok">+20</td></tr>
-      <tr><td>แลกสติกเกอร์ / รูปโปรไฟล์</td><td class="part">−20…−100</td></tr>
+      <tr><td>แลกสติกเกอร์ / รูปโปรไฟล์ (สติกเกอร์เรื่องรถ 19 + รูปโปรไฟล์ 12 ฟรี)</td><td class="part">−10…−100</td></tr>
       <tr><td>รีวิวถูก report และผู้ดูแลยืนยันว่าผิด</td><td style="color:var(--red);font-weight:700">−20</td></tr>
     </tbody>
   </table>
@@ -275,7 +275,7 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span>
 <h2><span class="n">7</span>การทดสอบ</h2>
 <div class="row">
   <div class="card small"><h3 style="margin-top:0">อัตโนมัติ — <code>cd api && npm test</code></h3>
-    <p>สร้างฐานข้อมูลทิ้งได้ <code>bus_test</code> → เปิด API จริง → ยิง HTTP 13 ชุด (ผ่านทั้งหมด): เข้าสู่ระบบ, รีวิว, word filter, มีประโยชน์, แลกของ, แลกพร้อมกัน, รูปโปรไฟล์, สติกเกอร์, report, moderator, refresh token, ลบบัญชี — ทุกกรณีที่ต้องถูกปฏิเสธ (400/401/403/409) มี test</p></div>
+    <p>สร้างฐานข้อมูลทิ้งได้ <code>bus_test</code> → เปิด API จริง → ยิง HTTP 14 ชุด (ผ่านทั้งหมด): เข้าสู่ระบบ, รีวิว, word filter, มีประโยชน์, แลกของ, แลกพร้อมกัน, ของฟรี, รูปโปรไฟล์, สติกเกอร์, report, moderator, refresh token, ลบบัญชี — ทุกกรณีที่ต้องถูกปฏิเสธ (400/401/403/409) มี test</p></div>
   <div class="card small"><h3 style="margin-top:0">บน server หลัง deploy</h3>
     <p><code>curl</code> ตรวจ header, 301, endpoint ใหม่, refresh/logout ผ่าน LB จริง · ทดสอบ restore backup · nmap · ภาพหน้าจอทุกหน้าในรายงานนี้ถ่ายจากเว็บจริงหลัง deploy</p>
     <p><b>บั๊กที่เจอและแก้:</b> "เหี้ยมาก" หลุด filter (เจอจาก test) · logout แล้วยัง refresh ได้ภายใน 20 วินาที (เจอบน server) — เพิ่ม test ทั้งคู่</p></div>
