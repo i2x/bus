@@ -26,12 +26,14 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const c = await pool.connect();
   try {
     await c.query("BEGIN");
-    await c.query("DELETE FROM gtfs_routes; DELETE FROM gtfs_stops");
+    await c.query("DELETE FROM gtfs_route_stops; DELETE FROM gtfs_routes; DELETE FROM gtfs_stops");
     await c.query(`INSERT INTO gtfs_stops (id, name, lat, lon)
       SELECT key, value->>0, (value->>1)::float8, (value->>2)::float8 FROM jsonb_each($1::jsonb)`, [JSON.stringify(g.stops)]);
     await c.query(`INSERT INTO gtfs_routes (id, no, old_no, name, agency, kind, dirs)
       SELECT id, no, old, name, agency, kind, dirs FROM jsonb_to_recordset($1::jsonb)
         AS x(id text, no text, old text, name text, agency text, kind text, dirs jsonb)`, [JSON.stringify(g.routes)]);
+    await c.query(`INSERT INTO gtfs_route_stops (route_id, stop_id)
+      SELECT DISTINCT g.id, st FROM gtfs_routes g, jsonb_array_elements(g.dirs) d, jsonb_array_elements_text(d->'stops') st`);
     await c.query("COMMIT");
   } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
   console.log(`schema ok · ${items.length} rewards · ${g.routes.length} routes (GTFS ${g.version})`);

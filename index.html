@@ -65,7 +65,7 @@
   <div class="glass-bar sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 px-4 pb-3">
     <div class="relative">
       <i class="fa-solid fa-route pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-[16px] text-mute"></i>
-      <input id="rtTabQ" class="glass h-12 w-full rounded-2xl !border-2 pr-4 pl-11 text-[16px] text-ink outline-none transition placeholder:text-mute/70 focus:border-route" type="search" placeholder="เลขสาย หรือปลายทาง เช่น 8, 1-12E, หมอชิต" aria-label="ค้นหาสายรถเมล์" autocomplete="off" enterkeyhint="search">
+      <input id="rtTabQ" class="glass h-12 w-full rounded-2xl !border-2 pr-4 pl-11 text-[16px] text-ink outline-none transition placeholder:text-mute/70 focus:border-route" type="search" placeholder="เลขสาย ป้าย หรือย่าน เช่น 8, หมอชิต, นางลิ้นจี่" aria-label="ค้นหาสายรถเมล์" autocomplete="off" enterkeyhint="search">
     </div>
   </div>
   <div class="card rise overflow-hidden px-4" id="rtTabList"></div>
@@ -752,35 +752,61 @@
   });
 
   // ชีตสาย: ค้นหา → รายละเอียด (ป้ายตามลำดับ + คันที่มีคนรีวิวบนสายนี้)
-  function openRoutes(id) {
+  function openRoutes(id, mark) {
     sheet("#routeSheet").show();
-    return id ? showRoute(id) : showRouteSearch();
+    return id ? showRoute(id, mark) : showRouteSearch();
+  }
+  // ช่องค้นหาสาย: เลข/ชื่อสายค้นในเครื่องทันที + ชื่อป้ายถาม server (สะกดผิดเล็กน้อยได้) แล้ววาดใหม่
+  const ROUTE_NO = /^(\d{1,3}[a-zก-ฮ]?|[1-4]-\d+[a-z]?)$/i;
+  function bindRouteSearch(input, list) {
+    let t, seq = 0;
+    input.addEventListener("input", () => {
+      if (!routes) return;
+      const q = input.value.trim(), my = ++seq;
+      list.innerHTML = routeList(q); clearTimeout(t);
+      if ([...q.replace(/\s/g, "")].length < 2 || ROUTE_NO.test(thaiDigits(q))) return;
+      t = setTimeout(async () => {
+        try { const via = await api(`/routes/search?q=${encodeURIComponent(q)}`); if (my === seq) list.innerHTML = routeList(q, via); }
+        catch { if (my === seq) list.innerHTML = routeList(q, { near: false, stops: [], items: [] }); }
+      }, 250);
+    });
   }
   async function showRouteSearch() {
     $("#rtTitle").textContent = "สายรถเมล์"; $("#rtBack").hidden = true;
-    $("#rtBody").innerHTML = `<input id="rtQ" class="field" type="search" placeholder="เลขสาย หรือชื่อปลายทาง เช่น 8, 1-12E, หมอชิต" autocomplete="off" enterkeyhint="search">
+    $("#rtBody").innerHTML = `<input id="rtQ" class="field" type="search" placeholder="เลขสาย ป้าย หรือย่าน เช่น 8, หมอชิต, นางลิ้นจี่" autocomplete="off" enterkeyhint="search">
       <div id="rtList" class="mt-2 max-h-[55vh] overflow-y-auto">${loading("กำลังโหลดสาย…")}</div>`;
     const q = $("#rtQ");
-    q.oninput = () => { $("#rtList").innerHTML = routeList(q.value); };
+    bindRouteSearch(q, $("#rtList"));
     try { await loadRoutes(); $("#rtList").innerHTML = routeList(q.value); }
     catch (err) { $("#rtList").innerHTML = problem(err.message); }
   }
-  function routeList(raw) {
-    const s = thaiDigits(raw.trim()).toLowerCase();
+  // via = ผลค้นจากชื่อป้าย { near, stops, items: [{ id, stops }] } (null = ยังไม่ได้ถาม/ไม่ต้องถาม)
+  function routeList(raw, via) {
+    const s = thaiDigits(raw.trim()).toLowerCase(), sn = s.replace(/\s/g, "");
+    const viaMap = new Map((via && via.items || []).map(x => [x.id, x.stops]));
     const score = r => { const l = routeLabel(r).toLowerCase(), n = r.no.toLowerCase();
-      return !s ? 1 : l === s || n === s ? 0 : l.startsWith(s) || n.startsWith(s) ? 1 : r.name.toLowerCase().includes(s) ? 2 : 9; };
+      return !s ? 1 : l === s || n === s ? 0 : l.startsWith(s) || n.startsWith(s) ? 1 : r.name.toLowerCase().replace(/\s/g, "").includes(sn) ? 2 : viaMap.has(r.id) ? 3 : 9; };
     const all = routes.map(r => [score(r), r]).filter(([k]) => k < 9).sort((a, b) => a[0] - b[0]), hit = all.slice(0, 60).map(([, r]) => r);
-    if (!hit.length) return `<p class="p-4 text-center text-[13.5px] text-mute">ไม่พบสาย "${esc(raw)}"</p>`;
-    const more = all.length > hit.length ? `<p class="border-t border-line py-3 text-center text-[12.5px] text-mute">แสดง ${hit.length} จาก ${all.length} สาย — พิมพ์เลขสายหรือปลายทางเพื่อหาเพิ่ม</p>` : "";
-    return hit.map((r, i) => `<button type="button" class="flex w-full items-center gap-3 ${i ? "border-t border-line" : ""} py-2.5 text-left transition active:bg-sunk" data-route="${esc(r.id)}">${routeBadge(r)}
-      <span class="min-w-0 flex-1 leading-snug"><span class="block truncate text-[14px] font-semibold">${esc(r.name)}</span><span class="block truncate text-[12px] text-mute">${r.old ? esc(r.no) + " · " : ""}${esc(r.kind)}</span></span>
-      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`).join("") + more;
+    const head = via && via.near && via.items.length ? `<p class="py-2.5 text-[12.5px] text-mute"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>ไม่พบ "${esc(raw.trim())}" — ใกล้เคียง: <b class="text-ink">${via.stops.map(esc).join(", ")}</b></p>`
+      : viaMap.size ? `<p class="py-2.5 text-[12.5px] text-mute"><i class="fa-solid fa-location-dot mr-1"></i>${viaMap.size} สายผ่านป้าย "${esc(raw.trim())}"</p>` : "";
+    if (!hit.length) return `<p class="p-4 text-center text-[13.5px] text-mute">${via || !sn || sn.length < 2 || ROUTE_NO.test(s) ? `ไม่พบสายหรือป้าย "${esc(raw)}"` : "กำลังค้นจากชื่อป้าย…"}</p>`;
+    const more = all.length > hit.length ? `<p class="border-t border-line py-3 text-center text-[12.5px] text-mute">แสดง ${hit.length} จาก ${all.length} สาย — พิมพ์เลขสาย ป้าย หรือย่านเพื่อหาเพิ่ม</p>` : "";
+    return head + hit.map((r, i) => { const vs = viaMap.get(r.id);
+      return `<button type="button" class="flex w-full items-center gap-3 ${i || head ? "border-t border-line" : ""} py-2.5 text-left transition active:bg-sunk" data-route="${esc(r.id)}" ${vs ? `data-mark="${esc(vs.join("|"))}"` : ""}>${routeBadge(r)}
+      <span class="min-w-0 flex-1 leading-snug"><span class="block truncate text-[14px] font-semibold">${esc(r.name)}</span><span class="block truncate text-[12px] ${vs ? "text-route" : "text-mute"}">${vs ? `<i class="fa-solid fa-location-dot mr-1"></i>ผ่าน ${vs.map(esc).join(", ")}` : `${r.old ? esc(r.no) + " · " : ""}${esc(r.kind)}`}</span></span>
+      <i class="fa-solid fa-chevron-right text-[11px] text-mute"></i></button>`; }).join("") + more;
   }
-  async function showRoute(id) {
+  let rtMark = new Set();   // ป้ายที่ค้นเจอ → ไฮไลต์ในรายการป้าย
+  async function showRoute(id, mark) {
     $("#rtBack").hidden = false;
+    rtMark = new Set((mark || "").split("|").filter(Boolean));
     $("#rtBody").innerHTML = loading("กำลังโหลดป้าย…");
-    try { rtCur = await loadRoute(id); rtDir = 0; renderRoute(); }
-    catch (err) { $("#rtBody").innerHTML = problem(err.message); }
+    try {
+      rtCur = await loadRoute(id);
+      rtDir = Math.max(0, rtCur.dirs.findIndex(d => d.stops.some(st => rtMark.has(st.name))));
+      renderRoute();
+      $("#rtBody [data-hit]")?.scrollIntoView({ block: "center" });
+    } catch (err) { $("#rtBody").innerHTML = problem(err.message); }
   }
   function renderRoute() {
     const r = rtCur, d = r.dirs[rtDir] || r.dirs[0], last = d.stops.length - 1;
@@ -794,24 +820,24 @@
         : `<p class="mt-3 rounded-xl bg-sunk px-3 py-2 text-[12.5px] text-mute">ยังไม่มีใครบอกว่าคันไหนวิ่งสายนี้ — ค้นเลขข้างรถแล้วกด "บอกสาย" คันนั้นจะขึ้นที่นี่</p>`}
       ${r.dirs.length > 1 ? `<div class="seg mt-4" role="tablist">${r.dirs.map((x, i) => `<button class="${i === rtDir ? "on" : ""} truncate" type="button" role="tab" aria-selected="${i === rtDir}" data-rtdir="${i}">ไป ${esc(x.head)}</button>`).join("")}</div>` : ""}
       <div class="mt-3 mb-1 text-[12px] text-mute">${d.stops.length} ป้าย · แตะชื่อป้ายเพื่อเปิดแผนที่</div>
-      <ol>${d.stops.map((st, i) => `<li class="flex items-stretch gap-3">
+      <ol>${d.stops.map((st, i) => `<li class="flex items-stretch gap-3 ${rtMark.has(st.name) ? "-mx-2 rounded-xl bg-route-soft px-2" : ""}" ${rtMark.has(st.name) ? "data-hit" : ""}>
         <span class="relative flex w-3 shrink-0 justify-center"><span class="absolute w-0.5 bg-route/30 ${i ? "top-0" : "top-1/2"} ${i === last ? "bottom-1/2" : "bottom-0"}"></span><span class="relative my-auto h-3 w-3 rounded-full border-2 border-route ${i === 0 || i === last ? "bg-route" : "bg-solid"}"></span></span>
-        <a class="min-w-0 flex-1 py-1.5 text-[14px] ${i === 0 || i === last ? "font-semibold" : ""}" href="https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}" target="_blank" rel="noopener">${esc(st.name)}</a></li>`).join("")}</ol>`;
+        <a class="min-w-0 flex-1 py-1.5 text-[14px] ${i === 0 || i === last || rtMark.has(st.name) ? "font-semibold" : ""}" href="https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}" target="_blank" rel="noopener">${esc(st.name)}</a></li>`).join("")}</ol>`;
   }
   $("#rtBack").onclick = () => showRouteSearch();
   // แท็บ "สาย": รายการสายทั้งหมด + ค้นหา · แตะแล้วเปิดชีตรายละเอียด
   async function renderRoutesTab() {
     const el = $("#rtTabList");
     if (!routes) el.innerHTML = loading("กำลังโหลดสาย…");
-    try { await loadRoutes(); el.innerHTML = routeList($("#rtTabQ").value); }
+    try { await loadRoutes(); el.innerHTML = routeList($("#rtTabQ").value); if ($("#rtTabQ").value) $("#rtTabQ").dispatchEvent(new Event("input")); }
     catch (err) { el.innerHTML = problem(err.message); }
   }
-  $("#rtTabQ").addEventListener("input", () => { if (routes) $("#rtTabList").innerHTML = routeList($("#rtTabQ").value); });
+  bindRouteSearch($("#rtTabQ"), $("#rtTabList"));
   $("#rtBody").addEventListener("click", e => { const b = e.target.closest("[data-rtdir]"); if (b) { rtDir = +b.dataset.rtdir; renderRoute(); } });
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-route]"); if (!b) return;
     e.preventDefault();
-    if (!$("#routeSheet").open) openRoutes(b.dataset.route); else b.dataset.route ? showRoute(b.dataset.route) : showRouteSearch();
+    if (!$("#routeSheet").open) openRoutes(b.dataset.route, b.dataset.mark); else b.dataset.route ? showRoute(b.dataset.route, b.dataset.mark) : showRouteSearch();
   });
 
   // ---------- เข้าสู่ระบบด้วย Google (จำลอง) ----------

@@ -425,6 +425,47 @@ app.get("/api/routes", wrap(async (_req, res) => {
   const r = await pool.query("SELECT id, no, old_no AS old, name, agency, kind FROM gtfs_routes ORDER BY NULLIF(old_no, '') IS NULL, old_no, no, id");
   res.set("Cache-Control", "public, max-age=3600").json({ items: r.rows });
 }));
+// ค้นสายจากชื่อป้าย/ย่าน เช่น "นางลิ้นจี่" → ทุกสายที่ผ่านป้ายนั้น · สะกดผิดได้ 1–2 ตัว (บางลิ้นจี่ → นางลิ้นจี่)
+let stopIndex = null;   // [{ key, name, ids }] ชื่อป้ายไม่ซ้ำ · โหลดครั้งแรกที่ค้น (ข้อมูลเปลี่ยนเฉพาะตอน deploy ซึ่ง restart อยู่แล้ว)
+const normTh = t => String(t).toLowerCase().replace(/[\s.()\-]/g, "");
+// ระยะแก้ไขน้อยสุดระหว่าง q กับ "ส่วนใดส่วนหนึ่ง" ของ text (approximate substring)
+function nearDist(q, text) {
+  const a = [...q], b = [...text];
+  let prev = new Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return Math.min(...prev);
+}
+app.get("/api/routes/search", wrap(async (req, res) => {
+  const q = normTh(String(req.query.q || "").slice(0, 40));
+  if ([...q].length < 2) return res.json({ near: false, stops: [], items: [] });
+  if (!stopIndex) {
+    const all = await pool.query("SELECT id, name FROM gtfs_stops");
+    const by = new Map();
+    for (const x of all.rows) { const k = normTh(x.name); if (!by.has(k)) by.set(k, { key: k, name: x.name, ids: [] }); by.get(k).ids.push(x.id); }
+    stopIndex = [...by.values()];
+  }
+  let hits = stopIndex.filter(x => x.key.includes(q)).map(x => ({ ...x, d: 0 }));
+  const len = [...q].length, near = !hits.length && len >= 4;
+  if (near) {
+    const k = len >= 9 ? 2 : 1;
+    hits = stopIndex.map(x => ({ ...x, d: nearDist(q, x.key) })).filter(x => x.d <= k);
+    const best = Math.min(...hits.map(x => x.d));
+    hits = hits.filter(x => x.d === best);
+  }
+  hits = hits.slice(0, 150);
+  if (!hits.length) return res.json({ near, stops: [], items: [] });
+  const nameOf = new Map(hits.flatMap(x => x.ids.map(id => [id, x.name])));
+  const r = await pool.query("SELECT route_id, stop_id FROM gtfs_route_stops WHERE stop_id = ANY($1)", [[...nameOf.keys()]]);
+  const per = new Map();
+  for (const x of r.rows) { if (!per.has(x.route_id)) per.set(x.route_id, new Set()); per.get(x.route_id).add(nameOf.get(x.stop_id)); }
+  res.set("Cache-Control", "public, max-age=3600").json({ near, stops: [...new Set(hits.map(x => x.name))].slice(0, 5),
+    items: [...per].map(([id, names]) => ({ id, stops: [...names].slice(0, 3) })) });
+}));
+
 app.get("/api/routes/:id", wrap(async (req, res) => {
   const r = await pool.query("SELECT id, no, old_no AS old, name, agency, kind, dirs FROM gtfs_routes WHERE id = $1", [String(req.params.id).slice(0, 20)]);
   if (!r.rows.length) throw new HttpError(404, "ไม่พบสายนี้");

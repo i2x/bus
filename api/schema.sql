@@ -149,6 +149,13 @@ CREATE TABLE IF NOT EXISTS gtfs_routes (
   dirs   jsonb NOT NULL              -- [{ head, stops: [stop id ตามลำดับ] }] ทิศละ 1 รายการ
 );
 
+-- สาย ↔ ป้าย (สร้างจาก dirs ตอน db-init) ไว้ค้น "สายที่ผ่านป้ายนี้"
+CREATE TABLE IF NOT EXISTS gtfs_route_stops (
+  route_id text NOT NULL,
+  stop_id  text NOT NULL,
+  PRIMARY KEY (stop_id, route_id)
+);
+
 -- สายที่ขึ้นตอนรีวิว (ไม่บังคับ) · เก็บเลขสายไว้ด้วย ถ้าข้อมูลสายเปลี่ยนรีวิวเดิมยังแสดงได้
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_id text;
 ALTER TABLE reviews ADD COLUMN IF NOT EXISTS route_label text;

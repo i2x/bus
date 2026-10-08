@@ -193,6 +193,18 @@ test("สาย (GTFS): รายการสาย · ป้ายตามล�
   assert.deepEqual((await call("GET", `/routes/${r8.id}`)).body.buses.map(b => b.fleet_no), ["8-80040"]);
 });
 
+test("ค้นสายจากชื่อป้าย: ตรงตัว · สะกดผิด 1 ตัวก็เจอ (บางลิ้นจี่ → นางลิ้นจี่) · สั้นเกินไม่ค้น", async () => {
+  const exact = (await call("GET", "/routes/search?q=" + encodeURIComponent("นางลิ้นจี่"))).body;
+  assert.equal(exact.near, false);
+  assert.ok(exact.items.length >= 5); assert.ok(exact.stops.includes("ตลาดนางลิ้นจี่"));
+  assert.ok(exact.items.every(x => x.stops.every(n => n.includes("นางลิ้นจี่"))));
+  const typo = (await call("GET", "/routes/search?q=" + encodeURIComponent("บาง ลิ้นจี่"))).body;
+  assert.equal(typo.near, true);
+  assert.deepEqual(typo.items.map(x => x.id).sort(), exact.items.map(x => x.id).sort());
+  assert.deepEqual((await call("GET", "/routes/search?q=" + encodeURIComponent("ก"))).body.items, []);
+  assert.deepEqual((await call("GET", "/routes/search?q=" + encodeURIComponent("ซซซซซซซ"))).body.items, []);
+});
+
 test("บอกสายของรถ: +2 แต้ม · วันเดียวกันบอกซ้ำ = แก้สาย ไม่ได้แต้มเพิ่ม · วันละ 5 คัน · นับรวมกับรีวิว", async () => {
   const items = (await call("GET", "/routes")).body.items;
   const r8 = items.find(x => x.old === "8"), r29 = items.find(x => x.old === "29");
