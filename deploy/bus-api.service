@@ -8,10 +8,13 @@ User=busapi
 Group=busapi
 WorkingDirectory=/opt/bus-api
 EnvironmentFile=/etc/bus-api.env
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/local/bin/node server.js
 Restart=on-failure
 RestartSec=2
 NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

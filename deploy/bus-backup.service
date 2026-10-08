@@ -1,0 +1,7 @@
+[Unit]
+Description=คันนี้ดีไหม? backup PostgreSQL
+After=postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/bus-backup.sh

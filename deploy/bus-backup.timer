@@ -1,0 +1,9 @@
+[Unit]
+Description=คันนี้ดีไหม? backup รายวัน 03:00 (เวลาไทย)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 Asia/Bangkok
+Persistent=true
+
+[Install]
+WantedBy=timers.target

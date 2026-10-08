@@ -36,6 +36,13 @@ const AVATARS = ["🐸", "🦖", "🧢", "🐱", "🐼", "🦊", "🐧", "🐙",
 const app = express();
 app.set("trust proxy", process.env.TRUST_PROXY || "loopback");
 app.disable("x-powered-by");
+// แยก node: รับเฉพาะ request จาก web node (ซ้อนกับ firewall อีกชั้น)
+const ALLOW_FROM = (process.env.ALLOW_FROM || "").split(",").map(x => x.trim()).filter(Boolean);
+if (ALLOW_FROM.length) app.use((req, res, next) => {
+  const ip = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
+  if (ip === "127.0.0.1" || ALLOW_FROM.includes(ip)) return next();
+  res.status(403).end();
+});
 app.use(express.json({ limit: "10kb" }));
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
@@ -181,9 +188,13 @@ app.post("/api/auth/refresh", wrap(async (req, res) => {
       FROM refresh_tokens t JOIN users u ON u.id = t.user_id WHERE t.token_hash = $1 FOR UPDATE OF t`, [sha256(raw)]);
     const t = r.rows[0];
     if (!t || t.expired) return null;
-    if (t.revoked_at && Date.now() - t.revoked_at.getTime() > REFRESH_REUSE_GRACE_MS) {
-      await c.query("UPDATE refresh_tokens SET revoked_at = now() WHERE family = $1 AND revoked_at IS NULL", [t.family]);
-      return null;
+    if (t.revoked_at) {
+      // ช่วงผ่อนผันใช้ได้เฉพาะ family ที่ยังมี token ใช้งานอยู่ (logout แล้ว = ทั้ง family ถูกเพิกถอน → ไม่ผ่อนผัน)
+      const live = await c.query("SELECT 1 FROM refresh_tokens WHERE family = $1 AND revoked_at IS NULL AND expires_at > now()", [t.family]);
+      if (!live.rowCount || Date.now() - t.revoked_at.getTime() > REFRESH_REUSE_GRACE_MS) {
+        await c.query("UPDATE refresh_tokens SET revoked_at = now() WHERE family = $1 AND revoked_at IS NULL", [t.family]);
+        return null;
+      }
     }
     if (!t.revoked_at) await c.query("UPDATE refresh_tokens SET revoked_at = now() WHERE id = $1", [t.id]);
     await issueRefresh(c, res, t.user_id, t.family);

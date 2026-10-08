@@ -17,7 +17,7 @@ before(async () => {
   await pool.query("TRUNCATE users, buses, reviews, review_votes, points_ledger, user_rewards, review_reactions, reports, refresh_tokens RESTART IDENTITY CASCADE");
   srv = spawn(process.execPath, [path.join(__dirname, "server.js")], {
     env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), MODERATOR_EMAILS: "mod@example.com",
-      COOKIE_SECURE: "0", REFRESH_GRACE_MS: "0", GOOGLE_CLIENT_ID: "" },
+      COOKIE_SECURE: "0", REFRESH_GRACE_MS: "1500", GOOGLE_CLIENT_ID: "" },
     stdio: ["ignore", "ignore", "inherit"],
   });
   for (let i = 0; i < 50; i++) {
@@ -189,12 +189,18 @@ test("refresh token: หมุนทุกครั้ง · เอาอัน�
   const r1 = await call("POST", "/auth/refresh", { cookie: u.cookie });
   assert.equal(r1.status, 200); assert.ok(r1.body.token); assert.ok(r1.cookie); assert.notEqual(r1.cookie, u.cookie);
   assert.equal((await call("GET", "/me", { token: r1.body.token })).status, 200);
-  assert.equal((await call("POST", "/auth/refresh", { cookie: u.cookie })).status, 401, "ใช้ token เก่าซ้ำ");
-  assert.equal((await call("POST", "/auth/refresh", { cookie: r1.cookie })).status, 401, "ทั้ง family ถูกเพิกถอน");
+  // 2 แท็บขอพร้อมกัน: ใช้ token เก่าภายในช่วงผ่อนผัน → ยังได้
+  const r2 = await call("POST", "/auth/refresh", { cookie: u.cookie });
+  assert.equal(r2.status, 200, "ช่วงผ่อนผัน");
+  await new Promise(r => setTimeout(r, 1700));
+  assert.equal((await call("POST", "/auth/refresh", { cookie: u.cookie })).status, 401, "ใช้ token เก่าซ้ำหลังช่วงผ่อนผัน");
+  assert.equal((await call("POST", "/auth/refresh", { cookie: r2.cookie })).status, 401, "ทั้ง family ถูกเพิกถอน");
 
   const v = await login("frank@example.com", "Frank");
-  assert.equal((await call("POST", "/auth/logout", { cookie: v.cookie })).status, 200);
-  assert.equal((await call("POST", "/auth/refresh", { cookie: v.cookie })).status, 401);
+  const v2 = await call("POST", "/auth/refresh", { cookie: v.cookie });
+  assert.equal((await call("POST", "/auth/logout", { cookie: v2.cookie })).status, 200);
+  assert.equal((await call("POST", "/auth/refresh", { cookie: v2.cookie })).status, 401, "หลัง logout");
+  assert.equal((await call("POST", "/auth/refresh", { cookie: v.cookie })).status, 401, "token ก่อนหน้าก็ใช้ไม่ได้หลัง logout");
   assert.equal((await call("GET", "/me", { token: "Bearer.x.y" })).status, 401);
 });
 
