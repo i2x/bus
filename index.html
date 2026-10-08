@@ -746,7 +746,7 @@
         ? `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto">${own.map(x => `<button type="button" class="card p-3 text-center transition active:scale-95 ${x.id === mine ? "!border-route ring-2 ring-route" : ""}" data-react="${id}" data-sticker="${esc(x.id)}">
             <div class="flex justify-center">${pic(x, 48)}</div><div class="mt-1 truncate text-[12.5px] font-semibold">${esc(x.name)}</div></button>`).join("")}</div>
            <p class="mt-3 text-[12.5px] text-mute">${mine ? "กดอันที่ใส่อยู่อีกครั้งเพื่อเอาออก · " : ""}คนละ 1 สติกเกอร์ต่อรีวิว</p>`
-        : `<p class="text-[14px]">ยังไม่มีสติกเกอร์ — แลกด้วยแต้มจากการรีวิวได้ที่ร้าน</p><button class="btn-primary mt-3 w-full" type="button" data-tab-go="shop" data-close><i class="fa-solid fa-gift"></i>ไปร้านแลกของ</button>`;
+        : `<p class="text-[14px]">ยังไม่มีสติกเกอร์ — แลกด้วยแต้มจากการรีวิวได้ที่ร้าน</p><button class="btn-primary mt-3 w-full" type="button" data-tab-go="shop" data-shop-kind="sticker" data-close><i class="fa-solid fa-gift"></i>ไปร้านแลกของ</button>`;
     } catch (err) { el.innerHTML = problem(err.message); }
   }
 
@@ -792,7 +792,7 @@
   $("#feedReload").onclick = loadFeed;
 
   // ---------- แลกของ ----------
-  let rewards = null;
+  let rewards = null, shopKind = store.get("shopKind") === "avatar" ? "avatar" : "sticker";
   async function loadRewards() { rewards ||= (await api("/rewards")).items; return rewards; }
   const EARN = [["สมัครสมาชิก", "+20"], ["เขียนรีวิว", "+10"], ["ใส่ป้ายและเวลาที่ขึ้น", "+5"], ["มีคนกดมีประโยชน์ (สูงสุด 30/วัน)", "+2"], ["แจ้งเหตุแล้วมีคนยืนยัน 3 คน", "+20"], ["รีวิวถูกรายงานและผู้ดูแลยืนยันว่าผิด", "−20"]];
   async function renderShop() {
@@ -826,17 +826,22 @@
     const group = (h, sub, list) => list.length ? `<div class="mt-5 mb-2 flex items-baseline gap-2"><div class="eyebrow">${h}</div><div class="text-[12px] text-mute">${sub}</div></div>
       <div class="grid grid-cols-4 gap-1.5">${list.map(card).join("")}</div>` : "";
     const of = (type, free) => items.filter(x => x.type === type && !x.cost === free);
+    const kinds = [["sticker", "สติกเกอร์"], ["avatar", "รูปโปรไฟล์"]];
     el.innerHTML = head
-      + group("สติกเกอร์ฟรี", "ใช้ได้เลย · ขับดี จอดป้าย สภาพรถ", of("sticker", true))
-      + group("สติกเกอร์แลกแต้ม", "แลกครั้งเดียว ใช้ได้ตลอด", of("sticker", false))
-      + group("รูปโปรไฟล์ฟรี", "โชว์ข้างชื่อในทุกรีวิว", of("avatar", true))
-      + group("รูปโปรไฟล์แลกแต้ม", "", of("avatar", false))
+      + `<div class="seg mt-5" role="tablist">${kinds.map(([k, h]) => `<button class="${shopKind === k ? "on" : ""}" type="button" role="tab" aria-selected="${shopKind === k}" data-shop-kind="${k}">${h} <span class="num font-normal opacity-70">${items.filter(x => x.type === k).length}</span></button>`).join("")}</div>`
+      + (shopKind === "sticker"
+        ? group("ฟรี", "ใช้ได้เลย · ขับดี จอดป้าย สภาพรถ", of("sticker", true))
+          + group("แลกแต้ม", "แลกครั้งเดียว ใช้ได้ตลอด", of("sticker", false))
+        : group("ฟรี", "โชว์ข้างชื่อในทุกรีวิว", of("avatar", true))
+          + group("แลกแต้ม", "", of("avatar", false)))
       + earn
       + `<p class="mt-3 px-1 text-[11.5px] leading-snug text-mute">รูปสติกเกอร์: Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์: DiceBear — Notionists, Lorelei, Thumbs (CC0), Fun Emoji โดย Davis Uche (CC BY 4.0) · <a class="underline" href="privacy.html#credits">เครดิต</a></p>`;
     $("#shopLogin") && ($("#shopLogin").onclick = () => openAuth());
   }
   $("#v-shop").addEventListener("click", async e => {
-    const rd = e.target.closest("[data-redeem]"), av = e.target.closest("[data-use-avatar]");
+    const kd = e.target.closest("[data-shop-kind]");
+    if (kd) { shopKind = kd.dataset.shopKind; store.set("shopKind", shopKind); return renderShop(); }
+    const rd =e.target.closest("[data-redeem]"), av = e.target.closest("[data-use-avatar]");
     if (!rd && !av) return;
     if (!token) return openAuth("เข้าสู่ระบบก่อนแลกของ");
     const x = (rewards || []).find(w => w.id === (rd || av).dataset[rd ? "redeem" : "useAvatar"]);
@@ -865,7 +870,7 @@
       el.innerHTML = `<div class="grid max-h-[55vh] grid-cols-4 gap-2 overflow-y-auto p-0.5">${list.map(x => {
           const on = cur && (cur.avatar_img ? cur.avatar_img === x.img : cur.avatar === x.emoji);
           return `<button type="button" class="card grid place-items-center p-2 transition active:scale-95 ${on ? "ring-2 ring-route" : ""}" data-pick-avatar="${esc(x.id)}" aria-label="${esc(x.name)}">${avatar({ avatar: x.emoji, avatar_img: x.img }, 56)}<span class="mt-1 w-full truncate text-[11.5px] font-medium">${esc(x.name)}</span></button>`; }).join("")}</div>
-        <button class="btn-quiet mt-3 w-full text-[14px]" type="button" data-tab-go="shop"><i class="fa-solid fa-gift"></i>ดูรูปที่แลกด้วยแต้ม</button>`;
+        <button class="btn-quiet mt-3 w-full text-[14px]" type="button" data-tab-go="shop" data-shop-kind="avatar"><i class="fa-solid fa-gift"></i>ดูรูปที่แลกด้วยแต้ม</button>`;
     } catch (err) { el.innerHTML = problem(err.message); }
   }
   $("#avatarSheet").addEventListener("close", () => { const next = afterAvatar; afterAvatar = null; if (next && token) setTimeout(next, 50); });
@@ -954,7 +959,7 @@
     if (name === "me") { renderMe(); refreshMe(); }
   }
   $$("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
-  document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { $$("dialog[open]").forEach(d => d.close()); showTab(b.dataset.tabGo); scrollTo(0, 0); } });
+  document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { if (b.dataset.shopKind) shopKind = b.dataset.shopKind; $$("dialog[open]").forEach(d => d.close()); showTab(b.dataset.tabGo); scrollTo(0, 0); } });
   refreshMe();
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
   if (["feed", "shop", "me"].includes(tab0)) showTab(tab0);
