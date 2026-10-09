@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>คันนี้ดีไหม — One-Pager</title>
+<title>คันนี้ดีไหม: One-Pager</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet">
 <style>
   @page { size: A4; margin: 0; }
@@ -53,21 +53,21 @@
     <ul>
       <li>ViaBus / แอป ขสมก. บอก<b>ตำแหน่งและสาย</b> แต่ไม่บอกว่าคันนั้น<b>แอร์หรือพัดลม</b> รุ่นอะไร ค่าโดยสารเท่าไร</li>
       <li>ไม่มีช่องทางประเมิน<b>คุณภาพการขับ</b>: ขับหวาดเสียว ไม่จอดป้าย จอดกลางถนนส่งคน</li>
-      <li>ร้องเรียน 1348 ได้ แต่ผู้โดยสารไม่เห็นผล และคนอื่นไม่ได้ประโยชน์ — ต่างจาก Grab / LINE MAN ที่ให้ดาวคนขับได้ทุกเที่ยว</li>
+      <li>ร้องเรียน 1348 ได้ แต่ผู้โดยสารไม่เห็นผล และคนอื่นไม่ได้ประโยชน์ ต่างจาก Grab / LINE MAN ที่ให้ดาวคนขับได้ทุกเที่ยว</li>
     </ul>
   </div>
   <div class="card" style="flex:1">
     <h2>ลูกค้า</h2>
     <ul>
-      <li><b>ผู้โดยสารประจำ (กลุ่มหลัก)</b> — รู้ก่อนขึ้นว่าคันไหนดี มีที่สะท้อนปัญหาที่คนอื่นเห็นด้วย</li>
-      <li><b>ผู้ประกอบการเดินรถ (B2B, Phase 2)</b> — feedback รายคันแบบทันเวลา ใช้ประเมินคนขับ</li>
-      <li><b>หน่วยงานกำกับ (อนาคต)</b> — ข้อมูลรวมด้านความปลอดภัยแยกสาย / เขต / อู่</li>
+      <li><b>ผู้โดยสารประจำ (กลุ่มหลัก)</b> รู้ก่อนขึ้นว่าคันไหนดี มีที่สะท้อนปัญหาที่คนอื่นเห็นด้วย</li>
+      <li><b>ผู้ประกอบการเดินรถ (B2B, Phase 2)</b> ได้ feedback รายคันแบบทันเวลา ใช้ประเมินคนขับ</li>
+      <li><b>หน่วยงานกำกับ (อนาคต)</b> ได้ข้อมูลรวมด้านความปลอดภัยแยกสาย / เขต / อู่</li>
     </ul>
   </div>
 </div>
 
 <div>
-  <h2>โซลูชัน — ค้นเลขข้างรถ → รีวิวรายคัน → ได้แต้ม → แลกของ / feed</h2>
+  <h2>โซลูชัน: ค้นเลขข้างรถ → รีวิวรายคัน → ได้แต้ม → แลกของ / feed</h2>
   <div class="phones">
     <div class="ph done"><img src="img/real-search.png" alt=""><div class="cap"><b>1. ค้นหาเลขข้างรถ <span class="pill">ใช้ได้แล้ว</span></b>รุ่น สี ปี เขต อู่ ค่าโดยสาร (13 รุ่น 8 เขต)</div></div>
     <div class="ph"><img src="img/mock-bus.png" alt=""><div class="cap"><b>2. หน้ารถ 1 คัน</b>คะแนนเฉลี่ย + แยก 3 ด้าน · รีวิว / แจ้งเหตุ</div></div>
@@ -101,7 +101,7 @@
 
 <div class="row">
   <div class="card" style="flex:1.75;padding:1.6mm 2.2mm">
-    <h2>สถาปัตยกรรม — Two-Tier Network</h2>
+    <h2>สถาปัตยกรรม: Two-Tier Network</h2>
     <svg viewBox="0 0 1160 300" width="100%" style="max-height:30mm;display:block" font-family="IBM Plex Sans Thai, sans-serif">
       <defs>
         <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#6b6760"/></marker>
@@ -115,17 +115,17 @@
       <rect x="225" y="52" width="360" height="222" rx="16" fill="#eef8f3" stroke="#1d9a6c" stroke-width="2"/>
       <text x="243" y="80" font-size="19" fill="#1d9a6c" font-weight="700">Public subnet 10.0.1.0/24</text>
       <rect x="250" y="98" width="310" height="156" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
-      <text x="405" y="138" text-anchor="middle" font-size="25" font-weight="700" fill="#1d1b18">🖥️ Web tier — Nginx</text>
+      <text x="405" y="138" text-anchor="middle" font-size="25" font-weight="700" fill="#1d1b18">🖥️ Web tier: Nginx</text>
       <text x="405" y="166" text-anchor="middle" font-size="16" fill="#6b6760">static frontend + reverse proxy /api → App</text>
       <text x="405" y="200" text-anchor="middle" font-size="20" fill="#1d9a6c" font-family="IBM Plex Mono" font-weight="700">inbound 443 เท่านั้น</text>
       <text x="405" y="230" text-anchor="middle" font-size="15" fill="#6b6760">public IP · TLS Let's Encrypt · rate limit</text>
       <rect x="615" y="52" width="515" height="222" rx="16" fill="#fff5f5" stroke="#d3222a" stroke-width="2"/>
-      <text x="633" y="80" font-size="19" fill="#d3222a" font-weight="700">Private subnet 10.0.2.0/24 — ไม่มี public IP</text>
+      <text x="633" y="80" font-size="19" fill="#d3222a" font-weight="700">Private subnet 10.0.2.0/24 ไม่มี public IP</text>
       <rect x="640" y="98" width="260" height="72" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
-      <text x="770" y="128" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App tier — REST API :3000</text>
+      <text x="770" y="128" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App tier: REST API :3000</text>
       <text x="770" y="154" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">Node.js · JWT · รับจาก sg-web เท่านั้น</text>
       <rect x="640" y="190" width="260" height="72" rx="14" fill="#fff" stroke="#e3ded2" stroke-width="2"/>
-      <text x="770" y="220" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data tier — PostgreSQL :5432</text>
+      <text x="770" y="220" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data tier: PostgreSQL :5432</text>
       <text x="770" y="246" text-anchor="middle" font-size="15" fill="#b7791f" font-family="IBM Plex Mono" font-weight="700">รับจาก sg-app เท่านั้น</text>
       <rect x="935" y="105" width="175" height="60" rx="14" fill="#f6f3ec" stroke="#e3ded2" stroke-dasharray="5 4" stroke-width="2"/>
       <text x="1022" y="130" text-anchor="middle" font-size="18" font-weight="700" fill="#1d1b18">NAT Gateway</text>
@@ -139,7 +139,7 @@
     </svg>
   </div>
   <div class="card" style="flex:1;padding:1.6mm 2.2mm">
-    <h2>Security — เปิดสู่ Internet เฉพาะ 443</h2>
+    <h2>Security: เปิดสู่ Internet เฉพาะ 443</h2>
     <table>
       <tr><th>SG</th><th>Inbound</th><th>จาก</th></tr>
       <tr><td><b>sg-web</b></td><td class="m">443 (80→443)</td><td class="m">0.0.0.0/0</td></tr>
@@ -171,7 +171,7 @@
       <tr><td class="m">buses</td><td>fleet_no, zone, model, ac, fare (seed จาก data.js)</td></tr>
       <tr><td class="m" style="color:var(--red)">reviews</td><td>user_id, fleet_no, stars ×3, text, type, status</td></tr>
       <tr><td class="m">review_votes</td><td>UNIQUE(review_id, user_id)</td></tr>
-      <tr><td class="m">points_ledger</td><td>delta, reason, ref_id — ยอด = SUM(delta)</td></tr>
+      <tr><td class="m">points_ledger</td><td>delta, reason, ref_id (ยอด = SUM(delta))</td></tr>
       <tr><td class="m">rewards</td><td>type, cost, asset · user_rewards</td></tr>
     </table>
   </div>

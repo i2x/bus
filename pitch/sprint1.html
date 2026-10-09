@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>คันนี้ดีไหม — Sprint 1 Review</title>
+<title>คันนี้ดีไหม: Sprint 1 Review</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -93,7 +93,7 @@
     <span class="tag blue">Node.js · PostgreSQL · Nginx</span>
     <span class="tag green">ทีม 3 คน</span>
   </div>
-  <div class="foot"><span>Sprint 1 — งานที่เสร็จ · demo · แผน Sprint 2</span><span>ตุลาคม 2569</span></div>
+  <div class="foot"><span>Sprint 1: งานที่เสร็จ · demo · แผน Sprint 2</span><span>ตุลาคม 2569</span></div>
 </section>
 
 <!-- 2 scorecard -->
@@ -120,7 +120,7 @@
     <div style="flex:.75" class="grid">
       <div class="card"><h3>ใหม่ใน Sprint 1</h3><ul class="small">
         <li>เข้าสู่ระบบด้วย Google <span class="tag">mock</span> → JWT</li><li>คะแนนเฉลี่ยรายคัน แยก 3 ด้าน</li><li>เขียนรีวิว / แจ้งเหตุ</li><li>Feed ล่าสุด · มีประโยชน์ · แจ้งเหตุ</li><li>หน้า "ฉัน": แต้ม + ประวัติแต้ม</li><li>แท็บล่าง 4 หน้า</li></ul></div>
-      <div class="card"><h3>ต่างจากแผน</h3><p class="small">ใช้ <b>systemd</b> แทน Docker Compose — เครื่องที่ได้เป็น Ubuntu พร้อมใช้ เลยยังไม่ใส่ Docker (ค่อยดูอีกทีตอนแยก 2 เครื่อง) · ยังเป็น <b>เครื่องเดียว</b> (แยก tier ด้วยการ bind 127.0.0.1)</p></div>
+      <div class="card"><h3>ต่างจากแผน</h3><p class="small">ใช้ <b>systemd</b> แทน Docker Compose เพราะเครื่องที่ได้เป็น Ubuntu พร้อมใช้ เลยยังไม่ใส่ Docker (ค่อยดูอีกทีตอนแยก 2 เครื่อง) · ยังเป็น <b>เครื่องเดียว</b> (แยก tier ด้วยการ bind 127.0.0.1)</p></div>
     </div>
   </div>
   <div class="foot"><span>คันนี้ดีไหม? · Sprint 1</span><span>Scorecard</span></div>
@@ -152,9 +152,9 @@
   </div>
   <div class="row fill" style="margin-top:16px">
     <div class="card" style="flex:1.3">
-      <h3>กันโกงแต้ม — server ปฏิเสธเอง ไม่พึ่งหน้าเว็บ</h3>
+      <h3>กันโกงแต้ม: server ปฏิเสธเอง</h3>
       <table>
-        <thead><tr><th>ถ้า…</th><th>ผล</th><th>ทำด้วย</th></tr></thead>
+        <thead><tr><th>ถ้า</th><th>ผล</th><th>ทำด้วย</th></tr></thead>
         <tbody>
           <tr><td>รีวิวคันเดิมซ้ำในวันเดียว</td><td class="m nowrap">409</td><td>partial unique index <code>(user, fleet_no, day)</code></td></tr>
           <tr><td>กดมีประโยชน์ซ้ำ</td><td class="m nowrap">409</td><td>PRIMARY KEY <code>(review_id, user_id)</code></td></tr>
@@ -168,7 +168,7 @@
       <h3>ทำไมใช้ ledger</h3>
       <ul class="small">
         <li>ตรวจย้อนหลังได้ว่าแต้มมาจากไหน (หน้า "ฉัน" โชว์ประวัติ)</li>
-        <li>รีวิว + แต้ม อยู่ใน <b>transaction เดียว</b> — พังกลางทาง rollback ทั้งคู่</li>
+        <li>รีวิว + แต้ม อยู่ใน <b>transaction เดียว</b> พังกลางทาง rollback ทั้งคู่</li>
         <li>นับโหวตใช้ <code>SELECT … FOR UPDATE</code> กันกดพร้อมกันแล้วนับผิด</li>
         <li>Sprint 2: หักแต้ม −20 เมื่อ moderator ยืนยัน report</li>
       </ul>
@@ -180,7 +180,7 @@
 <!-- 5 architecture as deployed -->
 <section class="slide">
   <div class="kicker">Architecture · ที่ deploy จริงตอนนี้</div>
-  <h2>3 tier ครบ แต่ยังอยู่ <em>เครื่องเดียว</em> — API และ DB ไม่เปิดออกนอกเครื่อง</h2>
+  <h2>3 tier ครบ แต่ยังอยู่ <em>เครื่องเดียว</em> แต่ API และ DB ไม่เปิดออกนอกเครื่อง</h2>
   <div class="row fill">
     <svg viewBox="0 0 1160 430" style="flex:1.6;max-height:470px" font-family="IBM Plex Sans Thai, sans-serif">
       <defs>
@@ -199,18 +199,18 @@
       <rect x="410" y="20" width="740" height="390" rx="20" fill="none" stroke="#2b6fd6" stroke-dasharray="8 6" stroke-width="2"/>
       <text x="428" y="48" font-size="17" fill="#2b6fd6" font-weight="700">Container node89231 · Ubuntu 24.04 · ไม่มี public IP (10.104.11.4)</text>
       <rect x="440" y="80" width="290" height="160" rx="14" fill="#fff" stroke="#1d9a6c" stroke-width="2"/>
-      <text x="585" y="118" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🖥️ Web — Nginx</text>
+      <text x="585" y="118" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🖥️ Web: Nginx</text>
       <text x="585" y="144" text-anchor="middle" font-size="14" fill="#6b6760">static: index.html · data.js · pitch/</text>
       <text x="585" y="166" text-anchor="middle" font-size="14" fill="#6b6760">/api/* → 127.0.0.1:3000 · rate limit · CSP</text>
       <text x="585" y="204" text-anchor="middle" font-size="17" fill="#1d9a6c" font-family="IBM Plex Mono" font-weight="700">0.0.0.0:80</text>
       <text x="585" y="226" text-anchor="middle" font-size="13" fill="#6b6760">รับได้จาก LB เท่านั้น</text>
       <rect x="810" y="80" width="310" height="140" rx="14" fill="#fff" stroke="#d3222a" stroke-width="2"/>
-      <text x="965" y="116" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App — Node.js</text>
+      <text x="965" y="116" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">⚙️ App: Node.js</text>
       <text x="965" y="142" text-anchor="middle" font-size="14" fill="#6b6760">Express · JWT · systemd</text>
       <text x="965" y="164" text-anchor="middle" font-size="14" fill="#6b6760">รันเป็น user <tspan font-family="IBM Plex Mono">busapi</tspan> (ไม่ใช่ root)</text>
       <text x="965" y="198" text-anchor="middle" font-size="17" fill="#d3222a" font-family="IBM Plex Mono" font-weight="700">127.0.0.1:3000</text>
       <rect x="810" y="265" width="310" height="120" rx="14" fill="#fff" stroke="#d3222a" stroke-width="2"/>
-      <text x="965" y="302" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data — PostgreSQL 16</text>
+      <text x="965" y="302" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1b18">🗄️ Data: PostgreSQL 16</text>
       <text x="965" y="328" text-anchor="middle" font-size="14" fill="#6b6760">unix socket · peer auth · ไม่มีรหัสผ่าน DB</text>
       <text x="965" y="362" text-anchor="middle" font-size="17" fill="#d3222a" font-family="IBM Plex Mono" font-weight="700">127.0.0.1:5432</text>
       <rect x="440" y="280" width="290" height="100" rx="14" fill="#f6f3ec" stroke="#e3ded2" stroke-dasharray="5 4" stroke-width="2"/>
@@ -226,7 +226,7 @@
     <div class="card" style="flex:.75">
       <h3>เทียบกับแบบ Sprint 0</h3>
       <ul class="small">
-        <li>แบบ: 2 subnet · ตอนนี้: <b>1 เครื่อง</b> แยกด้วยการ bind <code>127.0.0.1</code> — จากนอกเครื่องต่อ 3000/5432 ไม่ได้</li>
+        <li>แบบ: 2 subnet · ตอนนี้: <b>1 เครื่อง</b> แยกด้วยการ bind <code>127.0.0.1</code> จากนอกเครื่องต่อ 3000/5432 ไม่ได้</li>
         <li>TLS ย้ายไปที่ LB ของ ruk-com (ไม่ต้องดูแล cert เอง)</li>
         <li>เครื่องไม่มี public IP → ทางเข้ามีแค่ LB (เว็บ) กับ SSH gate</li>
       </ul>
@@ -234,13 +234,13 @@
       <p class="small">เพิ่ม node ที่ 2 ใน environment เดียวกัน ย้าย API + DB ไป ให้ Nginx proxy ผ่าน private IP → ตรงกับแบบ 2-tier network</p>
     </div>
   </div>
-  <div class="foot"><span>คันนี้ดีไหม? · Sprint 1</span><span>Architecture — as deployed</span></div>
+  <div class="foot"><span>คันนี้ดีไหม? · Sprint 1</span><span>Architecture as deployed</span></div>
 </section>
 
 <!-- 6 security -->
 <section class="slide">
   <div class="kicker">Security · พร้อมหลักฐาน</div>
-  <h2>ที่ทำแล้วใน Sprint 1 — <em>ตรวจได้จริง</em> ไม่ใช่แค่ในแผน</h2>
+  <h2>ที่ทำแล้วใน Sprint 1 <em>ตรวจได้บน server จริง</em></h2>
   <div class="row fill">
     <div class="card" style="flex:1.45">
       <table>
@@ -323,7 +323,7 @@
       <h3>สิ่งที่เจอใน Sprint 1</h3>
       <ul class="small">
         <li>ruk-com ไม่มี VPC/subnet แบบ AWS ตรง ๆ → จะใช้หลาย node ใน environment เดียวกัน (ยังต้องลองว่ากั้น traffic ได้แค่ไหน)</li>
-        <li>เลขข้างรถอย่างเดียวไม่พอ ต้องมีเขต — UI เลยบอกให้เลือกเขตก่อนรีวิว</li>
+        <li>เลขข้างรถอย่างเดียวไม่พอ ต้องมีเขต UI เลยบอกให้เลือกเขตก่อนรีวิว</li>
         <li>Rate limit ทำงานจริง: ทีมโดน 429 ตอนใส่ข้อมูลทดสอบรัว ๆ → ตอนทดสอบกลุ่มอาจต้องปรับ burst</li>
         <li>LB ใส่ HSTS ให้อยู่แล้ว → header ซ้ำ ต้องเอาของ Nginx ออก (เรื่องเล็ก)</li>
       </ul>
@@ -370,7 +370,7 @@
 })();
 </script>
 <script>
-// ฝังเว็บจริงในกรอบมือถือ — ใช้ได้เมื่อเปิดสไลด์จาก server เดียวกัน (CSP frame-ancestors 'self')
+// ฝังเว็บจริงในกรอบมือถือ ใช้ได้เมื่อเปิดสไลด์จาก server เดียวกัน (CSP frame-ancestors 'self')
 (() => {
   const APP = "https://env-0241390.proen.app.ruk-com.cloud";
   if (location.origin !== APP) { document.querySelectorAll(".phone .fb").forEach(f => f.innerHTML += `<br><span class="m" style="font-size:11px">${APP}/pitch/sprint1.html</span>`); return; }
