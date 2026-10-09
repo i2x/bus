@@ -4,10 +4,10 @@ const SESSION_MIN = 10;   // ขั้นตอนรีวิว/เล่า�
 const STAR_STEPS = [["stars_driving", "การขับ"], ["stars_stops", "การจอดป้าย"], ["stars_condition", "สภาพรถ"]];
 const INCIDENTS = { breakdown: "รถเสีย", accident: "อุบัติเหตุ" };
 const REASONS = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์",
-  incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", report_upheld: "รีวิวผิดกติกา", route_tag: "บอกสาย", redeem: "แลกของ" };
+  incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", report_upheld: "รีวิวผิดกติกา", route_tag: "บอกสาย", redeem: "แลกของ", jury_majority: "โหวตตรงเสียงส่วนใหญ่ (ลูกขุน)" };
 const GTFS_NOTE = "ข้อมูลสายและป้าย: GTFS ของ สนข. อาจไม่ตรงกับเส้นทางจริงทุกสาย";
 
-module.exports = function lineBot({ pool, linePost, parseFleet, DATA, busRoutes, createReview, addFollow }) {
+module.exports = function lineBot({ pool, linePost, parseFleet, DATA, busRoutes, createReview, addFollow, juryVote }) {
   const reply = (token, messages) => linePost("/v2/bot/message/reply", { replyToken: token, messages: [].concat(messages).slice(0, 5) });
   const text = (t, quick) => ({ type: "text", text: t.slice(0, 4900), ...(quick ? { quickReply: { items: quick.slice(0, 13) } } : {}) });
   const qPost = (label, data, shown = label) => ({ type: "action", action: { type: "postback", label, data, displayText: shown } });
@@ -147,6 +147,15 @@ module.exports = function lineBot({ pool, linePost, parseFleet, DATA, busRoutes,
     if (a === "cancel") { await endSession(uid); return text("ยกเลิกแล้ว", HELP_QUICK); }
     const user = await userOf(uid);
     if (!user) return needLink(origin);
+    if (a === "jury") {
+      let r;
+      try { r = await juryVote(user.id, parseInt(p.get("c"), 10), p.get("v"), origin); }
+      catch (e) { return text(errText(e)); }
+      const c = r.closed;
+      if (!c) return text("บันทึกเสียงแล้ว ⚖️ ผลจะประกาศเมื่อปิดคดี");
+      return text(c.by === "god" ? `บันทึกแล้ว ลูกขุนโหวตไม่ขาด พระเจ้าโยนเหรียญ… ออก ${c.outcome === "hide" ? "🔥 เผา" : "🕊️ ปล่อย"} ⚔️ DEUS VULT`
+        : `บันทึกแล้ว คดีปิด: ${c.outcome === "hide" ? "🔥 เผา" : "🕊️ ปล่อย"} ${c.hide}–${c.keep}`);
+    }
     if (a === "follow") {
       try { await addFollow(user.id, p.get("kind"), p.get("t")); }
       catch (e) { return text(errText(e)); }

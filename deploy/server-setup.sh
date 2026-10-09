@@ -49,7 +49,8 @@ setenv() { grep -q "^$1=" $ENV && sed -i "s|^$1=.*|$1=$2|" $ENV || echo "$1=$2" 
 setenv HOST "$API_BIND"
 setenv ALLOW_FROM "$ALLOW_FROM"
 setenv TRUST_PROXY "${ALLOW_FROM:-loopback}"
-grep -q '^MODERATOR_EMAILS=' $ENV || echo 'MODERATOR_EMAILS=demo-fon@example.com' >> $ENV
+# ลูกขุน: เดโมใช้บัญชีทดสอบที่เพิ่งสมัคร → ไม่จำกัดอายุบัญชี (ใช้จริงลบบรรทัดนี้ ค่าเริ่ม = 7 วัน)
+grep -q '^JURY_MIN_AGE_DAYS=' $ENV || echo 'JURY_MIN_AGE_DAYS=0' >> $ENV
 chown root:busapi $ENV; chmod 640 $ENV
 
 # แยก node: พอร์ต 3000 รับจาก web node เท่านั้น (API เช็ก ALLOW_FROM ซ้ำอีกชั้น) · 5432 ฟังแค่ localhost อยู่แล้ว

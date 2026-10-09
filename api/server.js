@@ -17,7 +17,6 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
 // Google Sign-In จริงเปิดเมื่อมี client ID · โหมดจำลอง (@example.com) ปิดได้ด้วย MOCK_LOGIN=0
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const MOCK_LOGIN = process.env.MOCK_LOGIN !== "0";
-const MODERATOR_EMAILS = (process.env.MODERATOR_EMAILS || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 const COOKIE_SECURE = process.env.COOKIE_SECURE !== "0";
 const ACCESS_TTL = "15m", REFRESH_DAYS = 30;
 // แจ้งเตือนทาง LINE Messaging API — เปิดเมื่อตั้งครบ 3 ค่า (ไม่ครบ = ปิดฟีเจอร์ ปุ่มติดตามไม่ขึ้น)
@@ -41,10 +40,14 @@ const DATA = {};
 vm.runInNewContext(fs.readFileSync(dataPath, "utf8") + "\nthis.MODELS = MODELS; this.ZONES = ZONES; this.LIVERY = LIVERY;", DATA);
 
 // แต้ม (ค่าเริ่มต้น — ปรับได้หลังทดลองกับผู้ใช้)
-const PTS = { signup: 20, review: 10, review_detail: 5, helpful_received: 2, helpful_daily_cap: 30, incident_confirmed: 20, incident_confirm_votes: 3, report_upheld: -20, route_tag: 2, route_tag_daily: 5 };
+const PTS = { signup: 20, review: 10, review_detail: 5, helpful_received: 2, helpful_daily_cap: 30, incident_confirmed: 20, incident_confirm_votes: 3, report_upheld: -20, route_tag: 2, route_tag_daily: 5, jury_majority: 3, jury_daily_cap: 15 };
 const SEEN_DAYS = 60;   // สายที่เห็นรถคันนี้: นับเฉพาะช่วงนี้ (รถย้ายสายได้)
-const REPORT_AUTO_HIDE = 3;   // report ที่ยังไม่ตัดสินครบเท่านี้ → ซ่อนไว้ก่อนรอ moderator
+const REPORT_AUTO_HIDE = 3;   // report ที่ยังไม่ตัดสินครบเท่านี้ → ซ่อนไว้ก่อน แล้วเปิดคดีให้ลูกขุน
 const REPORT_REASONS = ["spam", "rude", "personal", "fake"];
+// ลูกขุนสุ่ม: 5 คน · 3 เสียงชนะ · 24 ชม. · คนหนึ่งค้างโหวตได้ไม่เกิน 3 คดี
+// มีสิทธิ์ = บัญชีอายุ >= min_age_days วัน และมีรีวิวที่แสดงอยู่ (กันสมัครหลายบัญชีมารอถูกสุ่ม) · เดโมตั้ง JURY_MIN_AGE_DAYS=0
+const JURY = { size: 5, win: 3, hours: 24, max_open: 3,
+  min_age_days: process.env.JURY_MIN_AGE_DAYS != null ? +process.env.JURY_MIN_AGE_DAYS : 7, sweep_ms: +process.env.JURY_SWEEP_MS || 5 * 60e3 };
 const AVATARS = ["🐸", "🦖", "🧢", "🐱", "🐼", "🦊", "🐧", "🐙", "🦉", "🐻"];
 
 const app = express();
@@ -88,15 +91,6 @@ const forbidden = (status, msg) => new HttpError(status, msg);
 // ของราคา 0 = ฟรี ทุกคนใช้ได้ · ของที่มีราคาต้องแลกก่อน
 const OWNS = (w, uid) => `(${w}.cost = 0 OR EXISTS (SELECT 1 FROM user_rewards ur WHERE ur.reward_id = ${w}.id AND ur.user_id = ${uid}))`;
 
-// role อ่านจาก DB ทุกครั้ง (ถอดสิทธิ์แล้วมีผลทันที ไม่ต้องรอ token หมดอายุ)
-const requireMod = wrap(async (req, _res, next) => {
-  req.user = readAuth(req);
-  if (!req.user) throw new HttpError(401, "กรุณาเข้าสู่ระบบ");
-  const r = await pool.query("SELECT role FROM users WHERE id = $1", [req.user.sub]);
-  if (r.rows[0]?.role !== "moderator") throw forbidden(403, "เฉพาะผู้ดูแล");
-  next();
-});
-
 // ---------- refresh token (cookie HttpOnly · เก็บใน DB เป็น sha256) ----------
 const sha256 = s => crypto.createHash("sha256").update(s).digest("hex");
 const COOKIE = "bus_rt";
@@ -123,6 +117,9 @@ async function tx(fn) {
 }
 const addPoints = (c, userId, delta, reason, refId = null) =>
   c.query("INSERT INTO points_ledger (user_id, delta, reason, ref_id) VALUES ($1, $2, $3, $4)", [userId, delta, reason, refId]);
+// แต้มจาก reason นี้ที่ได้ไปแล้ววันนี้ (เวลาไทย) · ใช้ทำเพดานต่อวัน
+const pointsToday = async (c, userId, reason) => (await c.query(`SELECT COALESCE(SUM(delta), 0)::int AS s FROM points_ledger
+  WHERE user_id = $1 AND reason = $2 AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'`, [userId, reason])).rows[0].s;
 
 // คอลัมน์รีวิว + สิ่งที่ "ฉัน" ทำกับรีวิวนั้น ($me = เลข parameter ของ user id, null = ไม่ได้เข้าสู่ระบบ)
 const reviewCols = me => `r.id, r.fleet_no, r.type, r.stars_driving, r.stars_stops, r.stars_condition, r.text, r.stop_name, r.route_id, r.route_label,
@@ -186,7 +183,6 @@ app.post("/api/auth/google", wrap(async (req, res) => {
     if (!GOOGLE_CLIENT_ID || !req.body.credential) throw bad("ชื่อบัญชีไม่ถูกต้อง");
     name = "ผู้โดยสาร";
   }
-  const role = MODERATOR_EMAILS.includes(acc.email) ? "moderator" : null;
   const out = await tx(async c => {
     let r = await c.query("SELECT id, display_name, avatar FROM users WHERE google_sub = $1", [acc.sub]);
     if (!r.rowCount) {
@@ -194,7 +190,6 @@ app.post("/api/auth/google", wrap(async (req, res) => {
     }
     let created = false;
     if (!r.rowCount) { r = { rows: [await newUser(c, { email: acc.email, name, google_sub: acc.sub })] }; created = true; }
-    if (role) await c.query("UPDATE users SET role = $2 WHERE id = $1", [r.rows[0].id, role]);
     await issueRefresh(c, res, r.rows[0].id);
     return { user: r.rows[0], created };
   });
@@ -288,7 +283,7 @@ app.post("/api/auth/logout", wrap(async (req, res) => {
 
 app.get("/api/me", requireAuth, wrap(async (req, res) => {
   const id = req.user.sub;
-  const [u, pts, ledger, cnt, owned, follows] = await Promise.all([
+  const [u, pts, ledger, cnt, owned, follows, jury] = await Promise.all([
     pool.query("SELECT id, email, display_name, avatar, avatar_img, role, created_at, line_user_id IS NOT NULL AS line_linked FROM users WHERE id = $1", [id]),
     pool.query("SELECT COALESCE(SUM(delta), 0)::int AS points FROM points_ledger WHERE user_id = $1", [id]),
     pool.query("SELECT delta, reason, ref_id, note, created_at FROM points_ledger WHERE user_id = $1 ORDER BY created_at DESC, id DESC LIMIT 20", [id]),
@@ -296,9 +291,10 @@ app.get("/api/me", requireAuth, wrap(async (req, res) => {
     pool.query("SELECT reward_id FROM user_rewards WHERE user_id = $1 ORDER BY created_at", [id]),
     pool.query(`SELECT f.kind, f.target, COALESCE(NULLIF(g.old_no, ''), g.no, f.target) AS label, g.name FROM follows f
       LEFT JOIN gtfs_routes g ON f.kind = 'route' AND g.id = f.target WHERE f.user_id = $1 ORDER BY f.created_at DESC`, [id]),
+    pool.query("SELECT count(*)::int AS jury FROM jury_seats s JOIN jury_cases k ON k.id = s.case_id WHERE s.user_id = $1 AND s.vote IS NULL AND k.status = 'open'", [id]),
   ]);
   if (!u.rowCount) throw new HttpError(401, "กรุณาเข้าสู่ระบบใหม่");
-  res.json({ user: u.rows[0], points: pts.rows[0].points, ledger: ledger.rows, owned: owned.rows.map(x => x.reward_id), follows: follows.rows, ...cnt.rows[0] });
+  res.json({ user: u.rows[0], points: pts.rows[0].points, ledger: ledger.rows, owned: owned.rows.map(x => x.reward_id), follows: follows.rows, ...cnt.rows[0], ...jury.rows[0] });
 }));
 
 // ลบบัญชี (PDPA) — รีวิว โหวต แต้ม ของที่แลก ลบตามทั้งหมด
@@ -401,11 +397,11 @@ async function notifyIncident(x) {
   const to = r.rows.map(y => y.line_user_id);
   if (!to.length) return;
   const text = `🚨 มีคนแจ้งเหตุ รถ ${x.fleet_no}${x.route ? ` · สาย ${x.route.label}` : ""}\n"${x.text.length > 140 ? x.text.slice(0, 140) + "…" : x.text}"\n\nดูรายละเอียด: ${x.origin}/#${x.fleet_no}`;
-  for (let i = 0; i < to.length; i += 500) await linePost("/v2/bot/message/multicast", { to: to.slice(i, i + 500), messages: [{ type: "text", text }] });
+  await multicast(to, [{ type: "text", text }]);
 }
 
 // แชตบอท: ค้นรถ/สาย/ป้ายใกล้ · รีวิว/แจ้งเหตุ/ติดตามผ่านปุ่ม (busRoutes ประกาศทีหลัง → ส่งเป็นฟังก์ชันห่อ)
-const chatBot = require("./linebot")({ pool, linePost, parseFleet, DATA, busRoutes: (c, f) => busRoutes(c, f), createReview, addFollow });
+const chatBot = require("./linebot")({ pool, linePost, parseFleet, DATA, busRoutes: (c, f) => busRoutes(c, f), createReview, addFollow, juryVote });
 
 // ใช้รูปโปรไฟล์ที่แลกมาแล้ว
 app.post("/api/me/avatar", requireAuth, wrap(async (req, res) => {
@@ -624,9 +620,7 @@ app.post("/api/reviews/:id/helpful", requireAuth, wrap(async (req, res) => {
     const count = rv.helpful_count + 1;
     await c.query("UPDATE reviews SET helpful_count = $2 WHERE id = $1", [id, count]);
     // ผู้เขียนได้ +2 ต่อโหวต แต่ไม่เกินเพดานต่อวัน
-    const today = await c.query(`SELECT COALESCE(SUM(delta), 0)::int AS s FROM points_ledger
-      WHERE user_id = $1 AND reason = 'helpful_received' AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'`, [rv.user_id]);
-    if (today.rows[0].s + PTS.helpful_received <= PTS.helpful_daily_cap) await addPoints(c, rv.user_id, PTS.helpful_received, "helpful_received", id);
+    if (await pointsToday(c, rv.user_id, "helpful_received") + PTS.helpful_received <= PTS.helpful_daily_cap) await addPoints(c, rv.user_id, PTS.helpful_received, "helpful_received", id);
     // แจ้งเหตุที่มีคนยืนยันครบ → โบนัสครั้งเดียว
     if (rv.type === "incident" && count === PTS.incident_confirm_votes) await addPoints(c, rv.user_id, PTS.incident_confirmed, "incident_confirmed", id);
     return { id, helpful_count: count, voted: true };
@@ -656,7 +650,7 @@ app.post("/api/reviews/:id/react", requireAuth, wrap(async (req, res) => {
   res.json(out);
 }));
 
-// รายงานรีวิว · ครบ REPORT_AUTO_HIDE คน → ซ่อนไว้ก่อน รอ moderator ตัดสิน
+// รายงานรีวิว · ครบ REPORT_AUTO_HIDE คน → ซ่อนไว้ก่อน แล้วเปิดคดีให้ลูกขุน
 app.post("/api/reviews/:id/report", requireAuth, wrap(async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const reason = req.body.reason;
@@ -664,50 +658,154 @@ app.post("/api/reviews/:id/report", requireAuth, wrap(async (req, res) => {
   if (!REPORT_REASONS.includes(reason)) throw bad("เลือกเหตุผลที่รายงาน");
   const uid = req.user.sub;
   const out = await tx(async c => {
-    const rv = (await c.query("SELECT id, user_id FROM reviews WHERE id = $1 AND status = 'visible' FOR UPDATE", [id])).rows[0];
+    const rv = (await c.query("SELECT id, user_id, fleet_no, text FROM reviews WHERE id = $1 AND status = 'visible' FOR UPDATE", [id])).rows[0];
     if (!rv) throw new HttpError(404, "ไม่พบรีวิวนี้");
     if (rv.user_id === uid) throw bad("รายงานรีวิวตัวเองไม่ได้");
     const ins = await c.query("INSERT INTO reports (review_id, reporter_id, reason) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [id, uid, reason]);
     if (!ins.rowCount) throw new HttpError(409, "รายงานรีวิวนี้ไปแล้ว");
     const open = (await c.query("SELECT count(*)::int AS n FROM reports WHERE review_id = $1 AND status = 'open'", [id])).rows[0].n;
     const hidden = open >= REPORT_AUTO_HIDE;
-    if (hidden) await c.query("UPDATE reviews SET status = 'hidden' WHERE id = $1", [id]);
-    return { id, hidden };
-  });
-  res.status(201).json(out);
-}));
-
-// ---------- moderator ----------
-app.get("/api/mod/reports", requireMod, wrap(async (_req, res) => {
-  const r = await pool.query(`
-    SELECT r.id, r.fleet_no, r.type, r.text, r.status, r.created_at, u.display_name, u.avatar, u.avatar_img,
-           count(*)::int AS reports, json_agg(p.reason ORDER BY p.created_at) AS reasons, min(p.created_at) AS first_report
-    FROM reports p JOIN reviews r ON r.id = p.review_id JOIN users u ON u.id = r.user_id
-    WHERE p.status = 'open'
-    GROUP BY r.id, u.id ORDER BY count(*) DESC, min(p.created_at) LIMIT 50`);
-  res.json({ items: r.rows });
-}));
-
-// hide = ผิดกติกาจริง → ซ่อน + หักผู้เขียน −20 (ครั้งเดียวต่อรีวิว) · keep = ไม่ผิด → แสดงกลับ
-app.post("/api/mod/reviews/:id/resolve", requireMod, wrap(async (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const action = req.body.action;
-  if (!id || !["hide", "keep"].includes(action)) throw bad("action ต้องเป็น hide หรือ keep");
-  const out = await tx(async c => {
-    const rv = (await c.query("SELECT id, user_id FROM reviews WHERE id = $1 FOR UPDATE", [id])).rows[0];
-    if (!rv) throw new HttpError(404, "ไม่พบรีวิวนี้");
-    const upd = await c.query(`UPDATE reports SET status = $2, resolved_by = $3, resolved_at = now() WHERE review_id = $1 AND status = 'open'`,
-      [id, action === "hide" ? "upheld" : "dismissed", req.user.sub]);
-    if (!upd.rowCount) throw new HttpError(409, "ไม่มีรายงานค้างของรีวิวนี้");
-    await c.query("UPDATE reviews SET status = $2 WHERE id = $1", [id, action === "hide" ? "hidden" : "visible"]);
-    let penalty = 0;
-    if (action === "hide") {
-      const done = await c.query("SELECT 1 FROM points_ledger WHERE user_id = $1 AND reason = 'report_upheld' AND ref_id = $2", [rv.user_id, id]);
-      if (!done.rowCount) { await addPoints(c, rv.user_id, PTS.report_upheld, "report_upheld", id); penalty = PTS.report_upheld; }
+    let jury = null;
+    if (hidden) {
+      await c.query("UPDATE reviews SET status = 'hidden' WHERE id = $1", [id]);
+      jury = await openCase(c, rv);
     }
-    return { id, status: action === "hide" ? "hidden" : "visible", resolved: upd.rowCount, penalty };
+    return { id, hidden, jury };
   });
-  res.json(out);
+  if (out.jury) notifyJurors(out.jury, publicOrigin(req)).catch(e => console.error("line jury:", e.message));
+  res.status(201).json({ id: out.id, hidden: out.hidden });
+}));
+
+// ---------- ลูกขุน (ทีมล่าแม่มด) ----------
+// เปิดคดี: สุ่มจากคนที่ไม่ใช่ผู้เขียน ไม่ใช่คนรายงาน · ได้ไม่ถึง 5 คนก็เปิดด้วยเท่าที่มี (ครบเวลาไม่มีเสียง = พระเจ้าตัดสิน)
+async function openCase(c, rv) {
+  const k = (await c.query("INSERT INTO jury_cases (review_id, deadline) VALUES ($1, now() + make_interval(hours => $2)) RETURNING id",
+    [rv.id, JURY.hours])).rows[0];
+  await c.query("UPDATE reports SET case_id = $2 WHERE review_id = $1 AND status = 'open'", [rv.id, k.id]);
+  const j = await c.query(`INSERT INTO jury_seats (case_id, user_id)
+    SELECT $1, u.id FROM users u
+    WHERE u.id <> $3
+      AND NOT EXISTS (SELECT 1 FROM reports p WHERE p.review_id = $2 AND p.reporter_id = u.id)
+      AND u.created_at <= now() - make_interval(days => $4)
+      AND EXISTS (SELECT 1 FROM reviews r WHERE r.user_id = u.id AND r.status = 'visible')
+      AND (SELECT count(*) FROM jury_seats s JOIN jury_cases o ON o.id = s.case_id WHERE s.user_id = u.id AND s.vote IS NULL AND o.status = 'open') < $5
+    ORDER BY random() LIMIT $6
+    RETURNING user_id`, [k.id, rv.id, rv.user_id, JURY.min_age_days, JURY.max_open, JURY.size]);
+  return { id: k.id, fleet_no: rv.fleet_no, text: rv.text, jurors: j.rows.map(x => x.user_id) };
+}
+const tally = async (c, id) => (await c.query(`SELECT count(*) FILTER (WHERE vote = 'hide')::int AS hide,
+  count(*) FILTER (WHERE vote = 'keep')::int AS keep, count(*) FILTER (WHERE vote IS NULL)::int AS pending FROM jury_seats WHERE case_id = $1`, [id])).rows[0];
+// [ผล, ใครตัดสิน] หรือ null = ยังไม่จบ · final = หมดเวลาแล้ว
+function verdictOf(t, final) {
+  if (t.hide >= JURY.win) return ["hide", "jury"];
+  if (t.keep >= JURY.win) return ["keep", "jury"];
+  if (!final && t.pending) return null;
+  if (t.hide !== t.keep) return [t.hide > t.keep ? "hide" : "keep", "jury"];
+  return [crypto.randomInt(2) ? "hide" : "keep", "god"];   // เสมอหรือไม่มีใครโหวต: DEUS VULT
+}
+// ปิดคดี · ลูกขุนเผา = หักผู้เขียน −20 · พระเจ้าเผา = ซ่อนแต่ไม่หัก (เหรียญไม่ใช่หลักฐาน) · ลูกขุนฝั่งชนะ +3 (เพดานต่อวัน)
+async function closeCase(c, id, outcome, by) {
+  const reviewId = (await c.query("UPDATE jury_cases SET status = $2, decided_by = $3, closed_at = now() WHERE id = $1 RETURNING review_id",
+    [id, outcome, by])).rows[0].review_id;
+  const rv = (await c.query("UPDATE reviews SET status = $2 WHERE id = $1 RETURNING id, user_id, fleet_no",
+    [reviewId, outcome === "hide" ? "hidden" : "visible"])).rows[0];
+  await c.query("UPDATE reports SET status = $2, resolved_at = now() WHERE review_id = $1 AND status = 'open'", [rv.id, outcome === "hide" ? "upheld" : "dismissed"]);
+  if (outcome === "hide" && by === "jury") {
+    const done = await c.query("SELECT 1 FROM points_ledger WHERE user_id = $1 AND reason = 'report_upheld' AND ref_id = $2", [rv.user_id, rv.id]);
+    if (!done.rowCount) await addPoints(c, rv.user_id, PTS.report_upheld, "report_upheld", rv.id);
+  }
+  if (by === "jury") {
+    const won = await c.query("SELECT user_id FROM jury_seats WHERE case_id = $1 AND vote = $2", [id, outcome]);
+    for (const w of won.rows)
+      if (await pointsToday(c, w.user_id, "jury_majority") + PTS.jury_majority <= PTS.jury_daily_cap) await addPoints(c, w.user_id, PTS.jury_majority, "jury_majority", id);
+  }
+  return { id, fleet_no: rv.fleet_no, outcome, by, ...(await tally(c, id)) };
+}
+async function juryVote(uid, caseId, vote, origin) {
+  if (!Number.isInteger(caseId) || caseId <= 0) throw bad("คดีไม่ถูกต้อง");
+  if (!["hide", "keep"].includes(vote)) throw bad("โหวตได้แค่ เผา หรือ ปล่อย");
+  const out = await tx(async c => {
+    const k = (await c.query("SELECT status FROM jury_cases WHERE id = $1 FOR UPDATE", [caseId])).rows[0];
+    if (!k) throw new HttpError(404, "ไม่พบคดีนี้");
+    const seat = (await c.query("SELECT vote FROM jury_seats WHERE case_id = $1 AND user_id = $2", [caseId, uid])).rows[0];
+    if (!seat) throw forbidden(403, "คุณไม่ได้เป็นลูกขุนคดีนี้");
+    if (seat.vote) throw new HttpError(409, "โหวตคดีนี้ไปแล้ว");
+    if (k.status !== "open") throw new HttpError(409, "คดีนี้ตัดสินไปแล้ว");
+    await c.query("UPDATE jury_seats SET vote = $3, voted_at = now() WHERE case_id = $1 AND user_id = $2", [caseId, uid, vote]);
+    const v = verdictOf(await tally(c, caseId), false);
+    return { id: caseId, vote, closed: v ? await closeCase(c, caseId, ...v) : null };
+  });
+  if (out.closed) notifyVerdict(out.closed, origin).catch(e => console.error("line verdict:", e.message));
+  return out;
+}
+// คดีที่หมดเวลา → ตัดสินด้วยเสียงที่มี หรือให้พระเจ้าโยนเหรียญ
+async function sweepJury() {
+  const due = await pool.query("SELECT id FROM jury_cases WHERE status = 'open' AND deadline <= now() ORDER BY deadline LIMIT 50");
+  for (const { id } of due.rows) {
+    const closed = await tx(async c => {
+      const k = (await c.query("SELECT status FROM jury_cases WHERE id = $1 FOR UPDATE", [id])).rows[0];
+      return k && k.status === "open" ? closeCase(c, id, ...verdictOf(await tally(c, id), true)) : null;
+    });
+    if (closed) notifyVerdict(closed).catch(e => console.error("line verdict:", e.message));
+  }
+}
+setInterval(() => sweepJury().catch(e => console.error("jury sweep:", e.message)), JURY.sweep_ms);
+
+const VERDICT_TXT = { hide: "🔥 เผา", keep: "🕊️ ปล่อย" };
+const REPORT_TXT = { spam: "สแปม", rude: "หยาบคาย", personal: "ข้อมูลส่วนตัว", fake: "ไม่จริง" };
+const lineIdsOf = async (sql, args) => (await pool.query(`SELECT u.line_user_id FROM users u WHERE u.line_user_id IS NOT NULL AND u.id IN (${sql})`, args)).rows.map(x => x.line_user_id);
+async function multicast(to, messages) {
+  for (let i = 0; i < to.length; i += 500) await linePost("/v2/bot/message/multicast", { to: to.slice(i, i + 500), messages });
+}
+async function notifyJurors(k, origin) {
+  if (!LINE_ON || !k.jurors.length) return;
+  const to = await lineIdsOf("SELECT unnest($1::int[])", [k.jurors]);
+  if (!to.length) return;
+  const rs = (await pool.query("SELECT reason, count(*)::int AS n FROM reports WHERE case_id = $1 GROUP BY 1 ORDER BY 2 DESC", [k.id])).rows;
+  const q = (label, v) => ({ type: "action", action: { type: "postback", label, data: `a=jury&c=${k.id}&v=${v}`, displayText: label } });
+  await multicast(to, [{ type: "text",
+    text: `⚖️ คุณถูกสุ่มเป็นลูกขุน (ทีมล่าแม่มด)\nรีวิวรถ ${k.fleet_no}\n"${k.text.length > 200 ? k.text.slice(0, 200) + "…" : k.text}"\n\nถูกรายงานว่า: ${rs.map(r => `${REPORT_TXT[r.reason] || r.reason} ×${r.n}`).join(", ")}\nผิดกติกาไหม? โหวตได้ใน ${JURY.hours} ชม. โหวตตรงกับเสียงส่วนใหญ่ได้ +${PTS.jury_majority} แต้ม\nไม่มีใครโหวต พระเจ้าจะตัดสินเอง ⚔️\n\nดูในเว็บ: ${origin}/#jury`,
+    quickReply: { items: [q("🔥 เผา (ผิดกติกา)", "hide"), q("🕊️ ปล่อย (ไม่ผิด)", "keep")] } }]);
+}
+async function notifyVerdict(v, origin = process.env.PUBLIC_URL || "") {
+  if (!LINE_ON) return;
+  const to = await lineIdsOf("SELECT user_id FROM jury_seats WHERE case_id = $1", [v.id]);
+  if (!to.length) return;
+  const head = v.by === "god"
+    ? `⚖️ คดีรถ ${v.fleet_no}: ลูกขุนโหวตไม่ขาด (${v.hide}–${v.keep})\nพระเจ้าโยนเหรียญ… ออก ${VERDICT_TXT[v.outcome]}\n⚔️ DEUS VULT`
+    : `⚖️ คำพิพากษา รถ ${v.fleet_no}: ${VERDICT_TXT[v.outcome]} ${v.hide}–${v.keep}\nใครโหวตตรงกับผลได้ +${PTS.jury_majority} แต้ม`;
+  await multicast(to, [{ type: "text", text: head + (origin ? `\n\n${origin}/#verdicts` : "") }]);
+}
+
+// คดีที่ฉันเป็นลูกขุนและยังไม่ได้โหวต · ไม่บอกว่าใครรายงาน และไม่บอกเสียงคนอื่น
+app.get("/api/jury", requireAuth, wrap(async (req, res) => {
+  const r = await pool.query(`SELECT k.id, k.deadline, r.fleet_no, r.type, r.text, r.created_at,
+      (SELECT COALESCE(json_object_agg(x.reason, x.n), '{}') FROM (SELECT reason, count(*)::int AS n FROM reports WHERE case_id = k.id GROUP BY 1) x) AS reasons,
+      (SELECT count(*)::int FROM jury_seats WHERE case_id = k.id) AS seats
+    FROM jury_seats s JOIN jury_cases k ON k.id = s.case_id JOIN reviews r ON r.id = k.review_id
+    WHERE s.user_id = $1 AND s.vote IS NULL AND k.status = 'open' ORDER BY k.deadline`, [req.user.sub]);
+  res.json({ items: r.rows, win: JURY.win });
+}));
+app.post("/api/jury/:id/vote", requireAuth, wrap(async (req, res) => {
+  const out = await juryVote(req.user.sub, parseInt(req.params.id, 10), req.body.vote, publicOrigin(req));
+  const c = out.closed;
+  res.json({ id: out.id, vote: out.vote, closed: c ? { outcome: c.outcome, by: c.by, hide: c.hide, keep: c.keep } : null });
+}));
+// คำพิพากษา (สาธารณะ) · ลูกขุนเรียงตามชื่อ ไม่ผูกกับเสียง · เผาเพราะข้อมูลส่วนตัว = ไม่แสดงข้อความ
+app.get("/api/verdicts", wrap(async (req, res) => {
+  const f = req.query.fleet ? parseFleet(req.query.fleet) : null;
+  if (req.query.fleet && !f) throw bad("เลขข้างรถไม่ถูกต้อง");
+  const r = await pool.query(`SELECT k.id, k.status AS outcome, k.decided_by AS by, k.closed_at, r.fleet_no, r.type,
+      CASE WHEN k.status = 'hide' AND EXISTS (SELECT 1 FROM reports p WHERE p.case_id = k.id AND p.reason = 'personal') THEN NULL ELSE r.text END AS text,
+      (SELECT COALESCE(json_object_agg(x.reason, x.n), '{}') FROM (SELECT reason, count(*)::int AS n FROM reports WHERE case_id = k.id GROUP BY 1) x) AS reasons,
+      (SELECT count(*)::int FROM jury_seats WHERE case_id = k.id AND vote = 'hide') AS hide,
+      (SELECT count(*)::int FROM jury_seats WHERE case_id = k.id AND vote = 'keep') AS keep,
+      (SELECT COALESCE(json_agg(json_build_object('display_name', u.display_name, 'avatar', u.avatar, 'avatar_img', u.avatar_img) ORDER BY u.display_name, u.id), '[]')
+         FROM jury_seats s JOIN users u ON u.id = s.user_id WHERE s.case_id = k.id) AS jurors
+    FROM jury_cases k JOIN reviews r ON r.id = k.review_id
+    WHERE k.status <> 'open' AND ($1::text IS NULL OR r.fleet_no = $1)
+    ORDER BY k.closed_at DESC LIMIT 30`, [f ? f.fleet_no : null]);
+  res.json({ items: r.rows });
 }));
 
 app.get("/api/feed", optionalAuth, wrap(async (req, res) => {

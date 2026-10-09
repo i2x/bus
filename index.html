@@ -51,10 +51,11 @@
 
  <section class="view" id="v-feed" hidden>
   <div class="glass-bar sticky top-[calc(56px+env(safe-area-inset-top))] z-20 -mx-4 flex items-center gap-2 px-4 pb-3">
-    <div class="seg flex-1" role="tablist">
+    <div class="seg flex-1 [&>button]:px-1.5" role="tablist">
       <button class="on" type="button" data-feed="new">ล่าสุด</button>
       <button type="button" data-feed="top">มีประโยชน์</button>
       <button type="button" data-feed="incident">แจ้งเหตุ</button>
+      <button type="button" data-feed="court">ศาลเตี้ย</button>
     </div>
     <button class="icon-btn" type="button" id="feedReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button>
   </div>
@@ -121,7 +122,7 @@
       <button class="icon-btn" type="button" data-close aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="grid gap-1.5" id="rReasons"></div>
-    <p class="mt-3 text-[12.5px] leading-relaxed text-mute">ผู้ดูแลจะตรวจทุกรายงาน · มีคนรายงานครบ 3 คน รีวิวจะถูกซ่อนไว้ก่อน · ถ้าผิดกติกาจริง ผู้เขียนโดนหัก 20 แต้ม</p>
+    <p class="mt-3 text-[12.5px] leading-relaxed text-mute">มีคนรายงานครบ 3 คน รีวิวจะถูกซ่อนไว้ก่อน แล้วสุ่มผู้ใช้ 5 คนเป็นลูกขุนตัดสิน ถ้าลูกขุนบอกว่าผิด ผู้เขียนโดนหัก 20 แต้ม</p>
     <p class="text-[13px] font-medium text-alarm" id="rErr" role="alert"></p>
     <button class="btn-alarm mt-2 w-full" id="rSubmit" type="submit"><i class="fa-solid fa-flag"></i>ส่งรายงาน</button>
   </form>
@@ -589,8 +590,9 @@
     box.innerHTML = loading("กำลังโหลดรีวิว…");
     rvCtrl = new AbortController();
     const signal = rvCtrl.signal;
-    Promise.all([api(`/buses/${fleet}`, { signal }), api(`/buses/${fleet}/reviews?sort=${rvSort}`, { signal })])
-      .then(([b, list]) => { if (curBus === fleet) box.innerHTML = rvBox(b, list.items); })
+    Promise.all([api(`/buses/${fleet}`, { signal }), api(`/buses/${fleet}/reviews?sort=${rvSort}`, { signal }),
+      api(`/verdicts?fleet=${fleet}`, { signal }).catch(e => { if (e.name === "AbortError") throw e; return { items: [] }; })])
+      .then(([b, list, vs]) => { if (curBus === fleet) box.innerHTML = rvBox(b, list.items, vs.items); })
       .catch(e => { if (e.name !== "AbortError" && curBus === fleet) box.innerHTML = problem(e.message); });
   }
   function verdict(s) {
@@ -611,7 +613,7 @@
       <div class="mt-1 text-[11.5px] text-mute">${seen.length ? `จากผู้โดยสาร 60 วันล่าสุด · ล่าสุด ${ago(last)} · รถอาจย้ายสายได้` : "เห็นคันนี้วิ่งสายไหน บอกได้เลย ไม่ต้องเขียนรีวิว"}</div>
     </div>`;
   }
-  function rvBox(b, items) {
+  function rvBox(b, items, verdicts = []) {
     const s = b.stats;
     const bar = (l, v) => `<div class="mt-1.5 flex items-center gap-2 text-[12.5px]"><span class="w-14 shrink-0 text-mute">${l}</span><div class="bar-t"><i style="width:${(v || 0) * 20}%"></i></div><b class="num w-7 text-right">${v ? v.toFixed(1) : "–"}</b></div>`;
     return `
@@ -637,7 +639,33 @@
       ${items.length ? `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5"><div class="eyebrow flex-1">รีวิวและเหตุ</div>
           <div class="seg !p-0.5"><button class="${rvSort === "new" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="new">ล่าสุด</button><button class="${rvSort === "helpful" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="helpful">มีประโยชน์</button></div></div>`
         + items.map(r => reviewItem(r)).join("")
-        : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ยังไม่มีรีวิวคันนี้ — นั่งอยู่บนคันนี้ใช่ไหม? เขียนรีวิวแรกได้เลย</p>`}`;
+        : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ยังไม่มีรีวิวคันนี้ — นั่งอยู่บนคันนี้ใช่ไหม? เขียนรีวิวแรกได้เลย</p>`}
+      ${verdicts.length ? `<div class="border-t border-line px-4 py-2.5"><div class="eyebrow">⚖️ ศาลเตี้ย · คดีของคันนี้</div></div>` + verdicts.map(v => verdictItem(v, false, false)).join("") : ""}`;
+  }
+
+  // ---------- ศาลเตี้ย: คำพิพากษาของลูกขุน (ทีมล่าแม่มด) ----------
+  const VERDICT = { hide: ["🔥", "เผา"], keep: ["🕊️", "ปล่อย"] };
+  const reasonTags = reasons => Object.entries(reasons || {}).map(([k, n]) => `<span class="tag bg-sunk text-mute"><i class="fa-solid fa-flag"></i>${REPORT_LABEL[k] || esc(k)} ×${n}</span>`).join("");
+  function verdictItem(v, first, showBus = true) {
+    const [ic, word] = VERDICT[v.outcome], god = v.by === "god";
+    const note = god ? (v.outcome === "hide" ? "ซ่อนรีวิว ไม่หักแต้ม (เหรียญไม่ใช่หลักฐาน)" : "รีวิวกลับมาแสดง")
+      : v.outcome === "hide" ? "ลูกขุนลงมติว่าผิดกติกา ผู้เขียน −20 แต้ม" : "ลูกขุนลงมติว่าไม่ผิด รีวิวกลับมาแสดง";
+    return `<article class="${first ? "" : "border-t border-line"} px-4 py-3.5">
+      <div class="flex items-center gap-2">${showBus ? `<button type="button" data-q="${esc(v.fleet_no)}">${miniPlate(v.fleet_no)}</button>` : ""}<span class="flex-1 text-[12px] text-mute">${v.type === "incident" ? "แจ้งเหตุ" : "รีวิว"} · ปิดคดี ${ago(v.closed_at)}</span></div>
+      ${v.text == null ? `<p class="mt-2 text-[13.5px] text-mute italic">ข้อความถูกปิด เพราะมีข้อมูลส่วนตัว</p>`
+        : `<p class="mt-2 text-[14.5px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">“${esc(v.text)}”</p>`}
+      <div class="mt-2 flex flex-wrap gap-1">${reasonTags(v.reasons)}</div>
+      <div class="mt-3 flex items-center gap-3 rounded-xl bg-sunk px-3 py-2.5">
+        <span class="${god ? "coin" : "text-[32px] leading-none"}" aria-hidden="true">${ic}</span>
+        <div class="min-w-0 flex-1 leading-tight">
+          <div class="font-display text-[20px] font-bold ${v.outcome === "hide" ? "text-alarm" : "text-ok"}">${word} <span class="num text-[15px] font-semibold text-mute">${v.hide}–${v.keep}</span></div>
+          ${god ? `<div class="mt-0.5 text-[12.5px] font-semibold">ลูกขุนโหวตไม่ขาด พระเจ้าโยนเหรียญ ⚔️ DEUS VULT</div>` : ""}
+          <div class="mt-0.5 text-[12px] text-mute">${note}</div>
+        </div>
+      </div>
+      <div class="mt-2.5 text-[12px] font-semibold text-mute">🧙 ทีมล่าแม่มด${v.jurors.length ? ` ${v.jurors.length} คน` : ": ไม่มีใครถูกสุ่ม"}</div>
+      <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1.5">${v.jurors.map(j => `<span class="flex items-center gap-1.5 text-[12.5px]">${avatar(j, 22)}${esc(j.display_name)}</span>`).join("")}</div>
+    </article>`;
   }
 
   // ---------- เขียนรีวิว / แจ้งเหตุ ----------
@@ -918,6 +946,7 @@
   function updatePts() {
     $("#ptsPill").hidden = !me;
     if (me) $("#ptsPill span").textContent = me.points;
+    $('[data-tab="me"]').classList.toggle("dot", !!(me && me.jury));   // มีคดีรอโหวต
     if (!$("#v-me").hidden) renderMe();
     if (!$("#v-shop").hidden) renderShop();
   }
@@ -1009,7 +1038,7 @@
     try {
       const r = await api(`/reviews/${reportId}/report`, { method: "POST", body: { reason: new FormData(e.target).get("reason") } });
       sheet("#reportSheet").hide();
-      toast(r.hidden ? "ส่งแล้ว — รีวิวนี้ถูกซ่อนไว้รอผู้ดูแลตรวจ" : "ส่งรายงานแล้ว ผู้ดูแลจะตรวจให้");
+      toast(r.hidden ? "ส่งแล้ว รีวิวนี้ถูกซ่อนไว้ รอลูกขุนตัดสิน ⚖️" : "ส่งรายงานแล้ว ครบ 3 คนจะขึ้นศาลให้ลูกขุนตัดสิน");
       $$(`[data-report="${reportId}"]`).forEach(b => { b.disabled = true; b.innerHTML = `<i class="fa-solid fa-flag"></i>`; });
       if (r.hidden) { if (curBus) loadBus(curBus); if (!$("#v-feed").hidden) loadFeed(); }
     } catch (err) { $("#rErr").textContent = err.message; }
@@ -1020,19 +1049,17 @@
   async function loadFeed() {
     const el = $("#feedList");
     el.innerHTML = `<div class="card">${loading("กำลังโหลด…")}</div>`;
-    const q = feedSort === "incident" ? "?type=incident" : feedSort === "top" ? "?sort=top" : "";
+    const q = feedSort === "incident" ? "?type=incident" : feedSort === "top" ? "?sort=top" : "", court = feedSort === "court";
     try {
-      const r = await api("/feed" + q);
+      const r = await api(court ? "/verdicts" : "/feed" + q);
+      const intro = court ? `<p class="mb-3 px-1 text-[12.5px] leading-relaxed text-mute">รีวิวที่ถูกรายงานครบ 3 คน สุ่มผู้ใช้ 5 คนเป็นลูกขุนตัดสิน ได้ 3 เสียงก่อนชนะ ครบ 24 ชม. แล้วไม่มีใครโหวต พระเจ้าโยนเหรียญ ⚔️</p>` : "";
       el.innerHTML = r.items.length
-        ? `<div class="card rise overflow-hidden">${r.items.map((x, i) => reviewItem(x, true, i === 0)).join("")}</div>`
-        : `<div class="card p-6 text-center"><p class="text-[14px]">${feedSort === "incident" ? "ยังไม่มีใครแจ้งเหตุ" : "ยังไม่มีรีวิว"}</p><button class="btn-quiet mt-3" type="button" data-tab-go="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นเลขรถที่นั่งอยู่</button></div>`;
+        ? `${intro}<div class="card rise overflow-hidden">${r.items.map((x, i) => court ? verdictItem(x, i === 0) : reviewItem(x, true, i === 0)).join("")}</div>`
+        : `${intro}<div class="card p-6 text-center"><p class="text-[14px]">${court ? "ยังไม่มีคดี" : feedSort === "incident" ? "ยังไม่มีใครแจ้งเหตุ" : "ยังไม่มีรีวิว"}</p><button class="btn-quiet mt-3" type="button" data-tab-go="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นเลขรถที่นั่งอยู่</button></div>`;
     } catch (e) { el.innerHTML = `<div class="card">${problem(e.message)}</div>`; }
   }
-  $$("[data-feed]").forEach(b => b.onclick = () => {
-    feedSort = b.dataset.feed;
-    $$("[data-feed]").forEach(x => x.classList.toggle("on", x === b));
-    loadFeed();
-  });
+  const setFeed = k => { feedSort = k; $$("[data-feed]").forEach(x => x.classList.toggle("on", x.dataset.feed === k)); };
+  $$("[data-feed]").forEach(b => b.onclick = () => { setFeed(b.dataset.feed); loadFeed(); });
   $("#feedReload").onclick = loadFeed;
 
   // ---------- แลกของ ----------
@@ -1188,7 +1215,7 @@
   });
 
   // ---------- ฉัน ----------
-  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", route_tag: "บอกสายของรถ", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)" };
+  const REASON = { signup: "สมัครสมาชิก", review: "เขียนรีวิว", route_tag: "บอกสายของรถ", review_detail: "ใส่ป้ายและเวลา", helpful_received: "มีคนกดมีประโยชน์", incident_confirmed: "แจ้งเหตุมีคนยืนยันครบ", redeem: "แลก", refund: "คืนแต้ม (ตอนนี้ฟรีแล้ว)", report_upheld: "รีวิวถูกซ่อน (ผิดกติกา)", jury_majority: "โหวตตรงเสียงส่วนใหญ่ (ลูกขุน)" };
   const REPORT_LABEL = Object.fromEntries(REPORT_REASONS);
   function renderMe() {
     const el = $("#v-me");
@@ -1211,12 +1238,12 @@
           ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
         </dl>
       </div>
+      ${me.jury ? `<section class="card mt-3 overflow-hidden" id="juryBox">${loading("กำลังโหลดคดี…")}</section>` : ""}
       ${lineCard()}
       <div class="card mt-3 overflow-hidden">
         <div class="eyebrow px-4 pt-3 pb-1">ประวัติแต้ม</div>
         ${me.ledger.map(l => `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5 text-[14px]"><b class="num w-11 text-right ${l.delta > 0 ? "text-ok" : "text-alarm"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><span class="flex-1">${REASON[l.reason] || esc(l.reason)}${l.note ? " " + esc(l.note) : ""}</span><span class="text-[12px] text-mute">${ago(l.created_at)}</span></div>`).join("")}
       </div>
-      ${me.user.role === "moderator" ? `<section class="card mt-3 overflow-hidden"><div class="flex items-center px-4 pt-3 pb-1"><div class="eyebrow flex-1"><i class="fa-solid fa-shield-halved mr-1"></i>คิวรายงาน (ผู้ดูแล)</div><button class="icon-btn !h-8 !w-8" type="button" id="modReload" aria-label="โหลดใหม่"><i class="fa-solid fa-rotate-right"></i></button></div><div id="modList">${loading("กำลังโหลด…")}</div></section>` : ""}
       <button class="btn-quiet mt-3 w-full text-[14px]" type="button" id="logout"><i class="fa-solid fa-right-from-bracket"></i>ออกจากระบบ</button>
       <button class="mt-2 w-full py-2 text-[12.5px] text-mute underline" type="button" id="delAcc">ลบบัญชีและข้อมูลทั้งหมด</button>`;
     $("#meAvatar").onclick = () => openAvatarPicker();
@@ -1226,31 +1253,36 @@
       try { await api("/me", { method: "DELETE" }); setToken(null); toast("ลบบัญชีแล้ว"); if (curBus) loadBus(curBus); }
       catch (err) { toast(err.message); }
     };
-    if (me.user.role === "moderator") { loadMod(); $("#modReload").onclick = loadMod; }
+    if (me.jury) loadJury();
   }
 
-  // ---------- ผู้ดูแล: ตัดสินรีวิวที่ถูกรายงาน ----------
-  async function loadMod() {
-    const el = $("#modList"); if (!el) return;
+  // ---------- ลูกขุน: คดีที่ฉันถูกสุ่มและยังไม่ได้โหวต ----------
+  const hoursLeft = iso => { const h = (new Date(iso) - Date.now()) / 3600e3; return h < 1 ? "ไม่ถึงชั่วโมง" : Math.ceil(h) + " ชม."; };
+  async function loadJury() {
+    const el = $("#juryBox"); if (!el) return;
     try {
-      const { items } = await api("/mod/reports");
-      el.innerHTML = items.length ? items.map(r => `<article class="border-t border-line px-4 py-3.5">
-          <div class="flex items-center gap-2">${miniPlate(r.fleet_no)}${avatar(r, 22)}<span class="truncate text-[13px] text-mute">${esc(r.display_name)} · ${ago(r.created_at)}</span>
-            ${r.status === "hidden" ? `<span class="tag ml-auto bg-sunk text-mute">ซ่อนไว้ก่อน</span>` : ""}</div>
-          <p class="mt-2 text-[14px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">${esc(r.text)}</p>
-          <div class="mt-2 flex flex-wrap gap-1"><span class="tag bg-alarm-soft text-alarm"><i class="fa-solid fa-flag"></i>${r.reports}</span>${[...new Set(r.reasons)].map(k => `<span class="tag bg-sunk text-mute">${REPORT_LABEL[k] || esc(k)}</span>`).join("")}</div>
-          <div class="mt-2.5 flex gap-2"><button class="btn-alarm !min-h-10 flex-1 text-[13.5px]" type="button" data-resolve="${r.id}" data-action="hide">ผิดกติกา · ซ่อน −20</button><button class="btn-quiet !min-h-10 flex-1 text-[13.5px]" type="button" data-resolve="${r.id}" data-action="keep">ไม่ผิด · แสดงต่อ</button></div>
-        </article>`).join("") : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ไม่มีรายงานค้าง</p>`;
+      const { items, win } = await api("/jury");
+      if (!items.length) { el.remove(); return; }
+      el.innerHTML = `<div class="px-4 pt-3.5 pb-2.5"><div class="font-display text-[18px] font-bold">⚖️ คุณถูกสุ่มเป็นลูกขุน</div>
+          <p class="mt-0.5 text-[12.5px] leading-relaxed text-mute">🧙 ทีมล่าแม่มด · รีวิวนี้ถูกรายงานครบ 3 คน ผิดกติกาไหม? ได้ ${win} เสียงก่อนชนะ โหวตตรงกับเสียงส่วนใหญ่ได้ +3 แต้ม ไม่มีใครโหวต พระเจ้าตัดสินเอง</p></div>`
+        + items.map(k => `<article class="border-t border-line px-4 py-3.5">
+          <div class="flex items-center gap-2">${miniPlate(k.fleet_no)}<span class="flex-1 text-[12px] text-mute">${k.type === "incident" ? "แจ้งเหตุ" : "รีวิว"} · ลูกขุน ${k.seats} คน · เหลือ ${hoursLeft(k.deadline)}</span></div>
+          <p class="mt-2 text-[14.5px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">“${esc(k.text)}”</p>
+          <div class="mt-2 flex flex-wrap gap-1">${reasonTags(k.reasons)}</div>
+          <div class="mt-2.5 flex gap-2"><button class="btn-alarm !min-h-10 flex-1 text-[13.5px]" type="button" data-jury="${k.id}" data-vote="hide">🔥 เผา (ผิดกติกา)</button><button class="btn-quiet !min-h-10 flex-1 text-[13.5px]" type="button" data-jury="${k.id}" data-vote="keep">🕊️ ปล่อย (ไม่ผิด)</button></div>
+        </article>`).join("");
     } catch (err) { el.innerHTML = problem(err.message); }
   }
   $("#v-me").addEventListener("click", async e => {
-    const b = e.target.closest("[data-resolve]"); if (!b) return;
-    $$(`[data-resolve="${b.dataset.resolve}"]`).forEach(x => x.disabled = true);
+    const b = e.target.closest("[data-jury]"); if (!b) return;
+    $$(`[data-jury="${b.dataset.jury}"]`).forEach(x => x.disabled = true);
     try {
-      const r = await api(`/mod/reviews/${b.dataset.resolve}/resolve`, { method: "POST", body: { action: b.dataset.action } });
-      toast(r.status === "hidden" ? `ซ่อนแล้ว${r.penalty ? " · หักผู้เขียน " + -r.penalty + " แต้ม" : ""}` : "แสดงรีวิวต่อแล้ว");
-      loadMod();
-    } catch (err) { toast(err.message); loadMod(); }
+      const { closed: c, vote } = await api(`/jury/${b.dataset.jury}/vote`, { method: "POST", body: { vote: b.dataset.vote } });
+      if (!c) toast("บันทึกเสียงแล้ว ผลจะประกาศเมื่อปิดคดี");
+      else if (c.by === "god") toast(`ปิดคดี: พระเจ้าโยนเหรียญ ออก ${VERDICT[c.outcome].join(" ")} ⚔️ DEUS VULT`);
+      else toast(`ปิดคดี: ${VERDICT[c.outcome].join(" ")} ${c.hide}–${c.keep}${c.outcome === vote ? " · +3 แต้ม" : ""}`);
+      await refreshMe();
+    } catch (err) { toast(err.message); loadJury(); }
   });
 
   // ---------- แท็บ ----------
@@ -1281,7 +1313,14 @@
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
   if (["routes", "feed", "shop", "me"].includes(tab0)) showTab(tab0);
 
-  const fromHash = () => { const h = decodeURIComponent(location.hash.slice(1)); if (h) setAndLookup(h); };
+  // #jury = คดีที่ต้องโหวต (ลิงก์จาก LINE) · #verdicts = ศาลเตี้ย
+  const fromHash = () => {
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (h === "jury" || h === "verdicts") { if (!out.innerHTML) out.innerHTML = emptyState(); }
+    if (h === "jury") showTab("me");
+    else if (h === "verdicts") { setFeed("court"); showTab("feed"); }
+    else if (h) setAndLookup(h);
+  };
   addEventListener("hashchange", fromHash);
   if (location.hash.length > 1) fromHash(); else { out.innerHTML = emptyState(); if (!tab0) num.focus(); }
 

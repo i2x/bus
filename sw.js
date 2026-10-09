@@ -1,7 +1,7 @@
 // คันนี้ดีไหม? — service worker
 // หน้าเว็บ: network-first (ได้ของใหม่เสมอ ถ้าเน็ตหลุดใช้ของใน cache) · ไฟล์ static/ฟอนต์: cache-first
 // /api ไม่ cache เลย — รีวิว แต้ม ต้องเป็นข้อมูลสดจาก server
-const CACHE = "bus-v2";
+const CACHE = "bus-v3";
 const SHELL = ["./", "index.html", "app.css", "data.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 const STATIC_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com", "cdnjs.cloudflare.com"];
 

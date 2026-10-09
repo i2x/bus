@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS review_reactions (
   PRIMARY KEY (review_id, user_id)
 );
 
--- รายงานรีวิว → moderator ตัดสิน · คนละครั้งต่อรีวิว
+-- รายงานรีวิว → ครบ 3 คนเปิดคดีให้ลูกขุนตัดสิน (ด้านล่าง) · คนละครั้งต่อรีวิว
 CREATE TABLE IF NOT EXISTS reports (
   id          serial PRIMARY KEY,
   review_id   int  NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
@@ -202,3 +202,28 @@ CREATE TABLE IF NOT EXISTS bus_route_sightings (
 );
 CREATE INDEX IF NOT EXISTS sightings_bus ON bus_route_sightings (fleet_no, created_at DESC);
 CREATE INDEX IF NOT EXISTS sightings_route ON bus_route_sightings (route_id, created_at DESC);
+
+-- ---------- ลูกขุนสุ่ม (ทีมล่าแม่มด) แทนผู้ดูแล ----------
+-- รีวิวถูกรายงานครบ 3 คน → เปิดคดี สุ่มลูกขุน 5 คน · ได้ 3 เสียงก่อนชนะ · หมดเวลาแล้วเสมอ/ไม่มีเสียง = พระเจ้าโยนเหรียญ
+CREATE TABLE IF NOT EXISTS jury_cases (
+  id         serial PRIMARY KEY,
+  review_id  int  NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+  status     text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'hide', 'keep')),
+  decided_by text CHECK (decided_by IN ('jury', 'god')),
+  deadline   timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  closed_at  timestamptz
+);
+CREATE INDEX IF NOT EXISTS jury_open ON jury_cases (deadline) WHERE status = 'open';
+CREATE INDEX IF NOT EXISTS jury_review ON jury_cases (review_id);
+-- เสียงของลูกขุนแต่ละคน · ไม่เปิดเผยว่าใครโหวตอะไร (หน้าคำพิพากษาโชว์แค่รายชื่อ + ผลรวม)
+CREATE TABLE IF NOT EXISTS jury_seats (
+  case_id  int  NOT NULL REFERENCES jury_cases(id) ON DELETE CASCADE,
+  user_id  int  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  vote     text CHECK (vote IN ('hide', 'keep')),
+  voted_at timestamptz,
+  PRIMARY KEY (case_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS jury_seat_user ON jury_seats (user_id) WHERE vote IS NULL;
+-- รายงานที่ทำให้เปิดคดีนั้น (หน้าคำพิพากษานับเหตุผลต่อคดี)
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_id int REFERENCES jury_cases(id) ON DELETE SET NULL;

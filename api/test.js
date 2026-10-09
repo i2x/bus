@@ -33,7 +33,7 @@ before(async () => {
   }).listen(3998, "127.0.0.1");
   await pool.query("TRUNCATE users, buses, reviews, review_votes, points_ledger, user_rewards, review_reactions, reports, refresh_tokens RESTART IDENTITY CASCADE");
   srv = spawn(process.execPath, [path.join(__dirname, "server.js")], {
-    env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), MODERATOR_EMAILS: "mod@example.com",
+    env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), JURY_MIN_AGE_DAYS: "0", JURY_SWEEP_MS: "150",
       COOKIE_SECURE: "0", REFRESH_GRACE_MS: "1500", GOOGLE_CLIENT_ID: "",
       LINE_CHANNEL_SECRET: LINE_SECRET, LINE_CHANNEL_ACCESS_TOKEN: "test-token", LINE_BOT_ID: "@testbot", LINE_API_BASE: "http://127.0.0.1:3998",
       LINE_LOGIN_CHANNEL_ID: "llid", LINE_LOGIN_CHANNEL_SECRET: "llsecret", LINE_LOGIN_WEB: "http://127.0.0.1:3998", LINE_LOGIN_API: "http://127.0.0.1:3998" },
@@ -90,7 +90,6 @@ test("เข้าสู่ระบบ: ครั้งแรก +20 · ได�
   C = await login("carol@example.com", "Carol");
   D = await login("dave@example.com", "Dave");
   M = await login("mod@example.com", "Mod");
-  assert.equal((await call("GET", "/me", { token: M.token })).body.user.role, "moderator");
 });
 
 test("รีวิว: +10 +5 · รีวิวซ้ำวันเดียวกัน 409 · คำหยาบ/เบอร์โทร 400", async () => {
@@ -106,6 +105,9 @@ test("รีวิว: +10 +5 · รีวิวซ้ำวันเดีย�
 
 test("word filter: จับแบบเลี่ยงตัวสะกด แต่ไม่จับคำปกติ", () => {
   for (const t of ["เหี้ยยยย", "ส ั ส", "f.u.c.k", "sh1t", "มึงขับดีๆ"]) assert.equal(hasBlocked(t), true, t);
+  // ปิดตัวอักษรด้วย * · คำสั้นที่เว้นวรรคทีละตัว
+  for (const t of ["f*ck", "sh*t", "f**king", "F * C K", "เหี้*", "ม ึ ง", "ม ึง ขับแย่", "ก.ู ไม่สน", "ขับดี แต่ ม ึ ง"]) assert.equal(hasBlocked(t), true, t);
+  for (const t of ["****", "ให้ 5* เลย", "ดาว * * * *", "ร ถ ม า ช้ า", "ไป ก็ ได้"]) assert.equal(hasBlocked(t), false, t);
   assert.equal(hasBlocked("ขับโหดเหี้ยม"), false);
   assert.equal(hasBlocked("ใช้กูเกิลแมพดูสาย"), false);
   assert.equal(hasBlocked("แอร์เย็น คนขับใจดี"), false);
@@ -235,7 +237,9 @@ test("บอกสายของรถ: +2 แต้ม · วันเดี�
   assert.ok(["7-3001", "7-3005", "8-80040"].every(f => d.buses.some(b => b.fleet_no === f)));
 });
 
-test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ่อนอัตโนมัติ", async () => {
+test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ่อนอัตโนมัติ + เปิดคดี", async () => {
+  // คนที่มีสิทธิ์เป็นลูกขุน (มีรีวิวที่แสดงอยู่) ให้มีพอ 5 คน
+  for (let i = 1; i <= 6; i++) assert.equal((await review(await login(`juror${i}@example.com`, `ลูกขุน${i}`), "3-1001")).status, 201);
   assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: A.token, body: { reason: "spam" } })).status, 400);
   assert.equal((await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "whatever" } })).status, 400);
   let r = await call("POST", `/reviews/${aReview}/report`, { token: B.token, body: { reason: "rude" } });
@@ -250,23 +254,121 @@ test("report: ตัวเอง 400 · ซ้ำ 409 · ครบ 3 คนซ�
   assert.equal((await call("GET", "/buses/7-3077")).body.stats.reviews, 0);
 });
 
-test("moderator: คนทั่วไป 403 · ยืนยันว่าผิด → ซ่อน + หัก −20 ครั้งเดียว · ไม่ผิด → แสดงกลับ", async () => {
-  assert.equal((await call("GET", "/mod/reports", { token: B.token })).status, 403);
-  assert.equal((await call("GET", "/mod/reports")).status, 401);
-  let q = (await call("GET", "/mod/reports", { token: M.token })).body.items;
-  assert.equal(q.length, 1); assert.equal(q[0].id, aReview); assert.equal(q[0].reports, 3);
-  assert.deepEqual(q[0].reasons, ["rude", "fake", "spam"]);
-  let r = await call("POST", `/mod/reviews/${aReview}/resolve`, { token: M.token, body: { action: "hide" } });
-  assert.equal(r.status, 200); assert.equal(r.body.penalty, -20); assert.equal(r.body.resolved, 3);
-  assert.equal(await points(A), -3);
-  assert.equal((await call("POST", `/mod/reviews/${aReview}/resolve`, { token: M.token, body: { action: "hide" } })).status, 409);
+// ลูกขุนของคดีเป็นใคร: อ่านจาก DB แล้วเข้าสู่ระบบเป็นคนนั้น (บัญชีทดสอบทั้งหมด)
+const caseOf = async reviewId => (await pool.query("SELECT id FROM jury_cases WHERE review_id = $1 ORDER BY id DESC LIMIT 1", [reviewId])).rows[0].id;
+const jurorsOf = async id => Promise.all((await pool.query("SELECT u.email FROM jury_seats s JOIN users u ON u.id = s.user_id WHERE s.case_id = $1 ORDER BY u.id", [id]))
+  .rows.map(x => login(x.email)));
+const vote = (u, id, v) => call("POST", `/jury/${id}/vote`, { token: u.token, body: { vote: v } });
+const expire = id => pool.query("UPDATE jury_cases SET deadline = now() - interval '1 minute' WHERE id = $1", [id]);
+async function waitClosed(id) {
+  for (let i = 0; i < 40; i++) {
+    const k = (await pool.query("SELECT status, decided_by FROM jury_cases WHERE id = $1", [id])).rows[0];
+    if (k.status !== "open") return k;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  throw new Error("case not closed");
+}
+const verdict = async id => (await call("GET", "/verdicts")).body.items.find(x => x.id === id);
+const juryPts = async id => (await pool.query("SELECT user_id FROM points_ledger WHERE reason = 'jury_majority' AND ref_id = $1 ORDER BY user_id", [id])).rows.map(x => x.user_id);
 
-  await call("POST", `/reviews/${bReview}/report`, { token: A.token, body: { reason: "fake" } });
-  r = await call("POST", `/mod/reviews/${bReview}/resolve`, { token: M.token, body: { action: "keep" } });
-  assert.equal(r.body.status, "visible"); assert.equal(r.body.penalty, 0);
-  assert.equal(await points(B), 30);
-  q = (await call("GET", "/mod/reports", { token: M.token })).body.items;
-  assert.equal(q.length, 0);
+test("ลูกขุน: ไม่สุ่มคนเขียน/คนรายงาน · คนนอก 403 · โหวตซ้ำ 409 · โหวตลับ · 3 เสียงเผา → ซ่อน −20 ฝั่งชนะ +3 · คำพิพากษาไม่ผูกคนกับเสียง", async () => {
+  const k = await caseOf(aReview);
+  const J = await jurorsOf(k);
+  assert.equal(J.length, 5);
+  for (const u of [A, B, C, D]) assert.ok(!J.some(j => j.id === u.id), "คนเขียนและคนรายงานไม่เป็นลูกขุน");
+
+  assert.equal((await call("GET", "/me", { token: J[0].token })).body.jury, 1);
+  const mine = (await call("GET", "/jury", { token: J[0].token })).body;
+  assert.equal(mine.items.length, 1);
+  assert.equal(mine.items[0].id, k); assert.equal(mine.items[0].seats, 5);
+  assert.deepEqual(mine.items[0].reasons, { rude: 1, fake: 1, spam: 1 });
+  assert.ok(!/reporter|vote/.test(JSON.stringify(mine)), "ไม่บอกคนรายงาน ไม่บอกเสียง");
+  assert.equal((await call("GET", "/jury")).status, 401);
+  assert.equal((await vote(B, k, "hide")).status, 403);
+  assert.equal((await vote(J[0], k, "burn")).status, 400);
+  assert.equal((await vote(J[0], 999999, "hide")).status, 404);
+
+  const aBefore = await points(A), jBefore = await Promise.all(J.map(points));
+  assert.equal((await vote(J[0], k, "hide")).body.closed, null);
+  assert.equal((await vote(J[1], k, "keep")).body.closed, null);
+  assert.equal((await vote(J[1], k, "hide")).status, 409);
+  assert.equal((await vote(J[2], k, "hide")).body.closed, null);
+  assert.equal(await verdict(k), undefined, "ยังไม่ปิดคดี ไม่ประกาศ");
+  assert.equal((await call("GET", "/jury", { token: J[0].token })).body.items.length, 0, "โหวตแล้วหายจากรายการ");
+  const r = await vote(J[3], k, "hide");
+  assert.deepEqual(r.body.closed, { outcome: "hide", by: "jury", hide: 3, keep: 1 });
+  assert.equal((await vote(J[4], k, "keep")).status, 409, "คดีปิดแล้ว");
+
+  assert.equal(await points(A), aBefore - 20);
+  assert.deepEqual(await Promise.all(J.map(points)), jBefore.map((p, i) => p + ([0, 2, 3].includes(i) ? 3 : 0)));
+  assert.equal((await call("GET", "/buses/7-3077/reviews")).body.items.length, 0);
+
+  const v = await verdict(k);
+  assert.equal(v.outcome, "hide"); assert.equal(v.by, "jury"); assert.equal(v.hide, 3); assert.equal(v.keep, 1);
+  assert.equal(v.text, "แอร์เย็น ขับนิ่ม"); assert.equal(v.fleet_no, "7-3077");
+  assert.equal(v.jurors.length, 5);
+  const byName = (await pool.query("SELECT u.display_name FROM jury_seats s JOIN users u ON u.id = s.user_id WHERE s.case_id = $1 ORDER BY u.display_name, u.id", [k])).rows;
+  assert.deepEqual(v.jurors.map(x => x.display_name), byName.map(x => x.display_name), "เรียงตามชื่อ ไม่ใช่ลำดับโหวต");
+  assert.ok(!/"vote"|email|user_id/.test(JSON.stringify(v)));
+  assert.equal((await call("GET", "/verdicts?fleet=7-3077")).body.items[0].id, k);
+  assert.equal((await call("GET", "/verdicts?fleet=2-70235")).body.items.length, 0);
+  assert.equal((await call("GET", "/verdicts?fleet=xx")).status, 400);
+});
+
+test("ลูกขุน: หมดเวลา เสียงมากกว่าชนะ · เผาเพราะข้อมูลส่วนตัวไม่โชว์ข้อความ · ไม่มีใครโหวต = พระเจ้าตัดสิน ไม่หักแต้ม · LINE แจ้งลูกขุน + โหวตในแชต", async () => {
+  // ให้ทุกคนผูก LINE ไว้ (ชั่วคราว) เพื่อดูข้อความที่ส่ง
+  await pool.query("UPDATE users SET line_user_id = 'Uj' || id WHERE line_user_id IS NULL");
+  const hook = async events => {
+    const body = JSON.stringify({ destination: "Ubot", events });
+    await fetch(BASE + "/line/webhook", { method: "POST", body,
+      headers: { "content-type": "application/json", "x-line-signature": crypto.createHmac("sha256", LINE_SECRET).update(body).digest("base64") } });
+  };
+  const waitLine = async re => {
+    for (let i = 0; i < 40; i++) { const m = lineCalls.find(x => re.test(JSON.stringify(x.body))); if (m) return m; await new Promise(r => setTimeout(r, 25)); }
+    throw new Error("no LINE message " + re);
+  };
+  const reportAll = (id, reason) => Promise.all([B, C, M].map(u => call("POST", `/reviews/${id}/report`, { token: u.token, body: { reason } })));
+
+  // คดี 1: โหวต 1 เสียงทางแชต LINE แล้วหมดเวลา → ลูกขุนชนะ 1–0 · เหตุผลข้อมูลส่วนตัว → ไม่โชว์ข้อความ
+  const Y = await login("leaky@example.com", "Leaky");
+  const y = (await review(Y, "5-1234", { text: "คนขับชื่อสมศักดิ์ บ้านอยู่ซอย 5" })).body.id;
+  lineCalls.length = 0;
+  await reportAll(y, "personal");
+  const k1 = await caseOf(y), J1 = await jurorsOf(k1);
+  const sent = await waitLine(/ถูกสุ่มเป็นลูกขุน/);
+  assert.equal(sent.path, "/v2/bot/message/multicast");
+  assert.deepEqual([...sent.body.to].sort(), J1.map(j => "Uj" + j.id).sort());
+  assert.match(sent.body.messages[0].text, /5-1234[\s\S]*ข้อมูลส่วนตัว ×3/);
+  assert.deepEqual(sent.body.messages[0].quickReply.items.map(x => x.action.data), [`a=jury&c=${k1}&v=hide`, `a=jury&c=${k1}&v=keep`]);
+  lineCalls.length = 0;
+  await hook([{ type: "postback", replyToken: "rt", source: { type: "user", userId: "Uj" + J1[0].id }, postback: { data: `a=jury&c=${k1}&v=hide` } }]);
+  assert.match((await waitLine(/บันทึกเสียงแล้ว/)).body.messages[0].text, /บันทึกเสียงแล้ว/);
+  const yBefore = await points(Y);
+  await expire(k1);
+  assert.deepEqual({ ...(await waitClosed(k1)) }, { status: "hide", decided_by: "jury" });
+  assert.equal(await points(Y), yBefore - 20);
+  assert.deepEqual(await juryPts(k1), [J1[0].id]);
+  const v1 = await verdict(k1);
+  assert.equal(v1.text, null, "ข้อมูลส่วนตัวไม่เผยแพร่ซ้ำ"); assert.deepEqual(v1.reasons, { personal: 3 });
+  assert.deepEqual([v1.hide, v1.keep], [1, 0]);
+
+  // คดี 2: ไม่มีใครโหวต → พระเจ้าโยนเหรียญ · ไม่หักแต้ม ไม่มีใครได้แต้ม
+  const X = await login("suspect@example.com", "Suspect");
+  const x = (await review(X, "5-1235", { text: "รถมาช้ามาก" })).body.id;
+  await reportAll(x, "fake");
+  const k2 = await caseOf(x), xBefore = await points(X);
+  lineCalls.length = 0;
+  await expire(k2);
+  const c2 = await waitClosed(k2);
+  assert.equal(c2.decided_by, "god");
+  assert.equal(await points(X), xBefore, "เหรียญไม่ใช่หลักฐาน ไม่หักแต้ม");
+  assert.deepEqual(await juryPts(k2), []);
+  const v2 = await verdict(k2);
+  assert.equal(v2.by, "god"); assert.equal(v2.text, "รถมาช้ามาก"); assert.deepEqual([v2.hide, v2.keep], [0, 0]);
+  assert.equal((await call("GET", "/buses/5-1235/reviews")).body.items.length, c2.status === "keep" ? 1 : 0);
+  assert.match((await waitLine(/DEUS VULT/)).body.messages[0].text, /พระเจ้าโยนเหรียญ/);
+
+  await pool.query("UPDATE users SET line_user_id = NULL WHERE line_user_id LIKE 'Uj%'");
 });
 
 test("refresh token: หมุนทุกครั้ง · เอาอันเก่ามาใช้ซ้ำ = เพิกถอนทั้งชุด · logout แล้วใช้ไม่ได้", async () => {

@@ -148,6 +148,9 @@
   .tab i { @apply grid h-8 w-14 place-items-center rounded-full text-[17px] transition; }
   .tab.on { @apply text-ink font-semibold; }
   .tab.on i { @apply bg-route-soft text-route; }
+  /* มีคดีรอโหวต */
+  .tab.dot i { position: relative; }
+  .tab.dot i::after { content: ""; position: absolute; top: 3px; right: 14px; width: 9px; height: 9px; border-radius: 50%; background: var(--color-alarm); box-shadow: 0 0 0 2px var(--color-paper); }
 
   /* bottom sheet ด้วย <dialog> */
   dialog.sheet {
@@ -182,12 +185,17 @@
   [data-tip] { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 
   .rise { animation: rise .35s var(--ease-out-back) both; }
+  /* เหรียญของพระเจ้า: หมุนแล้วหยุดที่ผล */
+  .coin { @apply grid h-12 w-12 shrink-0 place-items-center rounded-full text-[24px] shadow-md;
+    background: radial-gradient(circle at 35% 30%, #fff1c2, #e3ad2f 58%, #a8730e); border: 3px solid #f4cf6a;
+    animation: coin-flip 1.6s cubic-bezier(.2, .7, .3, 1) both; }
 }
 
 @keyframes sheet-up { from { transform: translateY(100%); } }
 @keyframes sheet-left { from { transform: translateX(100%); } }
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes coin-flip { 0% { transform: translateY(0) rotateY(0); } 45% { transform: translateY(-22px) rotateY(1080deg); } 100% { transform: translateY(0) rotateY(1800deg); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after, dialog.sheet[open], dialog.sheet::backdrop { animation: none !important; transition: none !important; }

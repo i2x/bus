@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>คันนี้ดีไหม — รายงานสรุปโปรเจกต์</title>
+<title>คันนี้ดีไหม: รายงานสรุปโปรเจกต์</title>
 <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -49,13 +49,13 @@
 <header>
   <div>
     <h1>🚌 คันนี้ดีไหม?</h1>
-    <div class="sub">ระบบค้นหาและรีวิว<b>รถเมล์ ขสมก. รายคัน</b> ด้วยเลขข้างรถ พร้อมระบบแต้มและการดูแลเนื้อหา — รายงานสรุปโปรเจกต์</div>
+    <div class="sub">ระบบค้นหาและรีวิว<b>รถเมล์ ขสมก. รายคัน</b> ด้วยเลขข้างรถ พร้อมระบบแต้มและการดูแลเนื้อหา</div>
   </div>
   <div class="meta"><b style="color:var(--fg)">Sprint 0–2 · ตุลาคม 2569</b><br>ทีม 3 คน: <span class="blank" style="min-width:150px">&nbsp;</span><br>เว็บ: <span class="m">env-0241390.proen.app.ruk-com.cloud</span><br>โค้ด: <span class="m">github.com/i2x/bus</span></div>
 </header>
 
 <div class="card">
-  <p><b>สรุป</b> — ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ผิดกติกาถูก report และผู้ดูแลซ่อนพร้อมหักแต้มได้ เข้าสู่ระบบด้วยบัญชี Google จริง ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 14 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
+  <p><b>สรุป:</b> ผู้โดยสารรู้จากแอปอื่นว่ารถอยู่ไหน แต่ไม่รู้ว่า<b>คันนี้</b>ควรขึ้นไหม เราทำเว็บที่กรอกเลขข้างรถ (เช่น <code>7-3077</code>) แล้วเห็นรุ่น เขต อู่ ค่าโดยสาร และคะแนนจากผู้โดยสาร 3 ด้าน (การขับ · การจอดป้าย · สภาพรถ) ผู้ใช้ได้แต้มจากรีวิวที่มีประโยชน์ และนำแต้มไปแลกสติกเกอร์/รูปโปรไฟล์ได้ รีวิวที่ถูก report ครบ 3 คนขึ้นศาล ให้ผู้ใช้ 5 คนที่สุ่มมาเป็นลูกขุนตัดสิน เข้าสู่ระบบด้วยบัญชี Google จริง ระบบรันจริงบน ruk-com (Nginx · Node.js 22 · PostgreSQL 16) มี test อัตโนมัติ 21 ชุด และ backup รายวันที่ทดสอบกู้คืนแล้ว</p>
 </div>
 
 <h2><span class="n">1</span>ปัญหาและลูกค้า</h2>
@@ -65,9 +65,9 @@
     <li>ไม่มีช่องทางให้คะแนนคุณภาพการขับ: ขับหวาดเสียว ไม่จอดป้าย จอดกลางถนน</li>
     <li>ร้องเรียน 1348 ได้ แต่ผู้โดยสารคนอื่นไม่เห็นผล ต่างจาก Grab / LINE MAN ที่ให้ดาวได้ทุกเที่ยว</li></ul></div>
   <div class="card"><h3 style="margin-top:0">ลูกค้า</h3><ul class="small">
-    <li><b>ผู้โดยสารประจำ</b> (กลุ่มหลัก) — นักเรียน นักศึกษา คนทำงาน ที่ขึ้นสายเดิมทุกวัน</li>
-    <li><b>ผู้ประกอบการเดินรถ</b> (Phase 2) — feedback รายคันใช้ประเมินคนขับ</li>
-    <li><b>หน่วยงานกำกับ</b> (อนาคต) — ข้อมูลรวมด้านความปลอดภัยแยกสาย/เขต/อู่</li></ul></div>
+    <li><b>ผู้โดยสารประจำ</b> (กลุ่มหลัก) นักเรียน นักศึกษา คนทำงาน ที่ขึ้นสายเดิมทุกวัน</li>
+    <li><b>ผู้ประกอบการเดินรถ</b> (Phase 2) ใช้ feedback รายคันประเมินคนขับ</li>
+    <li><b>หน่วยงานกำกับ</b> (อนาคต) ใช้ข้อมูลรวมด้านความปลอดภัยแยกสาย/เขต/อู่</li></ul></div>
 </div>
 
 <h2><span class="n">2</span>สิ่งที่ทำได้ (ภาพจากเว็บจริง)</h2>
@@ -77,7 +77,7 @@
   <figure><img src="img/s2-feed.png" alt=""><figcaption><b>Feed</b><br>ล่าสุด · มีประโยชน์ · แจ้งเหตุ</figcaption></figure>
   <figure><img src="img/s2-shop.png" alt=""><figcaption><b>ร้าน 75 ชิ้น</b><br>ฟรี 31 · แลกแต้ม 44</figcaption></figure>
   <figure><img src="img/s2-avatar.png" alt=""><figcaption><b>เลือกรูปโปรไฟล์</b><br>ฟรี 12 แบบตอนสมัคร</figcaption></figure>
-  <figure><img src="img/s2-mod.png" alt=""><figcaption><b>ฉัน + คิวผู้ดูแล</b><br>แต้ม · ประวัติ</figcaption></figure>
+  <figure><img src="img/s2-mod.png" alt=""><figcaption><b>ฉัน + คิวผู้ดูแล</b><br>ภาพก่อนเปลี่ยนเป็นลูกขุน</figcaption></figure>
 </div>
 <p class="small muted" style="margin-top:6px">ข้อมูลรุ่นรถ 13 รุ่น 8 เขต จากวิกิพีเดีย "องค์การขนส่งมวลชนกรุงเทพ" (CC BY-SA) · รูปสติกเกอร์ Microsoft Fluent Emoji (MIT) · รูปโปรไฟล์ DiceBear (CC0 / CC BY 4.0) · รีวิวในภาพเป็นข้อมูลทดสอบของทีม · ติดตั้งเป็นแอปบนมือถือได้ (PWA)</p>
 
@@ -92,14 +92,15 @@
       <tr><td>มีคนกด "มีประโยชน์" (เพดาน 30/วัน)</td><td class="ok">+2</td></tr>
       <tr><td>แจ้งเหตุ มีคนยืนยันครบ 3</td><td class="ok">+20</td></tr>
       <tr><td>แลกสติกเกอร์ / รูปโปรไฟล์ (สติกเกอร์เรื่องรถ 19 + รูปโปรไฟล์ 12 ฟรี)</td><td class="part">−10…−100</td></tr>
-      <tr><td>รีวิวถูก report และผู้ดูแลยืนยันว่าผิด</td><td style="color:var(--red);font-weight:700">−20</td></tr>
+      <tr><td>โหวตตรงกับเสียงส่วนใหญ่ตอนเป็นลูกขุน (เพดาน 15/วัน)</td><td class="ok">+3</td></tr>
+      <tr><td>รีวิวถูก report และลูกขุนตัดสินว่าผิด (พระเจ้าตัดสินไม่หัก)</td><td style="color:var(--red);font-weight:700">−20</td></tr>
     </tbody>
   </table>
   <div class="card small"><h3 style="margin-top:0">กันโกง (server ตรวจเอง ไม่พึ่งหน้าเว็บ)</h3><ul>
     <li>ทุกการเปลี่ยนแต้มเป็น 1 แถวใน <code>points_ledger</code> · ยอด = <code>SUM(delta)</code> · ตรวจย้อนหลังได้</li>
     <li>รีวิว + แต้ม อยู่ใน transaction เดียว · 1 รีวิว/คัน/วัน ด้วย partial unique index</li>
     <li>โหวต/report/ของที่แลก ซ้ำไม่ได้ด้วย primary key / unique</li>
-    <li>แลกของล็อกแถวผู้ใช้ (<code>FOR UPDATE</code>) — กดพร้อมกันได้ของชิ้นเดียว แต้มไม่ติดลบ</li>
+    <li>แลกของล็อกแถวผู้ใช้ (<code>FOR UPDATE</code>) กดพร้อมกันได้ของชิ้นเดียว แต้มไม่ติดลบ</li>
     <li>สติกเกอร์ไม่ให้แต้ม · ต้องแลกก่อนใช้</li>
     <li>รีวิว "คัน" ไม่ใช่ "คน": ห้ามชื่อ/รูปคนขับ · กรองคำหยาบ · ห้ามเบอร์โทร · ไม่รับรูป</li></ul></div>
 </div>
@@ -119,24 +120,25 @@
     <rect x="500" y="40" width="200" height="130" rx="16" fill="#fff7f7" stroke="#d3222a" stroke-width="2"/>
     <text x="600" y="80" text-anchor="middle" font-size="19" font-weight="700" fill="#d3222a">report ครบ 3 คน</text>
     <text x="600" y="108" text-anchor="middle" font-size="14" fill="#6b6760">ซ่อนอัตโนมัติ</text>
-    <text x="600" y="130" text-anchor="middle" font-size="14" fill="#6b6760">ระหว่างรอผู้ดูแล</text>
+    <text x="600" y="130" text-anchor="middle" font-size="14" fill="#6b6760">แล้วเปิดคดี</text>
     <text x="600" y="152" text-anchor="middle" font-size="14" fill="#6b6760">(ยังไม่หักแต้ม)</text>
     <rect x="750" y="40" width="160" height="130" rx="16" fill="#fff" stroke="#2b6fd6" stroke-width="2"/>
-    <text x="830" y="85" text-anchor="middle" font-size="19" font-weight="700" fill="#2b6fd6">คิวผู้ดูแล</text>
-    <text x="830" y="112" text-anchor="middle" font-size="14" fill="#6b6760">เรียงตามจำนวน</text>
-    <text x="830" y="134" text-anchor="middle" font-size="14" fill="#6b6760">report</text>
+    <text x="830" y="78" text-anchor="middle" font-size="19" font-weight="700" fill="#2b6fd6">ลูกขุน 5 คน</text>
+    <text x="830" y="104" text-anchor="middle" font-size="14" fill="#6b6760">สุ่มจากผู้ใช้</text>
+    <text x="830" y="126" text-anchor="middle" font-size="14" fill="#6b6760">โหวตลับ 24 ชม.</text>
+    <text x="830" y="148" text-anchor="middle" font-size="14" fill="#6b6760">ไม่โหวต: โยนเหรียญ</text>
     <rect x="956" y="10" width="180" height="90" rx="14" fill="#fff7f7" stroke="#d3222a" stroke-width="2"/>
-    <text x="1046" y="48" text-anchor="middle" font-size="17" font-weight="700" fill="#d3222a">ผิดกติกา</text>
-    <text x="1046" y="74" text-anchor="middle" font-size="14" fill="#6b6760">ซ่อนถาวร · ผู้เขียน −20</text>
+    <text x="1046" y="48" text-anchor="middle" font-size="17" font-weight="700" fill="#d3222a">🔥 เผา</text>
+    <text x="1046" y="74" text-anchor="middle" font-size="14" fill="#6b6760">ซ่อนถาวร ผู้เขียน −20</text>
     <rect x="956" y="120" width="180" height="90" rx="14" fill="#eef8f3" stroke="#1d9a6c" stroke-width="2"/>
-    <text x="1046" y="158" text-anchor="middle" font-size="17" font-weight="700" fill="#1d9a6c">ไม่ผิด</text>
-    <text x="1046" y="184" text-anchor="middle" font-size="14" fill="#6b6760">แสดงกลับ · report ปิด</text>
+    <text x="1046" y="158" text-anchor="middle" font-size="17" font-weight="700" fill="#1d9a6c">🕊️ ปล่อย</text>
+    <text x="1046" y="184" text-anchor="middle" font-size="14" fill="#6b6760">แสดงกลับ report ปิด</text>
     <line x1="200" y1="105" x2="248" y2="105" stroke="#6b6760" stroke-width="2.5" marker-end="url(#a5)"/>
     <line x1="450" y1="105" x2="498" y2="105" stroke="#6b6760" stroke-width="2.5" marker-end="url(#a5)"/>
     <line x1="700" y1="105" x2="748" y2="105" stroke="#6b6760" stroke-width="2.5" marker-end="url(#a5)"/>
     <line x1="910" y1="95" x2="954" y2="60" stroke="#6b6760" stroke-width="2.5" marker-end="url(#a5)"/>
     <line x1="910" y1="115" x2="954" y2="160" stroke="#6b6760" stroke-width="2.5" marker-end="url(#a5)"/>
-    <text x="350" y="215" text-anchor="middle" font-size="14" fill="#6b6760">report 1–2 คน → ยังแสดง แต่เข้าคิวผู้ดูแลแล้ว</text>
+    <text x="350" y="215" text-anchor="middle" font-size="14" fill="#6b6760">report 1–2 คน ยังแสดงอยู่ ลูกขุนไม่ใช่คนเขียนหรือคนรายงาน คำพิพากษาเปิดให้ทุกคนดู</text>
   </svg></figure>
 
 <h2><span class="n">4</span>สถาปัตยกรรม</h2>
@@ -193,7 +195,7 @@
     <li>Data: PostgreSQL 16 ผ่าน unix socket แบบ peer auth (ไม่มีรหัสผ่าน DB) · ฟัง 127.0.0.1</li>
     <li>Deploy คำสั่งเดียว <code>./deploy/deploy.sh</code> (rsync + npm ci + migrate + restart)</li></ul></div>
   <div class="card small"><h3 style="margin-top:0">ต่างจากแบบใน Sprint 0</h3><ul>
-    <li>แบบ: AWS VPC 2 subnet · จริง: ruk-com ไม่มี VPC → แยก tier ด้วย bind 127.0.0.1 และเตรียมสคริปต์ย้าย API + DB ไป node ที่ 2 (private IP + iptables + ALLOW_FROM) — <b>ยังไม่ได้เพิ่ม node</b></li>
+    <li>แบบ: AWS VPC 2 subnet · จริง: ruk-com ไม่มี VPC → แยก tier ด้วย bind 127.0.0.1 และเตรียมสคริปต์ย้าย API + DB ไป node ที่ 2 (private IP + iptables + ALLOW_FROM) แต่<b>ยังไม่ได้เพิ่ม node</b></li>
     <li>Docker Compose → systemd · Let's Encrypt → TLS ที่ LB</li>
     <li>รหัสผ่าน + bcrypt → เข้าด้วย Google เท่านั้น (ไม่มีรหัสผ่านในระบบ) · มีบัญชีทดสอบ <code>@example.com</code> เปิดคู่ไว้สำหรับเดโม</li></ul></div>
 </div>
@@ -215,8 +217,9 @@
       <tr><td class="get">GET</td><td class="m">/api/feed</td><td>sort=new|top · type=incident · zone</td></tr>
       <tr><td class="get">GET</td><td class="m">/api/rewards</td><td>ของในร้าน</td></tr>
       <tr><td class="post">POST</td><td class="m">/api/rewards/{id}/redeem</td><td>แลกของ</td></tr>
-      <tr><td class="get">GET</td><td class="m">/api/mod/reports</td><td>คิวผู้ดูแล (role จาก DB)</td></tr>
-      <tr><td class="post">POST</td><td class="m">/api/mod/reviews/{id}/resolve</td><td>hide (−20) / keep</td></tr>
+      <tr><td class="get">GET</td><td class="m">/api/jury</td><td>คดีที่ฉันถูกสุ่มเป็นลูกขุนและยังไม่ได้โหวต</td></tr>
+      <tr><td class="post">POST</td><td class="m">/api/jury/{id}/vote</td><td>hide (เผา) / keep (ปล่อย)</td></tr>
+      <tr><td class="get">GET</td><td class="m">/api/verdicts</td><td>คำพิพากษา (สาธารณะ ไม่บอกว่าใครโหวตอะไร)</td></tr>
     </tbody>
   </table>
   <table style="margin-top:8px">
@@ -243,7 +246,7 @@
     <tr><td>API / DB ไม่เปิดออกนอกเครื่อง</td><td><code>ss -ltn</code> → 0.0.0.0:80 · 127.0.0.1:3000 · 127.0.0.1:5432 · nmap จากภายนอก: 3000, 5432 = filtered</td></tr>
     <tr><td>บังคับ HTTPS</td><td>http (80, 8080) → 301 https · HSTS จาก LB (Nginx เอาของตัวเองออกแล้ว ไม่ให้ header ซ้ำ)</td></tr>
     <tr><td>Authentication</td><td>ไม่มีรหัสผ่านในระบบ · access JWT 15 นาที · refresh token ใน cookie <code>HttpOnly; Secure; SameSite=Strict</code> เก็บใน DB เป็น sha256 · หมุนทุกครั้ง · ใช้ซ้ำ = เพิกถอนทั้งชุด · Google จริงตรวจ <code>aud</code>, <code>iss</code>, <code>email_verified</code>, <code>exp</code></td></tr>
-    <tr><td>Authorization</td><td>JWT middleware · moderator อ่าน role จาก DB ทุก request</td></tr>
+    <tr><td>Authorization</td><td>JWT middleware · โหวตคดีได้เฉพาะลูกขุนที่ถูกสุ่ม (ตรวจจาก DB)</td></tr>
     <tr><td>Input</td><td>parameterized SQL ทุกจุด · validate ทุก field · body ≤ 10 KB · word filter + กันเบอร์โทร</td></tr>
     <tr><td>XSS / clickjacking</td><td>escape ทุกข้อความก่อนแสดง · CSP · X-Frame-Options SAMEORIGIN · nosniff · Permissions-Policy</td></tr>
     <tr><td>Rate limit</td><td>Nginx: /api 10 req/s burst 20 · เข้าสู่ระบบ 10 req/นาที → 429</td></tr>
@@ -274,11 +277,11 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span>
 
 <h2><span class="n">7</span>การทดสอบ</h2>
 <div class="row">
-  <div class="card small"><h3 style="margin-top:0">อัตโนมัติ — <code>cd api && npm test</code></h3>
-    <p>สร้างฐานข้อมูลทิ้งได้ <code>bus_test</code> → เปิด API จริง → ยิง HTTP 14 ชุด (ผ่านทั้งหมด): เข้าสู่ระบบ, รีวิว, word filter, มีประโยชน์, แลกของ, แลกพร้อมกัน, ของฟรี, รูปโปรไฟล์, สติกเกอร์, report, moderator, refresh token, ลบบัญชี — ทุกกรณีที่ต้องถูกปฏิเสธ (400/401/403/409) มี test</p></div>
+  <div class="card small"><h3 style="margin-top:0">อัตโนมัติ: <code>cd api && npm test</code></h3>
+    <p>สร้างฐานข้อมูลทิ้งได้ <code>bus_test</code> → เปิด API จริง → ยิง HTTP 21 ชุด (ผ่านทั้งหมด): เข้าสู่ระบบ, รีวิว, word filter, มีประโยชน์, แลกของ, แลกพร้อมกัน, ของฟรี, รูปโปรไฟล์, สติกเกอร์, สายและป้าย, report, ลูกขุน, refresh token, ลบบัญชี, LINE และทุกกรณีที่ต้องถูกปฏิเสธ (400/401/403/409) มี test</p></div>
   <div class="card small"><h3 style="margin-top:0">บน server หลัง deploy</h3>
     <p><code>curl</code> ตรวจ header, 301, endpoint ใหม่, refresh/logout ผ่าน LB จริง · ทดสอบ restore backup · nmap · ภาพหน้าจอทุกหน้าในรายงานนี้ถ่ายจากเว็บจริงหลัง deploy</p>
-    <p><b>บั๊กที่เจอและแก้:</b> "เหี้ยมาก" หลุด filter (เจอจาก test) · logout แล้วยัง refresh ได้ภายใน 20 วินาที (เจอบน server) — เพิ่ม test ทั้งคู่</p></div>
+    <p><b>บั๊กที่เจอและแก้:</b> "เหี้ยมาก" หลุด filter (เจอจาก test) · logout แล้วยัง refresh ได้ภายใน 20 วินาที (เจอบน server) เพิ่ม test ทั้งคู่แล้ว</p></div>
 </div>
 
 <h2><span class="n">8</span>ผลแต่ละ Sprint</h2>
@@ -287,28 +290,22 @@ live   : <span class="g">6 users, 7 reviews, 33 ledger rows</span>
   <tbody>
     <tr><td class="nowrap">0 · ก.ย.</td><td>ปัญหา / ลูกค้า / โซลูชัน · ออกแบบ architecture · ต้นแบบค้นหา</td><td>One-pager + pitch · หน้าค้นหาใช้ได้บน GitHub Pages</td></tr>
     <tr><td class="nowrap">1 · ต.ค.</td><td>API + DB + Nginx/HTTPS + หน้ารีวิว + deploy</td><td>ครบ 5/5 + ดึงงาน Sprint 2 มาได้ 3 (ledger, feed, มีประโยชน์) · เปลี่ยนเป็น Google Sign-In (mock)</td></tr>
-    <tr><td class="nowrap">2 · ต.ค.</td><td>แลกของ · report/moderator · refresh token · PWA · security + backup · แยก node</td><td>เสร็จ 12 (รวม Google Sign-In จริง) · รอ node ที่ 2 · ทดลองกับผู้ใช้ ↓</td></tr>
+    <tr><td class="nowrap">2 · ต.ค.</td><td>แลกของ · report/moderator · refresh token · PWA · security + backup · แยก node</td><td>เสร็จ 12 (รวม Google Sign-In จริง) · รอ node ที่ 2 · ไม่ได้ทดลองกับผู้ใช้</td></tr>
   </tbody>
 </table>
 
-<h2><span class="n">9</span>ทดลองกับผู้ใช้</h2>
-<div class="card todo small">
-  <p>คนที่ลอง <span class="blank">&nbsp;</span> คน · สาย <span class="blank">&nbsp;</span> · รีวิว <span class="blank">&nbsp;</span> · แจ้งเหตุ <span class="blank">&nbsp;</span> · ใส่ป้าย+เวลา <span class="blank">&nbsp;</span>% · แลกของ <span class="blank">&nbsp;</span> คน · ติดตั้ง PWA <span class="blank">&nbsp;</span> คน</p>
-  <p>สิ่งที่ได้ยิน / ที่ปรับ: <span class="blank" style="min-width:520px">&nbsp;</span></p>
-  <p class="muted">ทีมกรอกจากข้อมูลจริง — ดึงตัวเลขได้จาก <code>SELECT reason, count(*) FROM points_ledger GROUP BY 1</code></p>
-</div>
-
-<h2><span class="n">10</span>ข้อจำกัดและงานต่อ</h2>
+<h2><span class="n">9</span>ข้อจำกัดและงานต่อ</h2>
 <div class="row">
   <div class="card small"><h3 style="margin-top:0">ข้อจำกัด</h3><ul>
     <li>ยังเปิดบัญชีทดสอบคู่กับ Google จริง (ปิดได้ด้วย <code>MOCK_LOGIN=0</code>)</li>
     <li>ยังเครื่องเดียว · backup อยู่เครื่องเดียวกับ DB ถ้าไม่ได้ดึงออก</li>
-    <li>word filter เป็นรายการคำ คำใหม่หลุดได้ — พึ่ง report</li>
+    <li>word filter เป็นรายการคำ คำใหม่หลุดได้ ต้องพึ่ง report</li>
     <li>ยังไม่แจ้งผู้เขียนเมื่อรีวิวถูกซ่อน · ไม่มีอุทธรณ์</li>
-    <li>ค่าแต้มเป็นค่าที่ทีมตั้งเอง ยังไม่ได้ปรับจากข้อมูลจริง</li></ul></div>
+    <li>ยังไม่ได้ทดลองกับผู้ใช้จริง ค่าแต้มเป็นค่าที่ทีมตั้งเอง</li></ul></div>
   <div class="card small"><h3 style="margin-top:0">งานต่อ</h3><ul>
     <li>ปิดบัญชีทดสอบหลังเดโม (<code>MOCK_LOGIN=0</code>)</li>
     <li>เพิ่ม node ที่ 2 → <code>API_HOST=… API_ADDR=… WEB_ADDR=… ./deploy/deploy.sh</code> → nmap ซ้ำ</li>
+    <li>ให้คนลองใช้จริง แล้วปรับค่าแต้มจากข้อมูล</li>
     <li>ติดตามสาย / feed ตามสาย · badge จากยอดรีวิว</li>
     <li>B2B: สรุปคะแนนรายอู่/รายเขตให้ผู้ประกอบการ</li></ul></div>
 </div>
