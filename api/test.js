@@ -20,13 +20,23 @@ before(async () => {
   pool = new Pool({ connectionString: DATABASE_URL });
   lineStub = http.createServer((req, res) => {
     let b = ""; req.on("data", c => b += c);
-    req.on("end", () => { lineCalls.push({ path: req.url, auth: req.headers.authorization, body: JSON.parse(b || "{}") }); res.setHeader("content-type", "application/json"); res.end("{}"); });
+    req.on("end", () => {
+      const form = (req.headers["content-type"] || "").startsWith("application/x-www-form-urlencoded");
+      const body = form ? Object.fromEntries(new URLSearchParams(b)) : JSON.parse(b || "{}");
+      lineCalls.push({ path: req.url, auth: req.headers.authorization, body });
+      res.setHeader("content-type", "application/json");
+      // LINE Login: code "bad" = LINE ปฏิเสธ · อื่น ๆ → id token ที่บอก sub = code
+      if (req.url === "/oauth2/v2.1/token") { res.statusCode = body.code === "bad" ? 400 : 200; return res.end(JSON.stringify({ id_token: "idt:" + body.code })); }
+      if (req.url === "/oauth2/v2.1/verify") return res.end(JSON.stringify({ sub: body.id_token.slice(4), aud: body.client_id, nonce: body.nonce, name: "สมชาย ใจดี" }));
+      res.end("{}");
+    });
   }).listen(3998, "127.0.0.1");
   await pool.query("TRUNCATE users, buses, reviews, review_votes, points_ledger, user_rewards, review_reactions, reports, refresh_tokens RESTART IDENTITY CASCADE");
   srv = spawn(process.execPath, [path.join(__dirname, "server.js")], {
     env: { ...process.env, DATABASE_URL, PORT, HOST: "127.0.0.1", JWT_SECRET: "t".repeat(40), MODERATOR_EMAILS: "mod@example.com",
       COOKIE_SECURE: "0", REFRESH_GRACE_MS: "1500", GOOGLE_CLIENT_ID: "",
-      LINE_CHANNEL_SECRET: LINE_SECRET, LINE_CHANNEL_ACCESS_TOKEN: "test-token", LINE_BOT_ID: "@testbot", LINE_API_BASE: "http://127.0.0.1:3998" },
+      LINE_CHANNEL_SECRET: LINE_SECRET, LINE_CHANNEL_ACCESS_TOKEN: "test-token", LINE_BOT_ID: "@testbot", LINE_API_BASE: "http://127.0.0.1:3998",
+      LINE_LOGIN_CHANNEL_ID: "llid", LINE_LOGIN_CHANNEL_SECRET: "llsecret", LINE_LOGIN_WEB: "http://127.0.0.1:3998", LINE_LOGIN_API: "http://127.0.0.1:3998" },
     stdio: ["ignore", "ignore", "inherit"],
   });
   for (let i = 0; i < 50; i++) {
@@ -62,7 +72,7 @@ let A, B, C, D, M, aReview, bReview;
 
 test("config: ยังไม่มี Google client ID → ใช้โหมดจำลอง", async () => {
   const r = await call("GET", "/config");
-  assert.deepEqual(r.body, { google_client_id: null, mock_login: true, line: { bot_id: "@testbot" } });
+  assert.deepEqual(r.body, { google_client_id: null, mock_login: true, line: { bot_id: "@testbot" }, line_login: true });
 });
 
 test("เข้าสู่ระบบ: ครั้งแรก +20 · ได้ refresh cookie แบบ HttpOnly · อีเมลจริงถูกปฏิเสธในโหมดจำลอง", async () => {
@@ -340,4 +350,145 @@ test("LINE: ลายเซ็นผิด 401 · ส่งรหัสให้
   const me = (await call("GET", "/me", { token: F.token })).body;
   assert.equal(me.user.line_linked, false, "บล็อกบอท = ยกเลิกการเชื่อม");
   assert.deepEqual(me.follows.map(f => f.label), ["8"]);
+});
+
+test("LINE แชต: เลขข้างรถ · ไม่มีเขตให้เลือก · สาย · ตำแหน่ง → ป้ายใกล้ · ยังไม่เชื่อม = ขอให้เชื่อม · รีวิวทีละขั้น · ติดตาม · แจ้งเหตุ · แต้ม", async () => {
+  const hook = async (events) => {
+    const body = JSON.stringify({ destination: "Ubot", events });
+    lineCalls.length = 0;
+    const r = await fetch(BASE + "/line/webhook", { method: "POST", body,
+      headers: { "content-type": "application/json", "x-line-signature": crypto.createHmac("sha256", LINE_SECRET).update(body).digest("base64") } });
+    assert.equal(r.status, 200);
+    const rep = lineCalls.find(c => c.path === "/v2/bot/message/reply");
+    return rep ? rep.body.messages : [];
+  };
+  const say = (text, userId) => hook([{ type: "message", replyToken: "rt", source: { type: "user", userId }, message: { type: "text", text } }]);
+  const tap = (data, userId) => hook([{ type: "postback", replyToken: "rt", source: { type: "user", userId }, postback: { data } }]);
+  const all = m => JSON.stringify(m);
+  const quick = m => m[0].quickReply.items.map(i => i.action);
+
+  let m = await say("7-3077", "Uanon");
+  assert.equal(m[0].type, "flex"); assert.match(all(m), /"7-3077"/); assert.match(all(m), /a=rate&bus=7-3077/);
+  m = await say("7 3077", "Uanon");
+  assert.equal(m[0].type, "flex", "เว้นวรรคแทนขีดได้");
+  m = await say("80040", "Uanon");
+  assert.ok(quick(m).some(a => a.text === "8-80040"), "ไม่มีเขต → ให้เลือก ไม่เดา");
+  m = await say("สาย 8", "Uanon");
+  assert.equal(m[0].contents.type, "carousel"); assert.match(all(m[0]), /สาย 8/); assert.match(all(m), /GTFS/);
+  m = await say("สาย ไม่มีจริง", "Uanon");
+  assert.match(m[0].text, /ไม่พบสาย/);
+  m = await hook([{ type: "message", replyToken: "rt", source: { type: "user", userId: "Uanon" }, message: { type: "location", latitude: 13.74735, longitude: 100.49569 } }]);
+  assert.match(all(m), /สวนสราญรมย์/); assert.match(all(m), /สาย /);
+  m = await hook([{ type: "message", replyToken: "rt", source: { type: "user", userId: "Uanon" }, message: { type: "location", latitude: 0, longitude: 0 } }]);
+  assert.match(m[0].text, /ไม่มีป้าย/);
+  m = await tap("a=rate&bus=2-70235", "Uanon");
+  assert.match(m[0].text, /เชื่อมบัญชี/, "ยังไม่เชื่อม → รีวิวไม่ได้");
+  m = await say("อะไรก็ได้", "Uanon");
+  assert.match(m[0].text, /เลขข้างรถ/);
+
+  // เชื่อมบัญชี แล้วรีวิวทีละขั้น
+  const C = await login("chat@example.com", "แชต");
+  await say((await call("POST", "/me/line", { token: C.token })).body.code, "Uchat");
+  const before = await points(C);
+  m = await tap("a=rate&bus=2-70235", "Uchat");
+  assert.match(m[0].text, /1\/3/); assert.equal(quick(m).length, 6);
+  await tap("a=star&v=5", "Uchat"); await tap("a=star&v=4", "Uchat");
+  m = await tap("a=star&v=3", "Uchat");
+  assert.match(m[0].text, /พิมพ์รีวิว/);
+  m = await say("STRESS แต่ขับนิ่ม", "Uchat");
+  assert.match(m[0].text, /บันทึกรีวิว.*\+10/, "คำอังกฤษ 6 ตัวในรีวิวไม่ถูกตีความเป็นรหัสเชื่อมบัญชี");
+  const rv = (await pool.query("SELECT stars_driving, stars_stops, stars_condition, text FROM reviews WHERE user_id = $1 AND fleet_no = '2-70235'", [C.id])).rows[0];
+  assert.deepEqual(rv, { stars_driving: 5, stars_stops: 4, stars_condition: 3, text: "STRESS แต่ขับนิ่ม" });
+  assert.equal(await points(C), before + 10);
+  m = await tap("a=rate&bus=2-70235", "Uchat");
+  assert.match(m[0].text, /รีวิวคันนี้ไปแล้ว/);
+  m = await tap("a=star&v=5", "Uchat");
+  assert.match(m[0].text, /หมดเวลา/, "ไม่มีขั้นตอนค้าง → กดดาวเก่าไม่มีผล");
+
+  // ติดตาม + แจ้งเหตุจากแชต → ส่งหาคนติดตาม ไม่ส่งหาคนแจ้ง
+  const D = await login("chatfollow@example.com", "ผู้ติดตาม");
+  await say((await call("POST", "/me/line", { token: D.token })).body.code, "Udee");
+  m = await tap("a=follow&kind=bus&t=2-70235", "Udee");
+  assert.match(m[0].text, /ติดตามแล้ว/);
+  assert.deepEqual((await call("GET", "/me", { token: D.token })).body.follows.map(f => f.label), ["2-70235"]);
+  m = await tap("a=inc&bus=2-70235", "Uchat");
+  assert.ok(quick(m).some(a => a.data.includes("k=breakdown")));
+  m = await tap("a=inc_kind&bus=2-70235&k=breakdown", "Uchat");
+  assert.match(m[0].text, /แจ้งเหตุรถ 2-70235 แล้ว/);
+  for (let i = 0; i < 40 && !lineCalls.some(c => c.path.endsWith("multicast")); i++) await new Promise(r => setTimeout(r, 25));
+  const mc = lineCalls.find(c => c.path.endsWith("multicast"));
+  assert.deepEqual(mc.body.to, ["Udee"]); assert.match(mc.body.messages[0].text, /2-70235[\s\S]*รถเสีย/);
+
+  // เล่าเหตุเอง: คำหยาบ → พิมพ์ใหม่ได้ในขั้นเดิม
+  await tap("a=inc_kind&bus=2-70235&k=other", "Uchat");
+  m = await say("คนขับเหี้ย", "Uchat");
+  assert.match(m[0].text, /พิมพ์ใหม่/);
+  m = await say("ควันดำเต็มรถ", "Uchat");
+  assert.match(m[0].text, /แจ้งเหตุรถ 2-70235 แล้ว/);
+
+  m = await say("แต้ม", "Uchat");
+  assert.match(m[0].text, new RegExp(`แชต มี ${await points(C)} แต้ม[\\s\\S]*\\+10  เขียนรีวิว`));
+  await tap("a=rate&bus=1-46001", "Uchat");
+  m = await tap("a=cancel", "Uchat");
+  assert.match(m[0].text, /ยกเลิก/);
+  m = await say("ข้อความหลังยกเลิก", "Uchat");
+  assert.match(m[0].text, /เลขข้างรถ/, "ยกเลิกแล้วข้อความต่อไปไม่ถูกบันทึกเป็นรีวิว");
+});
+
+test("เข้าสู่ระบบด้วย LINE: state ผิด/ยกเลิก/LINE ปฏิเสธ → กลับพร้อม error · ครั้งแรก +20 ไม่มีอีเมล เชื่อมบอทให้เลย · ครั้งต่อไปบัญชีเดิม · เคยเชื่อมบอทจากบัญชี Google → เข้าบัญชี Google เดิม", async () => {
+  const start = async () => {
+    const r = await fetch(BASE + "/auth/line", { redirect: "manual" });
+    assert.equal(r.status, 302);
+    const loc = new URL(r.headers.get("location")), ck = r.headers.get("set-cookie").match(/bus_ll=([^;]+)/)[1];
+    return { loc, ck };
+  };
+  const back = async (q, ck) => {
+    const r = await fetch(BASE + "/auth/line/callback?" + new URLSearchParams(q), { redirect: "manual", headers: ck ? { cookie: "bus_ll=" + ck } : {} });
+    assert.equal(r.status, 302);
+    const m = (r.headers.get("set-cookie") || "").match(/bus_rt=([^;]+)/);
+    return { to: new URL(r.headers.get("location"), "http://x").searchParams, cookie: m ? "bus_rt=" + m[1] : null };
+  };
+  const session = async cookie => (await call("POST", "/auth/refresh", { cookie })).body.token;
+
+  assert.equal((await call("GET", "/config")).body.line_login, true);
+  const { loc, ck } = await start();
+  assert.equal(loc.pathname, "/oauth2/v2.1/authorize");
+  assert.equal(loc.searchParams.get("client_id"), "llid");
+  assert.equal(loc.searchParams.get("scope"), "openid profile", "ไม่ขออีเมล");
+  assert.equal(loc.searchParams.get("redirect_uri"), "http://127.0.0.1:3999/api/auth/line/callback");
+  const [state, nonce] = decodeURIComponent(ck).split(".");
+  assert.equal(loc.searchParams.get("state"), state); assert.equal(loc.searchParams.get("nonce"), nonce);
+
+  let b = await back({ code: "Unew", state: "ปลอม" }, ck);
+  assert.match(b.to.get("login_error"), /หมดอายุ|ไม่ถูกต้อง/); assert.equal(b.cookie, null);
+  b = await back({ code: "Unew", state });
+  assert.ok(b.to.get("login_error"), "ไม่มี cookie (อีกเบราว์เซอร์) = ไม่ผ่าน");
+  b = await back({ error: "access_denied", state }, ck);
+  assert.match(b.to.get("login_error"), /ยกเลิก/);
+  b = await back({ code: "bad", state }, ck);
+  assert.match(b.to.get("login_error"), /ไม่สำเร็จ/);
+
+  lineCalls.length = 0;
+  b = await back({ code: "Unew", state }, ck);
+  assert.equal(b.to.get("login"), "line"); assert.equal(b.to.get("new"), "1");
+  assert.equal(lineCalls.find(c => c.path === "/oauth2/v2.1/verify").body.nonce, nonce, "ส่ง nonce ให้ LINE ตรวจ");
+  assert.equal(lineCalls.find(c => c.path === "/oauth2/v2.1/token").body.client_secret, "llsecret");
+  const L = { token: await session(b.cookie) };
+  const me = (await call("GET", "/me", { token: L.token })).body;
+  assert.equal(me.user.email, null); assert.equal(me.user.display_name, "สมชาย", "ชื่อต้นเท่านั้น");
+  assert.equal(me.user.line_linked, true, "เชื่อมบอทให้อัตโนมัติ"); assert.equal(me.points, 20);
+
+  const again = await start();
+  b = await back({ code: "Unew", state: decodeURIComponent(again.ck).split(".")[0] }, again.ck);
+  assert.equal(b.to.get("new"), null);
+  assert.equal((await call("GET", "/me", { token: await session(b.cookie) })).body.user.id, me.user.id, "ครั้งต่อไปได้บัญชีเดิม");
+
+  // บัญชี Google ที่เคยเชื่อมบอทด้วยรหัส 6 ตัว → เข้าด้วย LINE ได้บัญชีเดียวกัน
+  const G = await login("googlefirst@example.com", "กูเกิล");
+  await pool.query("UPDATE users SET line_user_id = 'Ugoogle' WHERE id = $1", [G.id]);
+  const s3 = await start();
+  b = await back({ code: "Ugoogle", state: decodeURIComponent(s3.ck).split(".")[0] }, s3.ck);
+  assert.equal(b.to.get("new"), null);
+  const gm = (await call("GET", "/me", { token: await session(b.cookie) })).body;
+  assert.equal(gm.user.id, G.id); assert.equal(gm.user.email, "googlefirst@example.com");
 });

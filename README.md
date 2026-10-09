@@ -5,7 +5,7 @@
 รีวิวได้แต้ม → แลกสติกเกอร์/รูปโปรไฟล์ · รีวิวที่ผิดกติกา report ได้ ผู้ดูแลซ่อนและหักแต้ม · ติดตั้งเป็นแอปบนมือถือได้ (PWA)
 
 ใช้งานจริง: https://env-0241390.proen.app.ruk-com.cloud/
-สไลด์: `/pitch/sprint2.html` (final) · `/pitch/sprint1.html` · รายงานสรุป: `/pitch/report.html` (`report.pdf`)
+สไลด์นำเสนอ: `/pitch/final.html` · รายสปรินต์: `/pitch/sprint2.html` · `/pitch/sprint1.html` · รายงานสรุป: `/pitch/report.html` (`report.pdf`)
 
 - `index.html` — หน้าเว็บ (ค้นหา · รีวิว · Feed · แลกของ · ฉัน) เรียก API ที่ `/api` ใน origin เดียวกัน
 - `sw.js`, `manifest.webmanifest`, `icons/` — PWA (ไม่ cache `/api`)
@@ -66,18 +66,22 @@ API_HOST=<node2>@gate.manage.ruk-com.cloud API_ADDR=<private IP node2> WEB_ADDR=
 
 API ฟัง private IP ของตัวเอง · iptables + `ALLOW_FROM` รับพอร์ต 3000 จาก web node เท่านั้น · Nginx proxy ไป `API_ADDR:3000`
 
-### แจ้งเตือนทาง LINE (ไม่บังคับ)
+### LINE: แชตบอท + แจ้งเตือน (ไม่บังคับ)
 
-ผู้ใช้กด "ติดตาม" รถหรือสาย → มีคนแจ้งเหตุ = บอทส่งข้อความ LINE ให้ · ไม่ตั้ง 3 ค่านี้ = ฟีเจอร์ปิด ปุ่มติดตามไม่ขึ้น
+ไม่ตั้ง 3 ค่านี้ = ฟีเจอร์ปิด ปุ่มติดตามไม่ขึ้น
 
-1. [LINE Developers](https://developers.line.biz/console/) → สร้าง Provider → **Messaging API channel** (ได้ Official Account มาด้วย)
-2. แท็บ Messaging API: Webhook URL = `https://<โดเมน>/api/line/webhook` → เปิด **Use webhook** → กด Verify ·
-   ใน LINE Official Account Manager ปิด Auto-reply และ Greeting message (บอทตอบเอง)
-3. ใส่ใน `/etc/bus-api.env` บน server แล้ว `systemctl restart bus-api`:
-   `LINE_CHANNEL_SECRET=` (แท็บ Basic settings) · `LINE_CHANNEL_ACCESS_TOKEN=` (long-lived, แท็บ Messaging API) · `LINE_BOT_ID=@xxxx` (Basic ID ของบอท)
+1. [LINE Official Account Manager](https://manager.line.biz/) → สร้าง Official Account → Settings → **Messaging API** → Enable
+   (ตั้งแต่ปี 2024 สร้าง Messaging API channel จาก LINE Developers Console ตรง ๆ ไม่ได้แล้ว)
+2. Messaging API: Webhook URL = `https://<โดเมน>/api/line/webhook` · Response settings: เปิด Webhooks · ปิด Greeting, Auto-response, Chat
+3. LINE Developers → channel → แท็บ Messaging API → Issue **Channel access token (long-lived)**
+4. `./deploy/set-line.sh` (ถาม secret · token · Bot ID แบบไม่แสดงบนจอ แล้ว restart API) → กด Verify ใน LINE Developers ต้องได้ Success
+5. เมนูปุ่มใต้แชต: `ssh … 'set -a; . /etc/bus-api.env; set +a; node /opt/bus-api/line-richmenu.js https://<โดเมน>'` (รูปคือ `api/richmenu.png`)
 
-เชื่อมบัญชี: แท็บ "ฉัน" → เชื่อม LINE → ได้รหัส 6 ตัว (15 นาที) → ส่งให้บอท · บล็อกบอท = ยกเลิกการเชื่อมอัตโนมัติ ·
-แผนฟรีของ Official Account ส่งได้จำกัดต่อเดือน — ส่งเฉพาะแจ้งเหตุ ไม่ส่งรีวิวปกติ
+แชตบอท (`api/linebot.js`) ตอบเฉพาะที่ค้นจากรหัสหรือพิกัดได้แน่นอน — ตอบด้วย reply ไม่กินโควตาแผนฟรี:
+พิมพ์เลขข้างรถ `7-3077` → การ์ดรถ + ปุ่มรีวิว (ดาวทีละด้าน แล้วพิมพ์ข้อความ) / แจ้งเหตุ / ติดตาม ·
+พิมพ์ `สาย 8` → ปลายทาง + คันที่คนบอกว่าวิ่งสายนี้ · ส่งตำแหน่ง → 3 ป้ายใกล้สุด (ไม่เกิน 1 กม.) + สายที่ผ่าน · `แต้ม` → ยอดแต้ม
+รีวิว แจ้งเหตุ ติดตาม และแต้ม ต้องเชื่อมบัญชีก่อน: แท็บ "ฉัน" → เชื่อม LINE → ได้รหัส 6 ตัว (15 นาที) → ส่งให้บอท ·
+บล็อกบอท = ยกเลิกการเชื่อมอัตโนมัติ · แจ้งเหตุส่ง push หาคนที่ติดตาม (กินโควตา) — ส่งเฉพาะแจ้งเหตุ
 
 ### Backup
 

@@ -27,12 +27,18 @@ const LINE_BOT_ID = process.env.LINE_BOT_ID || "";             // @xxxx ขอ�
 const LINE_API = process.env.LINE_API_BASE || "https://api.line.me";
 const LINE_ON = !!(LINE_SECRET && LINE_TOKEN && LINE_BOT_ID);
 const MAX_FOLLOWS = 30;
+// เข้าสู่ระบบด้วย LINE (LINE Login channel ใต้ provider เดียวกับบอท → userId ตรงกัน เชื่อมบอทให้อัตโนมัติ)
+const LL_ID = process.env.LINE_LOGIN_CHANNEL_ID || "";
+const LL_SECRET = process.env.LINE_LOGIN_CHANNEL_SECRET || "";
+const LL_ON = !!(LL_ID && LL_SECRET);
+const LL_WEB = process.env.LINE_LOGIN_WEB || "https://access.line.me";
+const LL_API = process.env.LINE_LOGIN_API || "https://api.line.me";
 const REFRESH_REUSE_GRACE_MS = process.env.REFRESH_GRACE_MS != null ? +process.env.REFRESH_GRACE_MS : 20000;
 
 // ใช้ data.js ชุดเดียวกับหน้าเว็บ → จับคู่รุ่นรถจากเลขข้างรถ
 const dataPath = [process.env.DATA_JS, path.join(__dirname, "data.js"), path.join(__dirname, "..", "data.js")].find(p => p && fs.existsSync(p));
 const DATA = {};
-vm.runInNewContext(fs.readFileSync(dataPath, "utf8") + "\nthis.MODELS = MODELS; this.ZONES = ZONES;", DATA);
+vm.runInNewContext(fs.readFileSync(dataPath, "utf8") + "\nthis.MODELS = MODELS; this.ZONES = ZONES; this.LIVERY = LIVERY;", DATA);
 
 // แต้ม (ค่าเริ่มต้น — ปรับได้หลังทดลองกับผู้ใช้)
 const PTS = { signup: 20, review: 10, review_detail: 5, helpful_received: 2, helpful_daily_cap: 30, incident_confirmed: 20, incident_confirm_votes: 3, report_upheld: -20, route_tag: 2, route_tag_daily: 5 };
@@ -138,7 +144,7 @@ app.get("/api/health", wrap(async (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 }));
 
-app.get("/api/config", (_req, res) => res.json({ google_client_id: GOOGLE_CLIENT_ID || null, mock_login: MOCK_LOGIN, line: LINE_ON ? { bot_id: LINE_BOT_ID } : null }));
+app.get("/api/config", (_req, res) => res.json({ google_client_id: GOOGLE_CLIENT_ID || null, mock_login: MOCK_LOGIN, line: LINE_ON ? { bot_id: LINE_BOT_ID } : null, line_login: LL_ON }));
 
 // ตรวจ ID token กับ Google (aud ต้องเป็น client ของเรา · อีเมลยืนยันแล้ว · ยังไม่หมดอายุ)
 async function verifyGoogle(credential) {
@@ -156,6 +162,16 @@ async function verifyGoogle(credential) {
 
 // เข้าสู่ระบบด้วย Google — ครั้งแรก = สร้างบัญชี + 20 แต้ม · ไม่มีรหัสผ่านในระบบ
 // โหมดจำลอง: ยังไม่มี client ID → รับเฉพาะอีเมล @example.com (บัญชีทดสอบ) กันสวมรอยบัญชีจริง
+// บัญชีใหม่ (Google หรือ LINE) · รูปโปรไฟล์เริ่มต้นสุ่มจากรูปฟรี (เปลี่ยนเองได้ทันที) · +20 แต้ม
+async function newUser(c, { email = null, name, google_sub = null, line_sub = null }) {
+  const free = (await c.query("SELECT emoji, img FROM rewards WHERE type = 'avatar' AND cost = 0 ORDER BY random() LIMIT 1")).rows[0]
+    || { emoji: AVATARS[Math.floor(Math.random() * AVATARS.length)], img: null };
+  const u = (await c.query(`INSERT INTO users (email, display_name, avatar, avatar_img, google_sub, line_sub) VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, display_name, avatar`, [email, name, free.emoji, free.img, google_sub, line_sub])).rows[0];
+  await addPoints(c, u.id, PTS.signup, "signup");
+  return u;
+}
+
 app.post("/api/auth/google", wrap(async (req, res) => {
   let acc;
   if (GOOGLE_CLIENT_ID && req.body.credential) acc = await verifyGoogle(req.body.credential);
@@ -177,21 +193,63 @@ app.post("/api/auth/google", wrap(async (req, res) => {
       r = await c.query("UPDATE users SET google_sub = $1 WHERE email = $2 AND google_sub IS NULL RETURNING id, display_name, avatar", [acc.sub, acc.email]);
     }
     let created = false;
-    if (!r.rowCount) {
-      // รูปโปรไฟล์เริ่มต้น: สุ่มจากรูปฟรี (เปลี่ยนเองได้ทันที)
-      const free = (await c.query("SELECT emoji, img FROM rewards WHERE type = 'avatar' AND cost = 0 ORDER BY random() LIMIT 1")).rows[0]
-        || { emoji: AVATARS[Math.floor(Math.random() * AVATARS.length)], img: null };
-      r = await c.query("INSERT INTO users (email, display_name, avatar, avatar_img, google_sub) VALUES ($1, $2, $3, $4, $5) RETURNING id, display_name, avatar",
-        [acc.email, name, free.emoji, free.img, acc.sub]);
-      await addPoints(c, r.rows[0].id, PTS.signup, "signup");
-      created = true;
-    }
+    if (!r.rowCount) { r = { rows: [await newUser(c, { email: acc.email, name, google_sub: acc.sub })] }; created = true; }
     if (role) await c.query("UPDATE users SET role = $2 WHERE id = $1", [r.rows[0].id, role]);
     await issueRefresh(c, res, r.rows[0].id);
     return { user: r.rows[0], created };
   });
   res.status(out.created ? 201 : 200).json({ token: signToken(out.user), ...out });
 }));
+
+// ---------- เข้าสู่ระบบด้วย LINE (OpenID Connect · ไม่ขออีเมล) ----------
+// เริ่ม: สุ่ม state (กันปลอมคำขอ) + nonce (ผูก ID token กับคำขอนี้) เก็บใน cookie อายุ 10 นาที → ส่งไปหน้าอนุญาตของ LINE
+// cookie ต้องเป็น SameSite=Lax เพราะ LINE ส่งผู้ใช้กลับมาแบบข้ามเว็บ
+const LL_COOKIE = "bus_ll";
+const llCookieOpts = { httpOnly: true, secure: COOKIE_SECURE, sameSite: "lax", path: "/api/auth/line" };
+const llCallback = req => publicOrigin(req) + "/api/auth/line/callback";
+const backTo = (res, q) => res.redirect(302, "/?" + new URLSearchParams(q));
+app.get("/api/auth/line", (req, res) => {
+  if (!LL_ON) return backTo(res, { login_error: "ยังไม่เปิดเข้าสู่ระบบด้วย LINE" });
+  const state = crypto.randomBytes(16).toString("base64url"), nonce = crypto.randomBytes(16).toString("base64url");
+  res.cookie(LL_COOKIE, `${state}.${nonce}`, { ...llCookieOpts, maxAge: 600e3 });
+  const q = new URLSearchParams({ response_type: "code", client_id: LL_ID, redirect_uri: llCallback(req), state, scope: "openid profile", nonce, bot_prompt: "normal" });
+  res.redirect(302, `${LL_WEB}/oauth2/v2.1/authorize?${q}`);
+});
+app.get("/api/auth/line/callback", async (req, res) => {
+  const [state, nonce] = String(readCookie(req, LL_COOKIE) || "").split(".");
+  res.clearCookie(LL_COOKIE, llCookieOpts);
+  try {
+    if (!LL_ON) throw bad("ยังไม่เปิดเข้าสู่ระบบด้วย LINE");
+    if (req.query.error) throw bad("ยกเลิกการเข้าสู่ระบบด้วย LINE แล้ว");
+    if (!state || !nonce || req.query.state !== state || typeof req.query.code !== "string") throw bad("ลิงก์หมดอายุหรือไม่ถูกต้อง — กดเข้าสู่ระบบใหม่อีกครั้ง");
+    const form = body => ({ method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body), signal: AbortSignal.timeout(8000) });
+    const tok = await fetch(`${LL_API}/oauth2/v2.1/token`, form({ grant_type: "authorization_code", code: req.query.code, redirect_uri: llCallback(req), client_id: LL_ID, client_secret: LL_SECRET }));
+    if (!tok.ok) throw new Error("token " + tok.status);
+    const { id_token } = await tok.json();
+    // ให้ LINE ตรวจ ID token เอง (ลายเซ็น · aud · exp · nonce) แล้วเช็ก aud ซ้ำ
+    const ver = await fetch(`${LL_API}/oauth2/v2.1/verify`, form({ id_token: String(id_token || ""), client_id: LL_ID, nonce }));
+    if (!ver.ok) throw new Error("verify " + ver.status);
+    const p = await ver.json();
+    if (!p.sub || p.aud !== LL_ID || p.nonce !== nonce) throw new Error("id token claims");
+    let name = String(p.name || "").trim().split(/\s+/)[0].slice(0, 30);   // ชื่อต้นเท่านั้น เหมือน Google
+    if ([...name].length < 2 || hasBlocked(name)) name = "ผู้โดยสาร";
+    const created = await tx(async c => {
+      // เคยเข้าด้วย LINE · หรือบัญชี Google ที่เคยเชื่อมบอทด้วย LINE คนนี้ (userId เดียวกัน) → เข้าบัญชีเดิม แต้มไม่แยก
+      let u = (await c.query("SELECT id FROM users WHERE line_sub = $1", [p.sub])).rows[0];
+      if (!u) u = (await c.query("UPDATE users SET line_sub = $1 WHERE line_user_id = $1 AND line_sub IS NULL RETURNING id", [p.sub])).rows[0];
+      const fresh = !u;
+      if (fresh) u = await newUser(c, { name, line_sub: p.sub });
+      await c.query("UPDATE users SET line_user_id = NULL WHERE line_user_id = $1 AND id <> $2", [p.sub, u.id]);
+      await c.query("UPDATE users SET line_user_id = $1 WHERE id = $2", [p.sub, u.id]);   // เชื่อมบอทให้เลย
+      await issueRefresh(c, res, u.id);
+      return fresh;
+    });
+    backTo(res, created ? { login: "line", new: "1" } : { login: "line" });
+  } catch (e) {
+    if (!e.status) console.error("line login:", e.message);
+    backTo(res, { login_error: e.status ? e.message : "เข้าสู่ระบบด้วย LINE ไม่สำเร็จ ลองใหม่อีกครั้ง" });
+  }
+});
 
 // ขอ access token ใหม่ด้วย refresh token ใน cookie · หมุน token ทุกครั้ง
 // token ที่ถูกเพิกถอนแล้วถูกใช้ซ้ำ = อาจถูกขโมย → เพิกถอนทั้ง family (เว้นช่วงสั้น ๆ ให้แท็บที่ขอพร้อมกัน)
@@ -279,11 +337,14 @@ async function followTarget(kind, raw) {
   }
   throw bad("ติดตามได้เฉพาะรถหรือสาย");
 }
-app.post("/api/follows/:kind/:target", requireAuth, wrap(async (req, res) => {
-  const target = await followTarget(req.params.kind, req.params.target);
-  const n = await pool.query("SELECT count(*)::int AS n FROM follows WHERE user_id = $1", [req.user.sub]);
+async function addFollow(uid, kind, raw) {
+  const target = await followTarget(kind, raw);
+  const n = await pool.query("SELECT count(*)::int AS n FROM follows WHERE user_id = $1", [uid]);
   if (n.rows[0].n >= MAX_FOLLOWS) throw bad(`ติดตามได้สูงสุด ${MAX_FOLLOWS} รายการ — เลิกติดตามอันเก่าที่แท็บ "ฉัน" ก่อน`);
-  await pool.query("INSERT INTO follows (user_id, kind, target) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [req.user.sub, req.params.kind, target]);
+  await pool.query("INSERT INTO follows (user_id, kind, target) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING", [uid, kind, target]);
+}
+app.post("/api/follows/:kind/:target", requireAuth, wrap(async (req, res) => {
+  await addFollow(req.user.sub, req.params.kind, req.params.target);
   res.status(201).json({ following: true });
 }));
 app.delete("/api/follows/:kind/:target", requireAuth, wrap(async (req, res) => {
@@ -307,17 +368,19 @@ async function lineWebhook(req, res) {
   if (sig.length !== want.length || !crypto.timingSafeEqual(sig, want)) throw new HttpError(401, "ลายเซ็นไม่ถูกต้อง");
   let events = [];
   try { events = JSON.parse(raw.toString("utf8")).events || []; } catch { throw bad("JSON ไม่ถูกต้อง"); }
-  for (const ev of events) await lineEvent(ev).catch(e => console.error("line event:", e.message));
+  const origin = publicOrigin(req);
+  for (const ev of events) await lineEvent(ev, origin).catch(e => console.error("line event:", e.message));
   res.json({ ok: true });
 }
-async function lineEvent(ev) {
+async function lineEvent(ev, origin) {
   const uid = ev.source && ev.source.type === "user" ? ev.source.userId : null;
   if (!uid) return;
   if (ev.type === "unfollow") return pool.query("UPDATE users SET line_user_id = NULL WHERE line_user_id = $1", [uid]);
-  if (ev.type === "follow") return lineReply(ev.replyToken, "สวัสดีจาก คันนี้ดีไหม? 🚌\nเชื่อมบัญชี: ในเว็บไปที่แท็บ \"ฉัน\" กด \"เชื่อม LINE\" แล้วส่งรหัส 6 ตัวมาที่นี่\nจากนั้นกด \"ติดตาม\" รถหรือสายที่นั่งประจำ — มีคนแจ้งเหตุเมื่อไหร่จะบอกทันที");
-  if (ev.type !== "message" || !ev.message || ev.message.type !== "text") return;
-  const m = String(ev.message.text).toUpperCase().match(new RegExp(`(?:^|[^A-Z0-9])([${CODE_CHARS}]{6})(?![A-Z0-9])`));
-  if (!m) return lineReply(ev.replyToken, "ส่งรหัส 6 ตัวจากแท็บ \"ฉัน\" ในเว็บเพื่อเชื่อมบัญชี · บอทนี้ใช้ส่งแจ้งเตือนอย่างเดียว ตอบแชตไม่ได้");
+  if (ev.type === "follow") return lineReply(ev.replyToken, "สวัสดีจาก คันนี้ดีไหม? 🚌\nพิมพ์เลขข้างรถ เช่น 7-3077 เพื่อดูคะแนนคันนั้น · พิมพ์ สาย 8 · หรือส่งตำแหน่งเพื่อดูป้ายใกล้ ๆ\n\nอยากรีวิว แจ้งเหตุ หรือรับแจ้งเตือน: ในเว็บไปที่แท็บ \"ฉัน\" กด \"เชื่อม LINE\" แล้วส่งรหัส 6 ตัวมาที่นี่");
+  // รหัสเชื่อมบัญชี: ทั้งข้อความต้องเป็นรหัส (หรือ "เชื่อมบัญชี รหัส") — ไม่ให้คำอังกฤษในรีวิวถูกตีความเป็นรหัส
+  const m = ev.type === "message" && ev.message && ev.message.type === "text"
+    && String(ev.message.text).trim().toUpperCase().match(new RegExp(`^(?:เชื่อมบัญชี\\s*)?([${CODE_CHARS}]{6})$`));
+  if (!m) return chatBot(ev, uid, origin);
   const name = await tx(async c => {
     const code = await c.query("DELETE FROM line_link_codes WHERE code = $1 AND expires_at > now() RETURNING user_id", [m[1]]);
     if (!code.rowCount) return null;
@@ -340,6 +403,9 @@ async function notifyIncident(x) {
   const text = `🚨 มีคนแจ้งเหตุ รถ ${x.fleet_no}${x.route ? ` · สาย ${x.route.label}` : ""}\n"${x.text.length > 140 ? x.text.slice(0, 140) + "…" : x.text}"\n\nดูรายละเอียด: ${x.origin}/#${x.fleet_no}`;
   for (let i = 0; i < to.length; i += 500) await linePost("/v2/bot/message/multicast", { to: to.slice(i, i + 500), messages: [{ type: "text", text }] });
 }
+
+// แชตบอท: ค้นรถ/สาย/ป้ายใกล้ · รีวิว/แจ้งเหตุ/ติดตามผ่านปุ่ม (busRoutes ประกาศทีหลัง → ส่งเป็นฟังก์ชันห่อ)
+const chatBot = require("./linebot")({ pool, linePost, parseFleet, DATA, busRoutes: (c, f) => busRoutes(c, f), createReview, addFollow });
 
 // ใช้รูปโปรไฟล์ที่แลกมาแล้ว
 app.post("/api/me/avatar", requireAuth, wrap(async (req, res) => {
@@ -498,8 +564,8 @@ app.get("/api/buses/:fleetNo/reviews", optionalAuth, wrap(async (req, res) => {
   res.json({ fleet_no: f.fleet_no, items: r.rows.map(x => shapeReview(x, req.user)) });
 }));
 
-app.post("/api/reviews", requireAuth, wrap(async (req, res) => {
-  const b = req.body || {};
+// รีวิว / แจ้งเหตุ — ใช้ทั้งหน้าเว็บและแชต LINE (กติกาเดียวกัน)
+async function createReview(uid, b, origin) {
   const f = parseFleet(b.fleet_no);
   if (!f) throw bad("เลขข้างรถต้องระบุเขต เช่น 7-3077");
   const type = b.type === "incident" ? "incident" : "review";
@@ -518,8 +584,6 @@ app.post("/api/reviews", requireAuth, wrap(async (req, res) => {
     if (!rr.rows.length) throw bad("ไม่พบสายนี้ — เลือกจากรายการ");
     route = rr.rows[0];
   }
-  const uid = req.user.sub;
-
   const out = await tx(async c => {
     await c.query("INSERT INTO buses (fleet_no, zone, model_id) VALUES ($1, $2, $3) ON CONFLICT (fleet_no) DO NOTHING", [f.fleet_no, f.zone, f.model_id]);
     let r;
@@ -539,10 +603,12 @@ app.post("/api/reviews", requireAuth, wrap(async (req, res) => {
     }
     return { id, earned };
   });
-  if (type === "incident") notifyIncident({ fleet_no: f.fleet_no, route, text, author: uid, origin: process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}` })
+  if (type === "incident") notifyIncident({ fleet_no: f.fleet_no, route, text, author: uid, origin })
     .catch(e => console.error("line notify:", e.message));
-  res.status(201).json(out);
-}));
+  return out;
+}
+const publicOrigin = req => process.env.PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
+app.post("/api/reviews", requireAuth, wrap(async (req, res) => res.status(201).json(await createReview(req.user.sub, req.body || {}, publicOrigin(req)))));
 
 app.post("/api/reviews/:id/helpful", requireAuth, wrap(async (req, res) => {
   const id = parseInt(req.params.id, 10);

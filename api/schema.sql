@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
 -- ฐานข้อมูลเดิมที่สร้างก่อนเปลี่ยนเป็น Google Sign-In
 ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub text UNIQUE;
 ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+-- เข้าสู่ระบบด้วย LINE: ไม่ขออีเมลจาก LINE → email ว่างได้ · line_sub = userId จาก LINE Login
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS line_sub text UNIQUE;
 
 -- รถ 1 คัน = เลขข้างรถรวมเขต เช่น 7-3077 · สร้างเมื่อมีรีวิวแรก
 CREATE TABLE IF NOT EXISTS buses (
@@ -178,6 +181,12 @@ CREATE TABLE IF NOT EXISTS follows (
   PRIMARY KEY (user_id, kind, target)
 );
 CREATE INDEX IF NOT EXISTS follows_target ON follows (kind, target);
+-- ขั้นตอนที่ค้างในแชต LINE (ให้ดาวทีละด้าน → พิมพ์รีวิว / เล่าเหตุ) · หมดอายุเอง
+CREATE TABLE IF NOT EXISTS line_sessions (
+  line_user_id text PRIMARY KEY,
+  state        jsonb NOT NULL,
+  expires_at   timestamptz NOT NULL
+);
 
 -- ---------- รถคันนี้วิ่งสายอะไร (ผู้โดยสารช่วยกันบอก) ----------
 -- ไม่มีข้อมูลทางการว่ารถคันไหนวิ่งสายไหน (GTFS ไม่มีเลขข้างรถ · ขสมก. สลับรถในอู่ได้) → นับจากคนที่เห็น

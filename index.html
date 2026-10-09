@@ -164,10 +164,12 @@
     <div id="aStep1">
       <p class="mb-4 text-[14px] text-mute" id="aWhy" hidden></p>
       <div id="gReal" class="flex min-h-12 justify-center" hidden></div>
+      <a class="btn-line my-2.5 w-full" id="lineBtn" href="/api/auth/line" hidden><i class="fa-brands fa-line text-[22px]"></i>เข้าสู่ระบบด้วย LINE</a>
       <button class="btn-google w-full" type="button" id="gBtn"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
+      <p class="mt-2 text-center text-[12px] text-mute" id="lineNote" hidden>เคยเข้าด้วย Google แล้วเชื่อม LINE ไว้ → กดปุ่ม LINE ได้บัญชีเดิม</p>
       <ul class="mt-4 grid gap-1.5 text-[13px] text-mute">
         <li><i class="fa-solid fa-ticket-simple mr-2 w-4 text-center text-ticket"></i>เข้าครั้งแรกได้ 20 แต้ม</li>
-        <li><i class="fa-solid fa-id-badge mr-2 w-4 text-center"></i>ใช้แค่ชื่อและอีเมลจากบัญชี Google</li>
+        <li><i class="fa-solid fa-id-badge mr-2 w-4 text-center"></i>ใช้แค่ชื่อจากบัญชี · อีเมลเฉพาะเมื่อเข้าด้วย Google</li>
         <li><i class="fa-solid fa-key mr-2 w-4 text-center"></i>ไม่ต้องตั้งรหัสผ่าน · ไม่เก็บตำแหน่งของคุณ</li>
         <li><i class="fa-solid fa-shield-halved mr-2 w-4 text-center"></i><a class="underline" href="privacy.html">นโยบายความเป็นส่วนตัว</a></li>
       </ul>
@@ -871,6 +873,7 @@
     const real = !!cfg.google_client_id;
     $("#gReal").hidden = !real;
     $("#gBtn").hidden = real && !cfg.mock_login;
+    $("#lineBtn").hidden = $("#lineNote").hidden = !cfg.line_login;
     if (real) {
       $("#gBtn").innerHTML = `<i class="fa-solid fa-flask"></i>ใช้บัญชีทดสอบ`;
       loadGis().then(() => google.accounts.id.renderButton($("#gReal"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", locale: "th", width: Math.min(360, $("#aStep1").clientWidth || 320) }))
@@ -892,6 +895,8 @@
     finally { $$("#gList button").forEach(x => x.disabled = false); }
   }
   $("#gBtn").onclick = () => authStep(2);
+  // ไปหน้า LINE แล้วกลับมาที่ /?login=line → จำหน้ารถที่เปิดอยู่ไว้ก่อน
+  document.addEventListener("click", e => { if (e.target.closest("#lineBtn, [data-line-login]")) try { sessionStorage.setItem("lineBack", location.hash); } catch {} });
   $("#aBack").onclick = () => authStep(1);
   $("#authSheet").addEventListener("close", () => { const next = pendingAfterAuth; pendingAfterAuth = null; if (next && token) setTimeout(next, 50); });
   $("#gList").addEventListener("click", async e => {
@@ -1192,15 +1197,16 @@
         <div class="plate !rounded-b-none" style="--body:#f3e6c8;--band-c:#2346d6"><div class="fleet !text-[44px]">+20 <span class="z">แต้ม</span></div></div>
         <div class="p-5">
           <h2 class="font-display text-[21px] font-bold leading-tight">รีวิวรถเมล์คันที่นั่ง แล้วสะสมแต้ม</h2>
-          <p class="mt-1 text-[14px] text-mute">เข้าด้วยบัญชี Google ครั้งแรกได้ 20 แต้ม · ใช้แลกสติกเกอร์และรูปโปรไฟล์</p>
-          <button class="btn-google mt-4 w-full" type="button" id="meLogin"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
+          <p class="mt-1 text-[14px] text-mute">เข้าด้วยบัญชี ${cfg.line_login ? "LINE หรือ Google" : "Google"} ครั้งแรกได้ 20 แต้ม · ใช้แลกสติกเกอร์และรูปโปรไฟล์</p>
+          ${cfg.line_login ? `<a class="btn-line mt-4 w-full" href="/api/auth/line" data-line-login><i class="fa-brands fa-line text-[22px]"></i>เข้าสู่ระบบด้วย LINE</a>` : ""}
+          <button class="btn-google ${cfg.line_login ? "mt-2.5" : "mt-4"} w-full" type="button" id="meLogin"><svg class="h-5 w-5 shrink-0" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</button>
         </div></div>`;
       $("#meLogin").onclick = () => openAuth();
       return;
     }
     el.innerHTML = `<div class="card rise overflow-hidden">
         <div class="flex items-center gap-3.5 p-4"><button type="button" class="relative shrink-0 transition active:scale-95" id="meAvatar" aria-label="เปลี่ยนรูปโปรไฟล์">${avatar(me.user, 64)}<span class="absolute -right-0.5 -bottom-0.5 grid h-6 w-6 place-items-center rounded-full bg-route text-[11px] text-white shadow"><i class="fa-solid fa-pen"></i></span></button>
-          <div class="min-w-0 flex-1"><div class="truncate font-display text-[22px] font-bold leading-tight">${esc(me.user.display_name)}</div><div class="truncate text-[13px] text-mute">${esc(me.user.email)}</div></div></div>
+          <div class="min-w-0 flex-1"><div class="truncate font-display text-[22px] font-bold leading-tight">${esc(me.user.display_name)}</div><div class="truncate text-[13px] text-mute">${esc(me.user.email || "เข้าสู่ระบบด้วย LINE")}</div></div></div>
         <dl class="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
           ${[["แต้ม", me.points], ["รีวิว/แจ้งเหตุ", me.reviews], ["คนกดมีประโยชน์", me.helpful]].map(([k, v]) => `<div class="py-3"><dd class="num text-[24px] font-bold leading-none">${v}</dd><dt class="mt-1 text-[11.5px] text-mute">${k}</dt></div>`).join("")}
         </dl>
@@ -1259,6 +1265,19 @@
   $$("[data-tab]").forEach(b => b.onclick = () => { showTab(b.dataset.tab); scrollTo(0, 0); });
   document.addEventListener("click", e => { const b = e.target.closest("[data-tab-go]"); if (b) { if (b.dataset.shopKind) shopKind = b.dataset.shopKind; $$("dialog[open]").forEach(d => d.close()); showTab(b.dataset.tabGo); scrollTo(0, 0); } });
   refreshMe();
+  // กลับมาจากหน้าเข้าสู่ระบบของ LINE: server ตั้ง refresh cookie ไว้แล้ว → ขอ access token
+  const q0 = new URLSearchParams(location.search);
+  if (q0.has("login") || q0.has("login_error")) {
+    let back = ""; try { back = sessionStorage.getItem("lineBack") || ""; sessionStorage.removeItem("lineBack"); } catch {}
+    history.replaceState(null, "", location.pathname + back);
+    if (q0.get("login_error")) toast(q0.get("login_error"));
+    else renew().then(ok => {
+      if (!ok) return toast("เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้ง");
+      refreshMe(); if (curBus) loadBus(curBus);
+      if (q0.get("new")) { toast("ยินดีต้อนรับ · +20 แต้ม · เชื่อม LINE แล้ว"); openAvatarPicker(null, true); }
+      else toast("เข้าสู่ระบบด้วย LINE แล้ว");
+    });
+  }
   const tab0 = new URLSearchParams(location.search).get("tab");   // ลิงก์ตรงไปแท็บ เช่น ?tab=feed
   if (["routes", "feed", "shop", "me"].includes(tab0)) showTab(tab0);
 
