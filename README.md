@@ -51,20 +51,22 @@ cd api && npm test
 
 ## Deploy
 
+ระบบแยก 2 tier บน ruk-com (ตั้งแต่ 9 ต.ค. 2569):
+
+| node | private IP | ทำอะไร |
+| --- | --- | --- |
+| `89231-126` (web) | 10.104.11.4 | Nginx: หน้าเว็บ + ส่ง `/api` ต่อไป API node · ไม่มี DB |
+| `89583-126` (api) | 10.104.19.195 | Node.js 22 + PostgreSQL 16 · API ฟังแค่ private IP · DB ฟังแค่ 127.0.0.1 |
+
 ```bash
 ./deploy/deploy.sh
 ```
 
-ติดตั้ง Node 22 (จาก nodejs.org ตรวจ SHA256) / PostgreSQL / Nginx ถ้ายังไม่มี, rsync ไฟล์, `npm ci`, migrate, restart `bus-api`,
-เปิด `bus-backup.timer`, reload Nginx · secret อยู่ใน `/etc/bus-api.env` บน server เท่านั้น
+ติดตั้ง Node 22 (จาก nodejs.org ตรวจ SHA256) / PostgreSQL / Nginx ตาม role ของแต่ละเครื่อง, rsync ไฟล์, `npm ci`, migrate, restart `bus-api`,
+เปิด `bus-backup.timer`, reload Nginx · secret อยู่ใน `/etc/bus-api.env` บน API node เท่านั้น
 
-แยก API + DB ไป node ที่ 2 (private network ของ ruk-com):
-
-```bash
-API_HOST=<node2>@gate.manage.ruk-com.cloud API_ADDR=<private IP node2> WEB_ADDR=<private IP node1> ./deploy/deploy.sh
-```
-
-API ฟัง private IP ของตัวเอง · iptables + `ALLOW_FROM` รับพอร์ต 3000 จาก web node เท่านั้น · Nginx proxy ไป `API_ADDR:3000`
+พอร์ต 3000 ของ API node รับเฉพาะ web node: iptables (`bus-fw.service` ตั้งใหม่ทุกครั้งที่บูต) + `ALLOW_FROM` ใน API อีกชั้น ·
+เครื่องเดียว: `API_HOST=89231-126@gate.manage.ruk-com.cloud API_ADDR=127.0.0.1 ./deploy/deploy.sh`
 
 ### LINE: แชตบอท + แจ้งเตือน (ไม่บังคับ)
 
@@ -85,5 +87,5 @@ API ฟัง private IP ของตัวเอง · iptables + `ALLOW_FROM` 
 
 ### Backup
 
-`pg_dump` ทุกวัน 03:00 (เวลาไทย) ไปที่ `/var/backups/bus` เก็บ 7 วัน · ทดสอบกู้คืน: `bus-restore-test.sh` บน server ·
+`pg_dump` ทุกวัน 03:00 (เวลาไทย) ไปที่ `/var/backups/bus` เก็บ 7 วัน · ทดสอบกู้คืน: `bus-restore-test.sh` บน API node ·
 ดึงออกนอกเครื่อง: `./deploy/pull-backup.sh` (ลง `./backups/` ไม่อยู่ใน git)

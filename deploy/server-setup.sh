@@ -53,15 +53,37 @@ grep -q '^MODERATOR_EMAILS=' $ENV || echo 'MODERATOR_EMAILS=demo-fon@example.com
 chown root:busapi $ENV; chmod 640 $ENV
 
 # แยก node: พอร์ต 3000 รับจาก web node เท่านั้น (API เช็ก ALLOW_FROM ซ้ำอีกชั้น) · 5432 ฟังแค่ localhost อยู่แล้ว
-fw() {
-  { iptables -N BUS_API 2>/dev/null || iptables -F BUS_API; } &&
-  iptables -A BUS_API -s "$ALLOW_FROM" -j ACCEPT &&
-  iptables -A BUS_API -s 127.0.0.1 -j ACCEPT &&
-  iptables -A BUS_API -j DROP &&
-  { iptables -C INPUT -p tcp --dport 3000 -j BUS_API 2>/dev/null || iptables -I INPUT -p tcp --dport 3000 -j BUS_API; }
-}
-if [ -n "$ALLOW_FROM" ]; then
-  command -v iptables >/dev/null && fw || echo "warn: ตั้ง iptables ไม่ได้ในเครื่องนี้ — เหลือ ALLOW_FROM ใน API อีกชั้น"
+# กฎ iptables หายเมื่อเครื่อง restart → เขียนเป็นสคริปต์ + systemd unit ที่รันก่อน bus-api ทุกครั้งที่บูต
+if [ -n "$ALLOW_FROM" ] && command -v iptables >/dev/null; then
+  cat > /usr/local/sbin/bus-fw.sh <<FW
+#!/bin/bash
+set -e
+iptables -N BUS_API 2>/dev/null || iptables -F BUS_API
+iptables -A BUS_API -s $ALLOW_FROM -j ACCEPT
+iptables -A BUS_API -s 127.0.0.1 -j ACCEPT
+iptables -A BUS_API -j DROP
+iptables -C INPUT -p tcp --dport 3000 -j BUS_API 2>/dev/null || iptables -I INPUT -p tcp --dport 3000 -j BUS_API
+FW
+  chmod 700 /usr/local/sbin/bus-fw.sh
+  cat > /etc/systemd/system/bus-fw.service <<'UNIT'
+[Unit]
+Description=bus API firewall (port 3000 from web node only)
+Before=bus-api.service
+After=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/bus-fw.sh
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+  systemctl daemon-reload
+  systemctl enable bus-fw >/dev/null 2>&1
+  systemctl restart bus-fw || echo "warn: ตั้ง iptables ไม่ได้ในเครื่องนี้ — เหลือ ALLOW_FROM ใน API อีกชั้น"
+elif [ -n "$ALLOW_FROM" ]; then
+  echo "warn: ไม่มี iptables — เหลือ ALLOW_FROM ใน API อีกชั้น"
 fi
 
 mkdir -p /opt/bus-api /var/backups/bus

@@ -1,14 +1,15 @@
 #!/bin/bash
 # deploy จากเครื่องเรา → ruk-com
-#   เครื่องเดียว (ค่าเริ่มต้น):  ./deploy/deploy.sh
-#   แยก 2 node:  API_HOST=<node>@gate.manage.ruk-com.cloud API_ADDR=<private IP ของ API node> WEB_ADDR=<private IP ของ web node> ./deploy/deploy.sh
+#   ค่าเริ่มต้น = 2 node บน ruk-com (ตั้งแต่ 9 ต.ค. 2569): web = node 89231 (Nginx) · api = node 89583 (Node.js + PostgreSQL)
+#   ./deploy/deploy.sh
+#   เครื่องเดียว:  API_HOST=$WEB_HOST API_ADDR=127.0.0.1 ./deploy/deploy.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT=3022
 WEB_HOST=${WEB_HOST:-89231-126@gate.manage.ruk-com.cloud}
-API_HOST=${API_HOST:-$WEB_HOST}
-API_ADDR=${API_ADDR:-127.0.0.1}
-WEB_ADDR=${WEB_ADDR:-}
+API_HOST=${API_HOST:-89583-126@gate.manage.ruk-com.cloud}
+API_ADDR=${API_ADDR:-10.104.19.195}   # private IP ของ API node
+WEB_ADDR=${WEB_ADDR:-10.104.11.4}     # private IP ของ web node (ต่อ API ได้เครื่องเดียว)
 if [ "$API_HOST" != "$WEB_HOST" ]; then
   [ "$API_ADDR" != 127.0.0.1 ] && [ -n "$WEB_ADDR" ] || { echo "แยก node ต้องใส่ API_ADDR และ WEB_ADDR (private IP)"; exit 1; }
   SPLIT=1

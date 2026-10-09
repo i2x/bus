@@ -2,7 +2,7 @@
 # ใส่ค่า LINE Messaging API ลง /etc/bus-api.env บน server แล้ว restart API:  ./deploy/set-line.sh
 # พิมพ์ค่าเอง ไม่แสดงบนจอ ไม่อยู่ใน history ไม่ส่งผ่าน argument ของ ssh
 set -euo pipefail
-API_HOST=${API_HOST:-89231-126@gate.manage.ruk-com.cloud}
+API_HOST=${API_HOST:-89583-126@gate.manage.ruk-com.cloud}
 read -rsp "Channel secret (แท็บ Basic settings): " SECRET; echo
 read -rsp "Channel access token (แท็บ Messaging API): " TOKEN; echo
 read -rp  "Bot basic ID เช่น @123abcde: " BOT
