@@ -135,6 +135,42 @@ function shapeReview(r, me) {
   return { ...rest, mine: !!me && user_id === me.sub, voted: !!r.voted, reported: !!r.reported };
 }
 
+// ---------- แบ่งหน้าแบบ cursor (keyset) ----------
+// ส่งค่าคีย์เรียงของแถวสุดท้ายกลับไปเป็น next → หน้าถัดไปขอ ?before=next แล้ว DB ไปต่อจากแถวนั้นทันทีด้วย index
+// ไม่ใช้ OFFSET: DB ต้องไล่ข้ามทุกแถวก่อนหน้าทุกครั้ง (ยิ่งเลื่อนลึกยิ่งช้า) และโพสต์ใหม่ที่เข้ามาระหว่างเลื่อนทำให้ได้แถวซ้ำ
+const PAGE = 20, PAGE_MAX = 50;
+const pageSize = q => Math.min(Math.max(parseInt(q, 10) || PAGE, 1), PAGE_MAX);
+const TS = /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d(\.\d{1,6})?[+-]\d\d(:\d\d)?$/;   // timestamptz แบบที่ PostgreSQL แปลงเป็น text
+// kinds เช่น ["ts", "int"] · cursor มาจาก client ตรวจทุกค่าก่อนส่งให้ DB
+function decCursor(raw, kinds) {
+  if (raw == null || raw === "") return null;
+  let v = null;
+  try { v = JSON.parse(Buffer.from(String(raw).slice(0, 200), "base64url").toString()); } catch {}
+  if (!Array.isArray(v) || v.length !== kinds.length
+    || !kinds.every((k, i) => k === "int" ? Number.isInteger(v[i]) : typeof v[i] === "string" && TS.test(v[i]))) throw bad("cursor ไม่ถูกต้อง");
+  return v;
+}
+// ขอเกินมา 1 แถว: ได้เกิน = ยังมีหน้าถัดไป
+function toPage(rows, limit, key) {
+  const items = rows.slice(0, limit);
+  return { items, next: rows.length > limit ? Buffer.from(JSON.stringify(key(items[items.length - 1]))).toString("base64url") : null };
+}
+// รีวิวที่แสดงอยู่ เรียงใหม่สุด หรือมีประโยชน์สุด (top) · where ใช้ $2.. ตาม args ($1 = ผู้ใช้)
+async function reviewPage(req, top, where, args) {
+  const limit = pageSize(req.query.limit);
+  const cur = decCursor(req.query.before, top ? ["int", "ts", "int"] : ["ts", "int"]);
+  const p = [req.user ? req.user.sub : null, ...args];
+  const $ = v => { p.push(v); return "$" + p.length; };
+  const after = !cur ? "" : top ? `AND (r.helpful_count, r.created_at, r.id) < (${$(cur[0])}::int, ${$(cur[1])}::timestamptz, ${$(cur[2])}::int)`
+    : `AND (r.created_at, r.id) < (${$(cur[0])}::timestamptz, ${$(cur[1])}::int)`;
+  const r = await pool.query(`SELECT ${reviewCols("$1")}, r.created_at::text AS cur_at
+    FROM reviews r JOIN users u ON u.id = r.user_id
+    WHERE r.status = 'visible' AND ${where} ${after}
+    ORDER BY ${top ? "r.helpful_count DESC, " : ""}r.created_at DESC, r.id DESC LIMIT ${$(limit + 1)}`, p);
+  const { items, next } = toPage(r.rows, limit, x => top ? [x.helpful_count, x.cur_at, x.id] : [x.cur_at, x.id]);
+  return { items: items.map(({ cur_at, ...x }) => shapeReview(x, req.user)), next };
+}
+
 // ---------- routes ----------
 app.get("/api/health", wrap(async (_req, res) => {
   await pool.query("SELECT 1");
@@ -547,17 +583,8 @@ app.get("/api/routes/:id", wrap(async (req, res) => {
 app.get("/api/buses/:fleetNo/reviews", optionalAuth, wrap(async (req, res) => {
   const f = parseFleet(req.params.fleetNo);
   if (!f) throw bad("เลขข้างรถไม่ถูกต้อง");
-  const order = req.query.sort === "helpful" ? "r.helpful_count DESC, r.created_at DESC" : "r.created_at DESC";
   const typeFilter = req.query.type === "incident" ? "AND r.type = 'incident'" : "";
-  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
-  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
-  const me = req.user ? req.user.sub : null;
-  const r = await pool.query(`
-    SELECT ${reviewCols("$2")}
-    FROM reviews r JOIN users u ON u.id = r.user_id
-    WHERE r.fleet_no = $1 AND r.status = 'visible' ${typeFilter}
-    ORDER BY ${order} LIMIT $3 OFFSET $4`, [f.fleet_no, me, limit, offset]);
-  res.json({ fleet_no: f.fleet_no, items: r.rows.map(x => shapeReview(x, req.user)) });
+  res.json({ fleet_no: f.fleet_no, ...await reviewPage(req, req.query.sort === "helpful", `r.fleet_no = $2 ${typeFilter}`, [f.fleet_no]) });
 }));
 
 // รีวิว / แจ้งเหตุ — ใช้ทั้งหน้าเว็บและแชต LINE (กติกาเดียวกัน)
@@ -791,11 +818,12 @@ app.post("/api/jury/:id/vote", requireAuth, wrap(async (req, res) => {
   const c = out.closed;
   res.json({ id: out.id, vote: out.vote, closed: c ? { outcome: c.outcome, by: c.by, hide: c.hide, keep: c.keep } : null });
 }));
-// คำพิพากษา (สาธารณะ) · ลูกขุนเรียงตามชื่อ ไม่ผูกกับเสียง · เผาเพราะข้อมูลส่วนตัว = ไม่แสดงข้อความ
+// คำพิพากษา (สาธารณะ) · ลูกขุนเรียงตามชื่อ ไม่ผูกกับเสียง · เผาเพราะข้อมูลส่วนตัว = ไม่แสดงข้อความ · แบ่งหน้าแบบ cursor
 app.get("/api/verdicts", wrap(async (req, res) => {
   const f = req.query.fleet ? parseFleet(req.query.fleet) : null;
   if (req.query.fleet && !f) throw bad("เลขข้างรถไม่ถูกต้อง");
-  const r = await pool.query(`SELECT k.id, k.status AS outcome, k.decided_by AS by, k.closed_at, r.fleet_no, r.type,
+  const limit = pageSize(req.query.limit), cur = decCursor(req.query.before, ["ts", "int"]);
+  const r = await pool.query(`SELECT k.id, k.status AS outcome, k.decided_by AS by, k.closed_at, k.closed_at::text AS cur_at, r.fleet_no, r.type,
       CASE WHEN k.status = 'hide' AND EXISTS (SELECT 1 FROM reports p WHERE p.case_id = k.id AND p.reason = 'personal') THEN NULL ELSE r.text END AS text,
       (SELECT COALESCE(json_object_agg(x.reason, x.n), '{}') FROM (SELECT reason, count(*)::int AS n FROM reports WHERE case_id = k.id GROUP BY 1) x) AS reasons,
       (SELECT count(*)::int FROM jury_seats WHERE case_id = k.id AND vote = 'hide') AS hide,
@@ -804,21 +832,16 @@ app.get("/api/verdicts", wrap(async (req, res) => {
          FROM jury_seats s JOIN users u ON u.id = s.user_id WHERE s.case_id = k.id) AS jurors
     FROM jury_cases k JOIN reviews r ON r.id = k.review_id
     WHERE k.status <> 'open' AND ($1::text IS NULL OR r.fleet_no = $1)
-    ORDER BY k.closed_at DESC LIMIT 30`, [f ? f.fleet_no : null]);
-  res.json({ items: r.rows });
+      AND ($2::timestamptz IS NULL OR (k.closed_at, k.id) < ($2::timestamptz, $3::int))
+    ORDER BY k.closed_at DESC, k.id DESC LIMIT $4`, [f ? f.fleet_no : null, cur && cur[0], cur && cur[1], limit + 1]);
+  const { items, next } = toPage(r.rows, limit, x => [x.cur_at, x.id]);
+  res.json({ items: items.map(({ cur_at, ...x }) => x), next });
 }));
 
 app.get("/api/feed", optionalAuth, wrap(async (req, res) => {
-  const sort = req.query.sort === "top" ? "r.helpful_count DESC, r.created_at DESC" : "r.created_at DESC";
   const typeFilter = req.query.type === "incident" ? "AND r.type = 'incident'" : "";
   const zone = /^[1-8]$/.test(req.query.zone || "") ? +req.query.zone : null;
-  const me = req.user ? req.user.sub : null;
-  const r = await pool.query(`
-    SELECT ${reviewCols("$1")}
-    FROM reviews r JOIN users u ON u.id = r.user_id
-    WHERE r.status = 'visible' ${typeFilter} AND ($2::int IS NULL OR split_part(r.fleet_no, '-', 1)::int = $2)
-    ORDER BY ${sort} LIMIT 30`, [me, zone]);
-  res.json({ items: r.rows.map(x => shapeReview(x, req.user)) });
+  res.json(await reviewPage(req, req.query.sort === "top", `($2::int IS NULL OR split_part(r.fleet_no, '-', 1)::int = $2) ${typeFilter}`, [zone]));
 }));
 
 app.use("/api", (_req, _res, next) => next(new HttpError(404, "ไม่พบ endpoint")));

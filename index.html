@@ -507,7 +507,7 @@
   }).join("");
 
   // ---------- รีวิว / แต้ม / feed — คุยกับ REST API ที่ /api ใน origin เดียวกัน ----------
-  let token = store.get("token"), me = null, curBus = null, rvSort = "new", rvCtrl = null, feedSort = "new", pendingAfterAuth = null;
+  let token = store.get("token"), me = null, curBus = null, rvSort = "new", rvCtrl = null, rvNext = null, feedSort = "new", pendingAfterAuth = null;
   const OFFLINE_MSG = "รีวิวและแต้มใช้ได้บนเว็บหลักของโปรเจกต์ — หน้านี้ค้นหาได้อย่างเดียว";
 
   // access token อายุ 15 นาที → ใกล้หมดก็ขอใหม่ด้วย refresh token (cookie HttpOnly ที่ JS อ่านไม่ได้)
@@ -592,8 +592,21 @@
     const signal = rvCtrl.signal;
     Promise.all([api(`/buses/${fleet}`, { signal }), api(`/buses/${fleet}/reviews?sort=${rvSort}`, { signal }),
       api(`/verdicts?fleet=${fleet}`, { signal }).catch(e => { if (e.name === "AbortError") throw e; return { items: [] }; })])
-      .then(([b, list, vs]) => { if (curBus === fleet) box.innerHTML = rvBox(b, list.items, vs.items); })
+      .then(([b, list, vs]) => { if (curBus === fleet) { rvNext = list.next; box.innerHTML = rvBox(b, list.items, vs.items); } })
       .catch(e => { if (e.name !== "AbortError" && curBus === fleet) box.innerHTML = problem(e.message); });
+  }
+  // ปุ่ม "ดูเพิ่ม" ท้ายรายการ (next = cursor ของหน้าถัดไป · null = หมดแล้ว)
+  const moreBtn = (next, attr) => next ? `<button class="btn-quiet m-3 w-[calc(100%-1.5rem)] text-[13.5px]" type="button" ${attr}><i class="fa-solid fa-chevron-down"></i>ดูเพิ่ม</button>` : "";
+  async function moreReviews(btn) {
+    const fleet = curBus, next = rvNext; if (!next) return;
+    btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>กำลังโหลด…`;
+    try {
+      const r = await api(`/buses/${fleet}/reviews?sort=${rvSort}&before=${encodeURIComponent(next)}`);
+      if (curBus !== fleet || rvNext !== next) return;
+      rvNext = r.next;
+      $("#rvList").insertAdjacentHTML("beforeend", r.items.map(x => reviewItem(x)).join(""));
+      btn.outerHTML = moreBtn(rvNext, "data-rv-more");
+    } catch (err) { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>โหลดไม่สำเร็จ ลองอีกครั้ง`; toast(err.message); }
   }
   function verdict(s) {
     if (!s.reviews) return `<span class="tag bg-sunk text-mute">ยังไม่มีใครรีวิว</span>`;
@@ -638,7 +651,7 @@
       </div>
       ${items.length ? `<div class="flex items-center gap-3 border-t border-line px-4 py-2.5"><div class="eyebrow flex-1">รีวิวและเหตุ</div>
           <div class="seg !p-0.5"><button class="${rvSort === "new" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="new">ล่าสุด</button><button class="${rvSort === "helpful" ? "on" : ""} !py-1 !text-[12.5px]" type="button" data-rvsort="helpful">มีประโยชน์</button></div></div>`
-        + items.map(r => reviewItem(r)).join("")
+        + `<div id="rvList">${items.map(r => reviewItem(r)).join("")}</div>${moreBtn(rvNext, "data-rv-more")}`
         : `<p class="border-t border-line px-4 py-5 text-center text-[13.5px] text-mute">ยังไม่มีรีวิวคันนี้ — นั่งอยู่บนคันนี้ใช่ไหม? เขียนรีวิวแรกได้เลย</p>`}
       ${verdicts.length ? `<div class="border-t border-line px-4 py-2.5"><div class="eyebrow">⚖️ ศาลเตี้ย · คดีของคันนี้</div></div>` + verdicts.map(v => verdictItem(v, false, false)).join("") : ""}`;
   }
@@ -956,6 +969,7 @@
   document.addEventListener("click", async e => {
     const w = e.target.closest("[data-write]"); if (w) return openWrite(w.dataset.write);
     const so = e.target.closest("[data-rvsort]"); if (so) { rvSort = so.dataset.rvsort; return loadBus(curBus); }
+    const mo = e.target.closest("[data-rv-more]"); if (mo) return moreReviews(mo);
     const rx = e.target.closest("[data-react]"); if (rx) return react(rx.dataset.react, rx.dataset.sticker, rx.dataset.name);
     const pk = e.target.closest("[data-react-pick]"); if (pk) return pickSticker(pk.dataset.reactPick, pk.dataset.mineRx);
     const rp = e.target.closest("[data-report]"); if (rp) return openReport(rp.dataset.report);
@@ -1046,17 +1060,43 @@
   });
 
   // ---------- Feed ----------
+  // โหลดทีละ 20 รายการ · เลื่อนใกล้ท้ายรายการ (หรือกด "ดูเพิ่ม") → ขอหน้าถัดไปด้วย cursor ไม่โหลดทั้งหมดทีเดียว
+  let feedNext = null, feedGen = 0, feedBusy = false;
+  const feedPath = () => feedSort === "court" ? "/verdicts?" : "/feed?" + (feedSort === "incident" ? "type=incident&" : feedSort === "top" ? "sort=top&" : "");
+  const feedRow = (x, first) => feedSort === "court" ? verdictItem(x, first) : reviewItem(x, true, first);
+  const feedTail = () => feedNext ? `<button class="btn-quiet mt-3 w-full text-[13.5px]" type="button" id="feedMore"><i class="fa-solid fa-chevron-down"></i>ดูเพิ่ม</button>`
+    : `<p class="py-5 text-center text-[12.5px] text-mute">ไม่มีรายการเก่ากว่านี้แล้ว</p>`;
+  const feedIO = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) moreFeed(); }, { rootMargin: "600px 0px" });
+  function watchTail() { feedIO.disconnect(); const t = $("#feedMore"); if (t) { t.onclick = moreFeed; feedIO.observe(t); } }
   async function loadFeed() {
-    const el = $("#feedList");
+    const el = $("#feedList"), gen = ++feedGen, court = feedSort === "court";
+    feedNext = null; feedIO.disconnect();
     el.innerHTML = `<div class="card">${loading("กำลังโหลด…")}</div>`;
-    const q = feedSort === "incident" ? "?type=incident" : feedSort === "top" ? "?sort=top" : "", court = feedSort === "court";
     try {
-      const r = await api(court ? "/verdicts" : "/feed" + q);
+      const r = await api(feedPath());
+      if (gen !== feedGen) return;
+      feedNext = r.next;
       const intro = court ? `<p class="mb-3 px-1 text-[12.5px] leading-relaxed text-mute">รีวิวที่ถูกรายงานครบ 3 คน สุ่มผู้ใช้ 5 คนเป็นลูกขุนตัดสิน ได้ 3 เสียงก่อนชนะ ครบ 24 ชม. แล้วไม่มีใครโหวต พระเจ้าโยนเหรียญ ⚔️</p>` : "";
       el.innerHTML = r.items.length
-        ? `${intro}<div class="card rise overflow-hidden">${r.items.map((x, i) => court ? verdictItem(x, i === 0) : reviewItem(x, true, i === 0)).join("")}</div>`
+        ? `${intro}<div class="card rise overflow-hidden" id="feedCard">${r.items.map((x, i) => feedRow(x, i === 0)).join("")}</div><div id="feedTail">${feedTail()}</div>`
         : `${intro}<div class="card p-6 text-center"><p class="text-[14px]">${court ? "ยังไม่มีคดี" : feedSort === "incident" ? "ยังไม่มีใครแจ้งเหตุ" : "ยังไม่มีรีวิว"}</p><button class="btn-quiet mt-3" type="button" data-tab-go="search"><i class="fa-solid fa-magnifying-glass"></i>ค้นเลขรถที่นั่งอยู่</button></div>`;
-    } catch (e) { el.innerHTML = `<div class="card">${problem(e.message)}</div>`; }
+      watchTail();
+    } catch (e) { if (gen === feedGen) el.innerHTML = `<div class="card">${problem(e.message)}</div>`; }
+  }
+  async function moreFeed() {
+    if (!feedNext || feedBusy) return;
+    const gen = feedGen, btn = $("#feedMore");
+    feedBusy = true; if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>กำลังโหลด…`; }
+    try {
+      const r = await api(feedPath() + "before=" + encodeURIComponent(feedNext));
+      if (gen !== feedGen) return;
+      feedNext = r.next;
+      $("#feedCard").insertAdjacentHTML("beforeend", r.items.map(x => feedRow(x, false)).join(""));
+      $("#feedTail").innerHTML = feedTail();
+      watchTail();
+    } catch (err) {
+      if (gen === feedGen && btn) { btn.disabled = false; btn.innerHTML = `<i class="fa-solid fa-rotate-right"></i>โหลดไม่สำเร็จ ลองอีกครั้ง`; feedIO.disconnect(); }
+    } finally { feedBusy = false; }
   }
   const setFeed = k => { feedSort = k; $$("[data-feed]").forEach(x => x.classList.toggle("on", x.dataset.feed === k)); };
   $$("[data-feed]").forEach(b => b.onclick = () => { setFeed(b.dataset.feed); loadFeed(); });

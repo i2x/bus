@@ -442,10 +442,155 @@
   <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
 </section>
 
+<!-- กรองคำหยาบ: ปัญหา -->
+<section class="slide">
+  <div class="kicker">ดูแลเนื้อหา</div>
+  <h2>ทำไมเทียบคำตรง ๆ ไม่พอ</h2>
+  <svg class="d" viewBox="0 0 1136 410">
+    <rect x="0" y="0" width="548" height="400" rx="18" class="bx red"/>
+    <text x="274" y="46" class="c b lg tr">หลุด: คนเลี่ยงตัวสะกด</text>
+    <rect x="24" y="80" width="500" height="64" rx="14" class="bx"/><text x="48" y="121" class="b lg">เ หี้ ย</text><text x="500" y="120" class="e s">เว้นวรรค</text>
+    <rect x="24" y="160" width="500" height="64" rx="14" class="bx"/><text x="48" y="201" class="b lg mono">sh1t</text><text x="500" y="200" class="e s">ใช้เลขแทนตัวอักษร</text>
+    <rect x="24" y="240" width="500" height="64" rx="14" class="bx"/><text x="48" y="281" class="b lg">เหี้ยยยยย</text><text x="500" y="280" class="e s">ลากเสียง</text>
+    <rect x="24" y="320" width="500" height="64" rx="14" class="bx"/><text x="48" y="361" class="b lg mono">f*ck</text><text x="500" y="360" class="e s">ปิดด้วย *</text>
+
+    <rect x="588" y="0" width="548" height="400" rx="18" class="bx amber"/>
+    <text x="862" y="46" class="c b lg ta">จับผิด: ภาษาไทยไม่มีช่องว่าง</text>
+    <rect x="612" y="80" width="500" height="64" rx="14" class="bx"/><text x="636" y="121" class="b lg"><tspan class="tr">กู</tspan>เกิล</text><text x="1088" y="120" class="e s">มีคำว่า "กู" ซ้อนอยู่</text>
+    <rect x="612" y="160" width="500" height="64" rx="14" class="bx"/><text x="636" y="201" class="b lg"><tspan class="tr">หี</tspan>บ</text><text x="1088" y="200" class="e s">มีคำว่า "หี" ซ้อนอยู่</text>
+    <rect x="612" y="240" width="500" height="64" rx="14" class="bx"/><text x="636" y="281" class="b lg"><tspan class="tr">สัด</tspan>ส่วน</text><text x="1088" y="280" class="e s">มีคำว่า "สัด" ซ้อนอยู่</text>
+    <rect x="612" y="320" width="500" height="64" rx="14" class="bx"/><text x="636" y="361" class="b lg">โหด<tspan class="tr">เหี้ย</tspan>ม</text><text x="1088" y="360" class="e s">มีคำว่า "เหี้ย" ซ้อนอยู่</text>
+  </svg>
+  <div class="note">ตัวกรองจึงมี 3 ชั้น แต่ละชั้นแก้คนละปัญหา</div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
+</section>
+
+<!-- กรองคำหยาบ: normalize -->
+<section class="slide">
+  <div class="kicker">ดูแลเนื้อหา</div>
+  <h2>ชั้น 1: แปลงข้อความให้เป็นรูปเดียวกันก่อนเทียบ</h2>
+  <svg class="d" viewBox="0 0 1136 330">
+    <text x="85" y="24" class="c b">ที่พิมพ์</text>
+    <text x="278" y="24" class="c b">1. ตัวพิมพ์เล็ก</text><text x="278" y="48" class="c s mono">H เป็น h</text>
+    <text x="471" y="24" class="c b">2. เลขเป็นตัวอักษร</text><text x="471" y="48" class="c s mono">1→i  $→s  @→a</text>
+    <text x="665" y="24" class="c b">3. ลบตัวคั่น</text><text x="665" y="48" class="c s mono">เว้นวรรค . - _ ( )</text>
+    <text x="858" y="24" class="c b">4. ยุบตัวซ้ำ</text><text x="858" y="48" class="c s mono">ซ้ำ 3 ตัวขึ้นไป</text>
+    <text x="1051" y="24" class="c b">เทียบกับรายการ</text>
+    <rect x="0" y="90" width="170" height="70" rx="14" class="bx"/><text x="85" y="133" class="c b mono">$H 1 . T</text>
+    <rect x="193" y="90" width="170" height="70" rx="14" class="bx amber"/><text x="278" y="133" class="c b mono">$h 1 . t</text>
+    <rect x="386" y="90" width="170" height="70" rx="14" class="bx amber"/><text x="471" y="133" class="c b mono">sh i . t</text>
+    <rect x="580" y="90" width="170" height="70" rx="14" class="bx amber"/><text x="665" y="133" class="c b mono">shit</text>
+    <rect x="773" y="90" width="170" height="70" rx="14" class="bx soft"/><text x="858" y="133" class="c b mono">shit</text>
+    <rect x="966" y="90" width="170" height="70" rx="14" class="bx red"/><text x="1051" y="133" class="c b tr">เจอ shit</text>
+    <line x1="171" y1="125" x2="190" y2="125" class="ln"/>
+    <line x1="364" y1="125" x2="383" y2="125" class="ln"/>
+    <line x1="557" y1="125" x2="577" y2="125" class="ln"/>
+    <line x1="751" y1="125" x2="770" y2="125" class="ln"/>
+    <line x1="944" y1="125" x2="963" y2="125" class="ln"/>
+    <rect x="0" y="210" width="170" height="70" rx="14" class="bx"/><text x="85" y="253" class="c b">เ หี้ ยยยย</text>
+    <rect x="193" y="210" width="170" height="70" rx="14" class="bx soft"/><text x="278" y="253" class="c b">เ หี้ ยยยย</text>
+    <rect x="386" y="210" width="170" height="70" rx="14" class="bx soft"/><text x="471" y="253" class="c b">เ หี้ ยยยย</text>
+    <rect x="580" y="210" width="170" height="70" rx="14" class="bx amber"/><text x="665" y="253" class="c b">เหี้ยยยย</text>
+    <rect x="773" y="210" width="170" height="70" rx="14" class="bx amber"/><text x="858" y="253" class="c b">เหี้ย</text>
+    <rect x="966" y="210" width="170" height="70" rx="14" class="bx red"/><text x="1051" y="253" class="c b tr">เจอ เหี้ย</text>
+    <line x1="171" y1="245" x2="190" y2="245" class="ln"/>
+    <line x1="364" y1="245" x2="383" y2="245" class="ln"/>
+    <line x1="557" y1="245" x2="577" y2="245" class="ln"/>
+    <line x1="751" y1="245" x2="770" y2="245" class="ln"/>
+    <line x1="944" y1="245" x2="963" y2="245" class="ln"/>
+    <rect x="0" y="306" width="22" height="16" rx="4" class="bx amber"/><text x="32" y="320" class="s">ขั้นนี้เปลี่ยนข้อความ</text>
+    <rect x="230" y="306" width="22" height="16" rx="4" class="bx soft"/><text x="262" y="320" class="s">ไม่เปลี่ยน</text>
+  </svg>
+  <div class="note">ต้องแปลงเลขก่อนลบเครื่องหมาย เพราะ $ กับ ! เป็นได้ทั้งเครื่องหมายและตัวอักษร</div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
+</section>
+
+<!-- กรองคำหยาบ: ไม่จับผิดคำปกติ -->
+<section class="slide">
+  <div class="kicker">ดูแลเนื้อหา</div>
+  <h2>ชั้น 2 และ 3: ไม่บล็อกคำปกติ</h2>
+  <svg class="d" viewBox="0 0 1136 420">
+    <text x="274" y="22" class="c b lg">2. ลบคำปกติออกก่อนเช็ก</text>
+    <text x="274" y="50" class="c s">โหดเหี้ยม สัดส่วน แม่งาน กูเกิล หีบ</text>
+    <line x1="568" y1="0" x2="568" y2="410" class="lane"/>
+    <text x="852" y="22" class="c b lg">3. คำสั้นต้องเป็นคำทั้งคำ</text>
+    <text x="852" y="50" class="c s">กู มึง หี สัด ตัดคำด้วยพจนานุกรมไทย</text>
+    <rect x="25" y="80" width="230" height="56" rx="14" class="bx"/><text x="140" y="116" class="c b">ขับโหดเหี้ยม</text>
+    <line x1="140" y1="138" x2="140" y2="204" class="ln"/>
+    <text x="152" y="177" class="s">ลบ "โหดเหี้ยม"</text>
+    <rect x="25" y="208" width="230" height="56" rx="14" class="bx soft"/><text x="140" y="244" class="c b">ขับ</text>
+    <line x1="140" y1="266" x2="140" y2="330" class="ln"/>
+    <rect x="25" y="334" width="230" height="56" rx="14" class="bx green"/><text x="140" y="370" class="c b tg">ผ่าน</text>
+    <rect x="293" y="80" width="230" height="56" rx="14" class="bx"/><text x="408" y="116" class="c b">เหี้ยมาก</text>
+    <line x1="408" y1="138" x2="408" y2="204" class="ln"/>
+    <text x="420" y="177" class="s">ไม่มีคำปกติ</text>
+    <rect x="293" y="208" width="230" height="56" rx="14" class="bx soft"/><text x="408" y="244" class="c b"><tspan class="tr">เหี้ย</tspan>มาก</text>
+    <line x1="408" y1="266" x2="408" y2="330" class="ln"/>
+    <rect x="293" y="334" width="230" height="56" rx="14" class="bx red"/><text x="408" y="370" class="c b tr">ส่งไม่ได้</text>
+    <rect x="600" y="80" width="240" height="56" rx="14" class="bx"/><text x="720" y="116" class="c b">ใช้กูเกิลแมพ</text>
+    <line x1="720" y1="138" x2="720" y2="204" class="ln"/>
+    <text x="732" y="177" class="s">ตัดคำ</text>
+    <rect x="556" y="208" width="84" height="56" rx="12" class="bx soft"/><text x="598" y="244" class="c b">ใช้</text>
+    <rect x="648" y="208" width="144" height="56" rx="12" class="bx soft"/><text x="720" y="244" class="c b">กูเกิล</text>
+    <rect x="800" y="208" width="84" height="56" rx="12" class="bx soft"/><text x="842" y="244" class="c b">แมพ</text>
+    <line x1="720" y1="266" x2="720" y2="330" class="ln"/>
+    <text x="732" y="304" class="s">ไม่มีคำว่า "กู"</text>
+    <rect x="600" y="334" width="240" height="56" rx="14" class="bx green"/><text x="720" y="370" class="c b tg">ผ่าน</text>
+    <rect x="870" y="80" width="240" height="56" rx="14" class="bx"/><text x="990" y="116" class="c b">มึงขับดีๆ</text>
+    <line x1="990" y1="138" x2="990" y2="204" class="ln"/>
+    <text x="1002" y="177" class="s">ตัดคำ</text>
+    <rect x="866" y="208" width="84" height="56" rx="12" class="bx red"/><text x="908" y="244" class="c b tr">มึง</text>
+    <rect x="958" y="208" width="84" height="56" rx="12" class="bx soft"/><text x="1000" y="244" class="c b">ขับ</text>
+    <rect x="1050" y="208" width="64" height="56" rx="12" class="bx soft"/><text x="1082" y="244" class="c b">ดี</text>
+    <line x1="990" y1="266" x2="990" y2="330" class="ln"/>
+    <text x="1002" y="304" class="s">เจอ "มึง"</text>
+    <rect x="870" y="334" width="240" height="56" rx="14" class="bx red"/><text x="990" y="370" class="c b tr">ส่งไม่ได้</text>
+  </svg>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
+</section>
+
+<!-- กรองคำหยาบ: ช่องโหว่ที่ปิดแล้ว -->
+<section class="slide">
+  <div class="kicker">ดูแลเนื้อหา</div>
+  <h2>ช่องโหว่ 2 แบบที่เจอแล้วแก้</h2>
+  <svg class="d" viewBox="0 0 1136 410">
+    <text x="274" y="22" class="c b lg">ปิดตัวอักษรด้วย *</text>
+    <rect x="14" y="50" width="110" height="60" rx="12" class="bx"/><text x="69" y="88" class="c b lg mono">f</text>
+    <rect x="148" y="50" width="110" height="60" rx="12" class="bx amber"/><text x="203" y="88" class="c b mono">u หรือ *</text>
+    <rect x="282" y="50" width="110" height="60" rx="12" class="bx amber"/><text x="337" y="88" class="c b mono">c หรือ *</text>
+    <rect x="416" y="50" width="110" height="60" rx="12" class="bx amber"/><text x="471" y="88" class="c b mono">k หรือ *</text>
+    <text x="274" y="140" class="c s">* แทนตัวอักษรใดก็ได้ 1 ตัว ยกเว้นตัวแรก</text>
+    <rect x="14" y="168" width="512" height="60" rx="12" class="bx"/><text x="38" y="207" class="b lg mono">f*ck  f**k  fu*k</text><text x="502" y="206" class="e b tr">ส่งไม่ได้</text>
+    <rect x="14" y="244" width="512" height="60" rx="12" class="bx"/><text x="38" y="283" class="b lg mono">****</text><text x="502" y="282" class="e b tg">ผ่าน</text>
+    <text x="274" y="336" class="c s">ต้องเห็นตัวแรก และเห็นตัวจริงอย่างน้อย 2 ตัว</text>
+    <text x="274" y="360" class="c s">ไม่อย่างนั้น **** จะตรงกับทุกคำที่ยาว 4 ตัว</text>
+    <line x1="568" y1="0" x2="568" y2="400" class="lane"/>
+    <text x="852" y="22" class="c b lg">เว้นวรรคทีละตัว</text>
+    <rect x="604" y="50" width="160" height="60" rx="12" class="bx"/><text x="684" y="89" class="c b lg">ม ึ ง</text>
+    <line x1="766" y1="80" x2="826" y2="80" class="ln"/><text x="796" y="68" class="c s">ต่อ</text>
+    <rect x="830" y="50" width="120" height="60" rx="12" class="bx soft"/><text x="890" y="89" class="c b lg">มึง</text>
+    <line x1="952" y1="80" x2="972" y2="80" class="ln"/>
+    <rect x="976" y="50" width="150" height="60" rx="12" class="bx red"/><text x="1051" y="88" class="c b tr">ส่งไม่ได้</text>
+    <text x="852" y="140" class="c s">ชิ้นยาวไม่เกิน 2 ตัวอักษรคั่นติดกันหลายชิ้น</text>
+    <text x="852" y="164" class="c s">แปลว่าเว้นวรรคเพื่อเลี่ยง ต่อกลับก่อนตัดคำ</text>
+    <rect x="604" y="200" width="140" height="60" rx="12" class="bx"/><text x="674" y="239" class="c b lg">ไป ก็ ได้</text>
+    <line x1="746" y1="230" x2="770" y2="230" class="ln"/>
+    <rect x="774" y="202" width="64" height="56" rx="12" class="bx soft"/><text x="806" y="238" class="c b">ไป</text>
+    <rect x="846" y="202" width="64" height="56" rx="12" class="bx soft"/><text x="878" y="238" class="c b">ก็</text>
+    <rect x="918" y="202" width="84" height="56" rx="12" class="bx soft"/><text x="960" y="238" class="c b">ได้</text>
+    <line x1="1004" y1="230" x2="1024" y2="230" class="ln"/>
+    <rect x="1028" y="200" width="100" height="60" rx="12" class="bx green"/><text x="1078" y="238" class="c b tg">ผ่าน</text>
+    <text x="852" y="296" class="c s">ข้อความปกติต่อแล้วตัดคำก็ยังได้คำเดิม</text>
+    <text x="852" y="320" class="c s">ไม่เกิดคำหยาบขึ้นมาใหม่</text>
+  </svg>
+  <div class="note">มี test ทั้ง 2 แบบ: ข้อความที่ต้องถูกบล็อก 9 แบบ และข้อความปกติที่ต้องผ่าน 5 แบบ</div>
+  <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
+</section>
+
 <!-- 12 -->
 <section class="slide">
   <div class="kicker">ดูแลเนื้อหา</div>
-  <h2>ตัวกรองคำหยาบภาษาไทย</h2>
+  <h2>ตัวกรองคำหยาบ: ตัวอย่างจริง</h2>
   <svg class="d" viewBox="0 0 1136 450">
     <text x="150" y="22" class="c s b">ข้อความที่พิมพ์</text>
     <text x="560" y="22" class="c s b">ระบบเห็นเป็น</text>
@@ -477,7 +622,7 @@
     <line x1="302" y1="317" x2="376" y2="317" class="ln"/><line x1="742" y1="317" x2="816" y2="317" class="ln"/>
     <line x1="302" y1="399" x2="376" y2="399" class="ln"/><line x1="742" y1="399" x2="816" y2="399" class="ln"/>
   </svg>
-  <div class="note">คำใหม่ที่ไม่อยู่ในรายการยังหลุดได้ ส่วนนี้ต้องใช้การรายงานช่วย</div>
+  <div class="note">ตัวกรองเป็นรายการคำ ไม่ได้เข้าใจความหมาย คำใหม่และสแลงยังหลุดได้ ส่วนนั้นใช้การรายงานและลูกขุนช่วย</div>
   <div class="foot"><span>คันนี้ดีไหม?</span><span>ดูแลเนื้อหา</span></div>
 </section>
 

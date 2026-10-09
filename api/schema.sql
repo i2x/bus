@@ -227,3 +227,10 @@ CREATE TABLE IF NOT EXISTS jury_seats (
 CREATE INDEX IF NOT EXISTS jury_seat_user ON jury_seats (user_id) WHERE vote IS NULL;
 -- รายงานที่ทำให้เปิดคดีนั้น (หน้าคำพิพากษานับเหตุผลต่อคดี)
 ALTER TABLE reports ADD COLUMN IF NOT EXISTS case_id int REFERENCES jury_cases(id) ON DELETE SET NULL;
+
+-- ---------- แบ่งหน้าแบบ cursor ----------
+-- index ตรงกับลำดับที่ feed / หน้ารถ / ศาลเตี้ย ใช้ → หน้าถัดไปเริ่มอ่านจากแถวที่ค้างไว้ได้ทันที ไม่ต้องไล่ข้าม
+CREATE INDEX IF NOT EXISTS reviews_page_new ON reviews (created_at DESC, id DESC) WHERE status = 'visible';
+CREATE INDEX IF NOT EXISTS reviews_page_top ON reviews (helpful_count DESC, created_at DESC, id DESC) WHERE status = 'visible';
+CREATE INDEX IF NOT EXISTS reviews_page_bus ON reviews (fleet_no, created_at DESC, id DESC) WHERE status = 'visible';
+CREATE INDEX IF NOT EXISTS jury_page ON jury_cases (closed_at DESC, id DESC) WHERE status <> 'open';

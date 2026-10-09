@@ -371,6 +371,44 @@ test("ลูกขุน: หมดเวลา เสียงมากกว�
   await pool.query("UPDATE users SET line_user_id = NULL WHERE line_user_id LIKE 'Uj%'");
 });
 
+test("แบ่งหน้า: feed / หน้ารถ / ศาลเตี้ย ไล่ cursor ได้ครบ ไม่ซ้ำ ไม่ข้าม · รีวิวใหม่ระหว่างเลื่อนไม่ทำให้ซ้ำ · cursor มั่ว 400", async () => {
+  // ไล่ทุกหน้าด้วย limit เล็ก ๆ แล้วเทียบกับการขอทีเดียว
+  const walk = async (path, limit) => {
+    const ids = []; let next = null, pages = 0;
+    do {
+      const r = await call("GET", `${path}${path.includes("?") ? "&" : "?"}limit=${limit}${next ? "&before=" + next : ""}`);
+      assert.equal(r.status, 200, JSON.stringify(r.body));
+      assert.ok(r.body.items.length <= limit);
+      ids.push(...r.body.items.map(x => x.id)); next = r.body.next; pages++;
+    } while (next && pages < 100);
+    return { ids, pages };
+  };
+  for (const path of ["/feed", "/feed?sort=top", "/feed?type=incident", "/buses/3-1001/reviews", "/buses/3-1001/reviews?sort=helpful", "/verdicts"]) {
+    const all = (await call("GET", `${path}${path.includes("?") ? "&" : "?"}limit=50`)).body;
+    assert.equal(all.next, null, path + " ทั้งหมดอยู่ในหน้าเดียว");
+    const { ids, pages } = await walk(path, 2);
+    assert.deepEqual(ids, all.items.map(x => x.id), path);
+    assert.equal(new Set(ids).size, ids.length, path + " ไม่ซ้ำ");
+    if (all.items.length > 2) assert.ok(pages > 1, path + " แบ่งหลายหน้าจริง");
+  }
+  assert.equal((await call("GET", "/feed")).body.items.length <= 20, true, "ค่าเริ่ม 20 ต่อหน้า");
+  assert.ok((await call("GET", "/feed?limit=999")).body.items.length <= 50, "ขอได้ไม่เกิน 50");
+
+  // ระหว่างเลื่อน มีรีวิวใหม่เข้ามา → หน้าถัดไปยังต่อจากเดิม ไม่ได้แถวซ้ำ
+  const p1 = (await call("GET", "/feed?limit=3")).body;
+  const U = await login("latecomer@example.com", "มาทีหลัง");
+  await review(U, "4-4444", { text: "รีวิวใหม่ระหว่างเลื่อน" });
+  const p2 = (await call("GET", `/feed?limit=3&before=${p1.next}`)).body;
+  assert.ok(!p2.items.some(x => p1.items.some(y => y.id === x.id)));
+  assert.ok(new Date(p2.items[0].created_at) <= new Date(p1.items.at(-1).created_at));
+
+  const bad = v => Buffer.from(JSON.stringify(v)).toString("base64url");
+  for (const c of ["abc", bad(["2026-01-01 00:00:00+07"]), bad(["x'; DROP TABLE reviews; --", 1]), bad(["2026-01-01 00:00:00+07", "1"])])
+    assert.equal((await call("GET", "/feed?before=" + c)).status, 400, c);
+  assert.equal((await call("GET", "/feed?sort=top&before=" + bad(["2026-01-01 00:00:00+07", 1]))).status, 400, "top ต้องมี 3 ค่า");
+  assert.equal((await call("GET", "/verdicts?before=abc")).status, 400);
+});
+
 test("refresh token: หมุนทุกครั้ง · เอาอันเก่ามาใช้ซ้ำ = เพิกถอนทั้งชุด · logout แล้วใช้ไม่ได้", async () => {
   assert.equal((await call("POST", "/auth/refresh")).status, 401);
   const u = await login("frank@example.com", "Frank");
